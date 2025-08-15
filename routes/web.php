@@ -1,0 +1,147 @@
+<?php
+
+use App\Http\Controllers\Admin\ActionPermissionController;
+use App\Http\Controllers\Admin\NavItemController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SupplierController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+// Authentication Routes
+
+// GUEST ROUTES: Only accessible if the user is NOT logged in.
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [AuthController::class, 'login']);
+});
+
+// Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
+// Route::post('login', [AuthController::class, 'login']);
+// Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
+// Authenticated Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+    
+    // All other routes for your app will go here...
+});
+
+
+// Redirect root to login if not authenticated, or dashboard if authenticated
+Route::get('/', function () {
+    // This check handles both cases elegantly
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+});
+
+Route::middleware(['auth'])->group(function () {
+
+    // Logout route for all authenticated users
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    
+    // ... dashboard and other authenticated routes
+
+    // Dashboard for all authenticated users
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Super Admin Routes
+    Route::middleware(['auth'])->group(function () {
+        
+        // Add a check here to ensure only Super Admin can access these routes
+        // This is a simple inline middleware for demonstration
+
+        // --- 1. GENERAL APPLICATION ROUTES (Permission controlled by 'nav.permission') ---
+        // These routes are accessible to any role that has been granted permission by the Super Admin.
+
+        Route::middleware(['nav.permission'])->group(function () {
+
+            // Student-related routes
+            Route::get('students', [StudentController::class, 'index'])
+                ->name('students.index')->middleware('action.permission:Student,read');
+                
+            Route::get('students/create', [StudentController::class, 'create'])
+                ->name('students.create')->middleware('action.permission:Student,create');
+                
+            Route::post('students', [StudentController::class, 'store'])
+                ->name('students.store')->middleware('action.permission:Student,create');
+                
+            Route::get('students/{student}/edit', [StudentController::class, 'edit'])
+                ->name('students.edit')->middleware('action.permission:Student,update');
+                
+            Route::put('students/{student}', [StudentController::class, 'update'])
+                ->name('students.update')->middleware('action.permission:Student,update');
+                
+            Route::delete('students/{student}', [StudentController::class, 'destroy'])
+                ->name('students.destroy')->middleware('action.permission:Student,delete');
+
+
+            // Teacher-related routes
+            Route::get('teachers', [StudentController::class, 'index'])
+                ->name('teachers.index')->middleware('action.permission:Teacher,read');
+
+            Route::get('onlineorder', [StudentController::class, 'index'])
+                ->name('onlineorder')->middleware('action.permission:Teacher,read');
+
+            Route::get('posorder', [StudentController::class, 'index'])
+                ->name('posorder')->middleware('action.permission:Teacher,read');
+            
+
+            // Customer-related routes
+            Route::get('customers/import', [CustomerController::class, 'showImportForm'])->name('customers.import.show');
+            Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
+
+            Route::resource('customers', CustomerController::class);
+
+            // Supplier-related routes
+            Route::get('suppliers/import', [SupplierController::class, 'showImportForm'])->name('suppliers.import.show');
+            Route::post('suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import.store');
+
+            Route::resource('suppliers', SupplierController::class);
+            
+
+        });
+
+        // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---
+        // Only users with the Super Admin role can access these routes.
+        Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
+            
+            // Settings / System Management Routes
+            Route::resource('roles', RoleController::class)->except(['show']);
+            Route::resource('users', UserController::class)->except(['show']);
+            Route::resource('nav-items', NavItemController::class)->except(['show']);
+
+            // Navigation Permission Management
+            Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
+            Route::get('permissions/{role}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
+            Route::put('permissions/{role}', [PermissionController::class, 'update'])->name('permissions.update');
+
+            // Action Permission Management
+            Route::get('action-permissions', [ActionPermissionController::class, 'index'])->name('action-permissions.index');
+            Route::get('action-permissions/{role}/edit', [ActionPermissionController::class, 'edit'])->name('action-permissions.edit');
+            Route::put('action-permissions/{role}', [ActionPermissionController::class, 'update'])->name('action-permissions.update');
+
+        });
+    });
+});
