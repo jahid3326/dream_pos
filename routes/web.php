@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SupplierController;
@@ -119,6 +120,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import.store');
 
             Route::resource('suppliers', SupplierController::class);
+
+            Route::resource('categories', CategoryController::class);
             
 
         });
