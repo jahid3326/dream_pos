@@ -52,31 +52,79 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table datatable" id="customer-table">
+                        <table class="table datatable">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Product</th>
+                                    <th>Variation</th>
                                     <th>Category</th>
-                                    <th>Variations</th>
-                                    <th>Sale Price</th>
+                                    <th>Sales Price</th>
                                     <th>Purchase Price</th>
                                     <th>Supplier</th>
+                                    <th class="text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($products as $product)
+                                @forelse($product_list as $item)
                                     <tr>
-                                        <td>{{ $product->name }}<br><small
-                                                class="text-muted">{{ $product->measurement }}</small></td>
-                                        <td>{{ $product->category->name }}</td>
-                                        <td>{{ $product->type === 'variation' ? $product->variations->count() : '—' }}</td>
-                                        <td>{{ $product->type === 'single' ? '$' . number_format($product->sale_price, 2) : '(Multiple)' }}
+                                        <td>
+                                            <a href="javascript:void(0);" class="fw-bold">{{ $item->name }}</a>
+                                            <br>
+                                            {{-- This will now display the measurement for every single row --}}
+                                            <small class="text-muted">{{ $item->measurement }}</small>
                                         </td>
-                                        <td>{{ $product->type === 'single' ? '$' . number_format($product->purchase_price, 2) : '(Multiple)' }}
+                                        <td class="text-center">
+                                            @if ($item->is_variation)
+                                                <span
+                                                    style="display:inline-block; width:10px; height:10px; background-color:green; border-radius:50%;"></span>
+                                            @endif
                                         </td>
-                                        <td>{{ $product->supplier->user->name }}</td>
+                                        <td>{{ $item->category->name ?? 'N/A' }}</td>
+                                        <td>{{ number_format($item->sale_price, 2) }}€</td>
+                                        <td>{{ number_format($item->purchase_price, 2) }}€</td>
+                                        <td>{{ $item->supplier->user->name ?? 'N/A' }}</td>
+                                        <td class="text-end">
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <a href="{{ route('products.show', $item->id) }}"
+                                                    class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+                                                <a href="{{ route('products.edit', $item->id) }}"
+                                                    class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+
+                                                {{-- THIS IS THE KEY LOGIC CHANGE --}}
+                                                @if ($item->is_variation)
+                                                    {{-- Form to delete a SINGLE VARIATION --}}
+                                                    <form
+                                                        action="{{ route('product-variations.destroy', $item->variation_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger delete-button"
+                                                            title="Delete this variation">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    {{-- Form to delete the ENTIRE PRODUCT --}}
+                                                    <form action="{{ route('products.destroy', $item->id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger delete-button"
+                                                            title="Delete this product">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center">No products found.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>

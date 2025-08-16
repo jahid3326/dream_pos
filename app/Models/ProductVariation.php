@@ -9,8 +9,21 @@ class ProductVariation extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
-    public function product() { 
-        return $this->belongsTo(Product::class); 
+    protected $fillable = [
+        'product_id',
+        'sku',
+        'measurement', // <-- ESSENTIAL
+        'cbm',         // <-- ESSENTIAL
+        'weight',      // <-- ESSENTIAL
+        'purchase_price',
+        'sale_price',
+        'margin',
+        'tax_id',
+        'image',
+    ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
     }
 }

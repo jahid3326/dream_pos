@@ -10,6 +10,7 @@ use App\Models\Tax;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\ProductVariation;
 
 class ProductController extends Controller
 {
@@ -21,6 +22,7 @@ class ProductController extends Controller
         $this->middleware('action.permission:Product,show')->only('show');
         $this->middleware('action.permission:Product,update')->only(['edit', 'update']);
         $this->middleware('action.permission:Product,delete')->only('destroy');
+        $this->middleware('action.permission:Product,delete')->only('destroyVariation');
     }
     /**
      * Display a listing of the resource.
@@ -29,23 +31,87 @@ class ProductController extends Controller
     {
         $query = Product::with(['category', 'supplier', 'variations']);
 
+        // 2. Apply filters based on request input
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
         }
-
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('variations', function ($varQuery) use ($search) {
+                        $varQuery->where('sku', 'like', '%' . $search . '%');
+                    });
+            });
         }
 
+        // 3. Fetch the products from the database
         $products = $query->latest()->get();
+
+        // 4. Transform the fetched products into a flattened list for the view
+        $product_list = collect(); // Create a new empty Laravel Collection
+
+        foreach ($products as $product) {
+            if ($product->type === 'single') {
+                // For single products, create a standardized object
+                $row = (object) [
+                    'id' => $product->id,
+                    'variation_id' => null, // Single products have no variation ID
+                    'name' => $product->name,
+                    'measurement' => $product->measurement,
+                    'is_variation' => false,
+                    'category' => $product->category,
+                    'supplier' => $product->supplier,
+                    'sale_price' => $product->sale_price,
+                    'purchase_price' => $product->purchase_price,
+                ];
+                $product_list->push($row);
+            } elseif ($product->type === 'variation') {
+                if ($product->variations->isNotEmpty()) {
+                    // If it's a variation product with variations, loop through them
+                    foreach ($product->variations as $variation) {
+                        $row = (object) [
+                            'id' => $product->id, // Parent product ID
+                            'variation_id' => $variation->id, // The specific variation ID
+                            'name' => $product->name,
+                            'measurement' => $variation->measurement,
+                            'is_variation' => true,
+                            'category' => $product->category,
+                            'supplier' => $product->supplier,
+                            'sale_price' => $variation->sale_price,
+                            'purchase_price' => $variation->purchase_price,
+                        ];
+                        $product_list->push($row);
+                    }
+                } else {
+                    // Handle the edge case of a "variation" product with no actual variations yet
+                    $row = (object) [
+                        'id' => $product->id,
+                        'variation_id' => null,
+                        'name' => $product->name,
+                        'measurement' => 'No variations added',
+                        'is_variation' => true, // Still true by type
+                        'category' => $product->category,
+                        'supplier' => $product->supplier,
+                        'sale_price' => 0.00,
+                        'purchase_price' => 0.00,
+                    ];
+                    $product_list->push($row);
+                }
+            }
+        }
+
+        // 5. Get data for the filter dropdowns
         $suppliers = Supplier::with('user')->get();
         $categories = Category::whereNull('parent_id')->get();
 
-        return view('products.index', compact('products', 'suppliers', 'categories'));
+        // 6. Return the view with the transformed data
+        // Note: We don't use Laravel's paginator because we built a custom collection.
+        // Client-side pagination (e.g., via DataTables) is expected.
+        return view('products.index', compact('product_list', 'suppliers', 'categories'));
     }
 
     /**
@@ -110,6 +176,9 @@ class ProductController extends Controller
                     'variations.*.sale_price' => 'required|numeric|min:0',
                     'variations.*.margin' => 'nullable|numeric|min:0|max:100',
                     'variations.*.image' => 'nullable|image|max:2048',
+                    'variations.*.measurement' => 'nullable|string', // <-- ADD VALIDATION
+                    'variations.*.cbm' => 'nullable|numeric',       // <-- ADD VALIDATION
+                    'variations.*.weight' => 'nullable|numeric',     // <-- ADD VALIDATION
                 ]);
 
                 // Create the parent product record
@@ -126,6 +195,8 @@ class ProductController extends Controller
                         $variationData['image'] = $request->file("variations.{$index}.image")
                             ->store('variation_images', 'public');
                     }
+                    // The $variationData array now correctly contains all fields
+                    // thanks to the validation step above.
                     $product->variations()->create($variationData);
                 }
             }
@@ -210,11 +281,14 @@ class ProductController extends Controller
                     'category_id' => 'required|exists:categories,id',
                     'variations' => 'required|array|min:1',
                     'variations.*.id' => 'nullable|exists:product_variations,id',
-                    'variations.*.sku' => 'required|string', // Unique validation is complex, best handled with a custom rule or DB constraint
+                    'variations.*.sku' => 'required|string',
                     'variations.*.purchase_price' => 'required|numeric|min:0',
                     'variations.*.sale_price' => 'required|numeric|min:0',
                     'variations.*.margin' => 'nullable|numeric|min:0|max:100',
                     'variations.*.image' => 'nullable|image|max:2048',
+                    'variations.*.measurement' => 'nullable|string', // <-- ADD VALIDATION
+                    'variations.*.cbm' => 'nullable|numeric',       // <-- ADD VALIDATION
+                    'variations.*.weight' => 'nullable|numeric',     // <-- ADD VALIDATION
                 ]);
 
                 // First, update the parent product
@@ -240,13 +314,13 @@ class ProductController extends Controller
 
                     // Use updateOrCreate to handle both existing and new variations
                     $variation = $product->variations()->updateOrCreate(
-                        ['id' => $variationId], // Conditions to find the record
-                        $variationData           // Data to update or create
+                        ['id' => $variationData['id'] ?? null], // Conditions to find
+                        $variationData                          // Data to update/create
                     );
                     $submittedVariationIds[] = $variation->id;
                 }
 
-                // Delete any variations that were on the form originally but were removed by the user
+                // Delete any variations that were removed by the user
                 $product->variations()->whereNotIn('id', $submittedVariationIds)->delete();
             }
         });
@@ -262,5 +336,33 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Remove a specific product variation from storage.
+     *
+     * @param  \App\Models\ProductVariation  $variation
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyVariation(ProductVariation $variation)
+    {
+        // Optional: Authorize the action.
+        // We can check if the user has 'delete' permission for the parent Product.
+
+        // Also check if this is the last variation.
+        // You might want to prevent deleting the last one to avoid an empty variation product.
+        if ($variation->product->variations()->count() === 1) {
+            return back()->with('error', 'Cannot delete the last variation of a product. Please delete the entire product instead or add another variation first.');
+        }
+
+        // Delete the variation's image from storage if it exists
+        if ($variation->image) {
+            Storage::disk('public')->delete($variation->image);
+        }
+
+        // Delete the variation record from the database
+        $variation->delete();
+
+        return back()->with('success', 'Product variation deleted successfully.');
     }
 }

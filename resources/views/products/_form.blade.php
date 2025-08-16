@@ -6,7 +6,8 @@
             <div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="type" id="type_single" value="single"
-                        @checked(old('type', $product->type ?? 'single') == 'single') onchange="toggleProductType()">
+                        @checked(old('type', $product->type ?? 'single') == 'single') onchange="toggleProductType()" />
+
                     <label class="form-check-label" for="type_single">Single Product</label>
                 </div>
                 <div class="form-check form-check-inline">

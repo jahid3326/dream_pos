@@ -151,6 +151,10 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('taxes', TaxController::class)->except(['show']);
 
             // Product-related routes
+
+            // ADD THIS NEW ROUTE FOR DELETING A SINGLE VARIATION
+            Route::delete('product-variations/{variation}', [ProductController::class, 'destroyVariation'])->name('product-variations.destroy');
+
             Route::resource('products', ProductController::class);
         });
 
