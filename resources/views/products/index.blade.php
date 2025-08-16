@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Products')
 @section('content')
     <div class="page-wrapper">
         <div class="content">
@@ -31,13 +32,26 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3"><select name="category_id" class="form-select">
+                        <div class="col-md-3">
+                            <select name="category_id" class="form-select">
                                 <option value="">All Categories</option>
-                                @foreach ($categories as $c)
-                                    <option value="{{ $c->id }}" @selected(request('category_id') == $c->id)>{{ $c->name }}
+                                @foreach ($categories as $category)
+                                    {{-- Render the parent category --}}
+                                    <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>
+                                        {{ $category->name }}
                                     </option>
+
+                                    {{-- If the parent has children, loop through and render them with indentation --}}
+                                    @if ($category->children->isNotEmpty())
+                                        @foreach ($category->children as $child)
+                                            <option value="{{ $child->id }}" @selected(request('category_id') == $child->id)>
+                                                &nbsp;&nbsp;&nbsp;› {{ $child->name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
                                 @endforeach
-                            </select></div>
+                            </select>
+                        </div>
                         <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Filter</button></div>
                     </form>
                 </div>
@@ -61,11 +75,13 @@
                                     <th>Sales Price</th>
                                     <th>Purchase Price</th>
                                     <th>Supplier</th>
-                                    <th class="text-end">Action</th>
+                                    @if (hasActionPermission('Product', 'update') || hasActionPermission('Product', 'delete'))
+                                        <th class="no-sort"></th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($product_list as $item)
+                                @foreach ($product_list as $item)
                                     <tr>
                                         <td>
                                             <a href="javascript:void(0);" class="fw-bold">{{ $item->name }}</a>
@@ -83,48 +99,55 @@
                                         <td>{{ number_format($item->sale_price, 2) }}€</td>
                                         <td>{{ number_format($item->purchase_price, 2) }}€</td>
                                         <td>{{ $item->supplier->user->name ?? 'N/A' }}</td>
-                                        <td class="text-end">
-                                            <div class="d-flex gap-2 justify-content-end">
-                                                <a href="{{ route('products.show', $item->id) }}"
-                                                    class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
-                                                <a href="{{ route('products.edit', $item->id) }}"
-                                                    class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-
-                                                {{-- THIS IS THE KEY LOGIC CHANGE --}}
-                                                @if ($item->is_variation)
-                                                    {{-- Form to delete a SINGLE VARIATION --}}
-                                                    <form
-                                                        action="{{ route('product-variations.destroy', $item->variation_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                            class="btn btn-sm btn-outline-danger delete-button"
-                                                            title="Delete this variation">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @else
-                                                    {{-- Form to delete the ENTIRE PRODUCT --}}
-                                                    <form action="{{ route('products.destroy', $item->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                            class="btn btn-sm btn-outline-danger delete-button"
-                                                            title="Delete this product">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                        </td>
+                                        @if (hasActionPermission('Product', 'update') || hasActionPermission('Product', 'delete'))
+                                            <td class="text-end">
+                                                <div class="d-flex gap-0 justify-content-end">
+                                                    @if (hasActionPermission('Product', 'show'))
+                                                        <a href="{{ route('products.show', $item->id) }}"
+                                                            class="me-2 p-2 d-flex align-items-center border rounded"><i
+                                                                data-feather="eye" class="feather-eye"></i></a>
+                                                    @endif
+                                                    @if (hasActionPermission('Product', 'update'))
+                                                        <a href="{{ route('products.edit', $item->id) }}"
+                                                            class="me-2 p-2 d-flex align-items-center border rounded"><i
+                                                                data-feather="edit" class="feather-edit"></i></a>
+                                                    @endif
+                                                    {{-- THIS IS THE KEY LOGIC CHANGE --}}
+                                                    @if ($item->is_variation)
+                                                        {{-- Form to delete a SINGLE VARIATION --}}
+                                                        @if (hasActionPermission('Product', 'delete'))
+                                                            <form
+                                                                action="{{ route('product-variations.destroy', $item->variation_id) }}"
+                                                                method="POST">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="me-2 p-2 d-flex align-items-center border rounded delete-button"
+                                                                    title="Delete this product">
+                                                                    <i data-feather="trash-2" class="feather-trash-2"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    @else
+                                                        {{-- Form to delete the ENTIRE PRODUCT --}}
+                                                        @if (hasActionPermission('Product', 'delete'))
+                                                            <form action="{{ route('products.destroy', $item->id) }}"
+                                                                method="POST">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="me-2 p-2 d-flex align-items-center border rounded delete-button"
+                                                                    title="Delete this product">
+                                                                    <i data-feather="trash-2" class="feather-trash-2"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        @endif
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center">No products found.</td>
-                                    </tr>
-                                @endforelse
+                                @endforeach
                             </tbody>
                         </table>
                     </div>

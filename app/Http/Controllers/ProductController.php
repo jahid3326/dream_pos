@@ -35,9 +35,9 @@ class ProductController extends Controller
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
         }
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
+        // if ($request->filled('category_id')) {
+        //     $query->where('category_id', $request->category_id);
+        // }
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -47,6 +47,31 @@ class ProductController extends Controller
                     });
             });
         }
+
+        // --- NEW AND IMPROVED CATEGORY FILTER LOGIC ---
+        if ($request->filled('category_id')) {
+            $categoryId = $request->category_id;
+
+            // Find the selected category and its children
+            $selectedCategory = Category::with('children')->find($categoryId);
+
+            if ($selectedCategory) {
+                // Check if the selected category is a parent with children
+                if ($selectedCategory->children->isNotEmpty()) {
+                    // Get an array of all child IDs
+                    $categoryIds = $selectedCategory->children->pluck('id');
+                    // Add the parent category's ID to the array
+                    $categoryIds->push($selectedCategory->id);
+
+                    // Use whereIn to find products in the parent OR any of its children
+                    $query->whereIn('category_id', $categoryIds);
+                } else {
+                    // If it's a child category (or a parent with no children), just filter by its ID
+                    $query->where('category_id', $categoryId);
+                }
+            }
+        }
+
 
         // 3. Fetch the products from the database
         $products = $query->latest()->get();
@@ -106,7 +131,7 @@ class ProductController extends Controller
 
         // 5. Get data for the filter dropdowns
         $suppliers = Supplier::with('user')->get();
-        $categories = Category::whereNull('parent_id')->get();
+        $categories = Category::whereNull('parent_id')->with('children')->orderBy('name')->get();
 
         // 6. Return the view with the transformed data
         // Note: We don't use Laravel's paginator because we built a custom collection.
@@ -175,6 +200,7 @@ class ProductController extends Controller
                     'variations.*.purchase_price' => 'required|numeric|min:0',
                     'variations.*.sale_price' => 'required|numeric|min:0',
                     'variations.*.margin' => 'nullable|numeric|min:0|max:100',
+                    'variations.*.tax_id' => 'nullable|exists:taxes,id',
                     'variations.*.image' => 'nullable|image|max:2048',
                     'variations.*.measurement' => 'nullable|string', // <-- ADD VALIDATION
                     'variations.*.cbm' => 'nullable|numeric',       // <-- ADD VALIDATION
@@ -285,6 +311,7 @@ class ProductController extends Controller
                     'variations.*.purchase_price' => 'required|numeric|min:0',
                     'variations.*.sale_price' => 'required|numeric|min:0',
                     'variations.*.margin' => 'nullable|numeric|min:0|max:100',
+                    'variations.*.tax_id' => 'nullable|exists:taxes,id',
                     'variations.*.image' => 'nullable|image|max:2048',
                     'variations.*.measurement' => 'nullable|string', // <-- ADD VALIDATION
                     'variations.*.cbm' => 'nullable|numeric',       // <-- ADD VALIDATION
