@@ -12,6 +12,7 @@
             <div class="page-btn">
                  @if(hasActionPermission('Category', 'create'))
                     <a href="{{ route('categories.create') }}" class="btn btn-primary"><i class="ti ti-circle-plus me-1"></i>Add New Category</a>
+                    <a href="{{ route('categories.import.show') }}" class="btn btn-secondary">Import Categories</a>
                 @endif
             </div>
         </div>

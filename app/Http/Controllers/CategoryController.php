@@ -6,6 +6,8 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CategoryImport;
 
 class CategoryController extends Controller
 {
@@ -116,6 +118,28 @@ class CategoryController extends Controller
 
         $category->update($data);
         return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
+    }
+
+    public function showImportForm()
+    {
+        return view('categories.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['category_file' => 'required|mimes:xlsx,csv']);
+
+        $import = new CategoryImport;
+        Excel::import($import, $request->file('category_file'));
+
+        if (!empty($import->errors)) {
+            return redirect()->route('categories.import.show')
+                             ->with('import_errors', $import->errors)
+                             ->with('error', "Import finished with errors. {$import->importedCount} records imported.");
+        }
+
+        return redirect()->route('categories.index')
+                         ->with('success', "All {$import->importedCount} categories imported successfully!");
     }
 
     /**

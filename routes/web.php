@@ -12,6 +12,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SupplierController;
+use Illuminate\Support\Facades\Response;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,6 +121,23 @@ Route::middleware(['auth'])->group(function () {
             Route::post('suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import.store');
 
             Route::resource('suppliers', SupplierController::class);
+
+            // Category-related routes
+            Route::get('categories/import', [CategoryController::class, 'showImportForm'])->name('categories.import.show');
+            Route::post('categories/import', [CategoryController::class, 'import'])->name('categories.import.store');
+
+            Route::get('categories/import/sample-download', function() {
+                // Define the path to the file in your public directory
+                $filePath = public_path('samples/categories_import_sample.csv');
+                
+                // Check if the file exists
+                if (!file_exists($filePath)) {
+                    abort(404, 'The sample file was not found.');
+                }
+                
+                // Return the file as a download response
+                return Response::download($filePath);
+            })->name('categories.import.sample');
 
             Route::resource('categories', CategoryController::class);
             
