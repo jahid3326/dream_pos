@@ -10,8 +10,10 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\TaxController;
 use Illuminate\Support\Facades\Response;
 
 /*
@@ -42,7 +44,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-    
+
     // All other routes for your app will go here...
 });
 
@@ -60,7 +62,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Logout route for all authenticated users
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
-    
+
     // ... dashboard and other authenticated routes
 
     // Dashboard for all authenticated users
@@ -70,7 +72,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Super Admin Routes
     Route::middleware(['auth'])->group(function () {
-        
+
         // Add a check here to ensure only Super Admin can access these routes
         // This is a simple inline middleware for demonstration
 
@@ -82,19 +84,19 @@ Route::middleware(['auth'])->group(function () {
             // Student-related routes
             Route::get('students', [StudentController::class, 'index'])
                 ->name('students.index')->middleware('action.permission:Student,read');
-                
+
             Route::get('students/create', [StudentController::class, 'create'])
                 ->name('students.create')->middleware('action.permission:Student,create');
-                
+
             Route::post('students', [StudentController::class, 'store'])
                 ->name('students.store')->middleware('action.permission:Student,create');
-                
+
             Route::get('students/{student}/edit', [StudentController::class, 'edit'])
                 ->name('students.edit')->middleware('action.permission:Student,update');
-                
+
             Route::put('students/{student}', [StudentController::class, 'update'])
                 ->name('students.update')->middleware('action.permission:Student,update');
-                
+
             Route::delete('students/{student}', [StudentController::class, 'destroy'])
                 ->name('students.destroy')->middleware('action.permission:Student,delete');
 
@@ -108,7 +110,7 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('posorder', [StudentController::class, 'index'])
                 ->name('posorder')->middleware('action.permission:Teacher,read');
-            
+
 
             // Customer-related routes
             Route::get('customers/import', [CustomerController::class, 'showImportForm'])->name('customers.import.show');
@@ -126,28 +128,36 @@ Route::middleware(['auth'])->group(function () {
             Route::get('categories/import', [CategoryController::class, 'showImportForm'])->name('categories.import.show');
             Route::post('categories/import', [CategoryController::class, 'import'])->name('categories.import.store');
 
-            Route::get('categories/import/sample-download', function() {
+            Route::get('categories/import/sample-download', function () {
                 // Define the path to the file in your public directory
                 $filePath = public_path('samples/categories_import_sample.csv');
-                
+
                 // Check if the file exists
                 if (!file_exists($filePath)) {
                     abort(404, 'The sample file was not found.');
                 }
-                
+
                 // Return the file as a download response
                 return Response::download($filePath);
             })->name('categories.import.sample');
 
             Route::resource('categories', CategoryController::class);
-            
 
+            // Tax-related routes
+
+            // ADD THIS ROUTE FOR THE AJAX REQUEST
+            Route::post('taxes/ajax-store', [TaxController::class, 'ajaxStore'])->name('taxes.ajaxStore');
+
+            Route::resource('taxes', TaxController::class)->except(['show']);
+
+            // Product-related routes
+            Route::resource('products', ProductController::class);
         });
 
         // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---
         // Only users with the Super Admin role can access these routes.
         Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
-            
+
             // Settings / System Management Routes
             Route::resource('roles', RoleController::class)->except(['show']);
             Route::resource('users', UserController::class)->except(['show']);
@@ -162,7 +172,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('action-permissions', [ActionPermissionController::class, 'index'])->name('action-permissions.index');
             Route::get('action-permissions/{role}/edit', [ActionPermissionController::class, 'edit'])->name('action-permissions.edit');
             Route::put('action-permissions/{role}', [ActionPermissionController::class, 'update'])->name('action-permissions.update');
-
         });
     });
 });

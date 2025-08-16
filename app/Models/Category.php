@@ -34,8 +34,8 @@ class Category extends Model
     }
     
     // A category can have many products
-    // public function products()
-    // {
-    //     return $this->hasMany(Product::class);
-    // }
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

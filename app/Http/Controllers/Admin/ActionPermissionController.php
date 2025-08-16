@@ -14,6 +14,9 @@ class ActionPermissionController extends Controller
         // 'Student',
         'Customer',
         'Supplier',
+        'Category',
+        'Tax',
+        'Product',
     ];
 
     public function index()
@@ -38,7 +41,7 @@ class ActionPermissionController extends Controller
 
         foreach ($this->manageableModels as $model_name) {
             $data = $submitted[$model_name] ?? [];
-            
+
             Permission::updateOrCreate(
                 ['role_id' => $role->id, 'model_name' => $model_name],
                 [
@@ -52,6 +55,6 @@ class ActionPermissionController extends Controller
         }
 
         return redirect()->route('admin.action-permissions.index')
-                         ->with('success', 'Action permissions updated successfully!');
+            ->with('success', 'Action permissions updated successfully!');
     }
 }
