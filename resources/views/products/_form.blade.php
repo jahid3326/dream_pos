@@ -25,7 +25,7 @@
                 <select name="supplier_id" class="form-select">
                     <option value="">Select Supplier</option>
                     @foreach ($suppliers as $s)
-                        <option value="{{ $s->id }}" @selected(old('supplier_id', $product->supplier_id) == $s->id)>{{ $s->user->name }}</option>
+                        <option value="{{ $s->id }}" @selected(old('supplier_id', $product->supplier_id) == $s->id)>{{ $s->company_name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -176,26 +176,22 @@
                 if (type === 'single') {
                     singleFields.show();
                     variationFields.hide();
-                    // Set attributes for single product fields
                     singleFields.find(
                         'input[name="sku"], input[name="purchase_price"], input[name="sale_price"]').prop(
                         'required', true);
                 } else {
                     singleFields.hide();
                     variationFields.show();
-                    // Remove attributes from single product fields
                     singleFields.find(
                         'input[name="sku"], input[name="purchase_price"], input[name="sale_price"]').prop(
                         'required', false);
-
-                    // Add a default row if none exist
                     if (variationContainer.children().length === 0) {
                         addVariationRow();
                     }
                 }
             }
 
-            // --- THE CORE CALCULATION LOGIC ---
+            // --- FORWARD CALCULATION (Purchase Price or Margin -> Sale Price) ---
             function calculateSalePrice(rowContext) {
                 const purchasePriceEl = $(rowContext).find('input[name*="purchase_price"]');
                 const marginEl = $(rowContext).find('input[name*="margin"]');
@@ -210,45 +206,57 @@
                 salePriceEl.val(finalSalePrice.toFixed(2));
             }
 
+            // --- REVERSE CALCULATION (Sale Price -> Margin) ---
+            function calculateMargin(rowContext) {
+                const purchasePriceEl = $(rowContext).find('input[name*="purchase_price"]');
+                const marginEl = $(rowContext).find('input[name*="margin"]');
+                const salePriceEl = $(rowContext).find('input[name*="sale_price"]');
+
+                const purchasePrice = parseFloat(purchasePriceEl.val()) || 0;
+                const salePrice = parseFloat(salePriceEl.val()) || 0;
+
+                if (purchasePrice > 0) {
+                    const marginPercent = ((salePrice - purchasePrice) / purchasePrice) * 100;
+                    marginEl.val(marginPercent.toFixed(2));
+                } else {
+                    // Avoid division by zero if purchase price is 0
+                    marginEl.val('0.00');
+                }
+            }
+
             // --- JQUERY EVENT LISTENERS ---
 
-            // Listener for the radio buttons to toggle the view
+            // Listener for the radio buttons
             $('input[name="type"]').on('change', toggleProductType);
 
-            // Delegated listener for the entire form for calculation fields
-            $('form').on('input', '.calculation-trigger', function() {
-                const row = $(this).closest('.variation-row, #single-product-fields');
-                calculateSalePrice(row);
-            });
+            // Delegated listener for the entire form
+            $('form').on('input', function(event) {
+                const target = $(event.target);
+                const row = target.closest('.variation-row, #single-product-fields');
 
-            // Delegated listener for the tax dropdown change
-            $('form').on('change', 'select[name*="tax_id"]', function() {
-                const row = $(this).closest('.variation-row, #single-product-fields');
-                const marginEl = row.find('input[name*="margin"]');
-
-                if (marginEl.length) {
-                    const taxRate = parseFloat($(this).find('option:selected').data('rate')) || 0;
-
-                    // 1. Copy tax rate to margin field
-                    marginEl.val(taxRate.toFixed(2));
-
-                    // 2. Trigger the input event to recalculate
-                    marginEl.trigger('input');
+                // Check which field was changed
+                if (target.is('input[name*="purchase_price"]') || target.is('input[name*="margin"]')) {
+                    // If Purchase Price or Margin changed, calculate Sale Price
+                    calculateSalePrice(row);
+                } else if (target.is('input[name*="sale_price"]')) {
+                    // If Sale Price changed, calculate Margin
+                    calculateMargin(row);
                 }
             });
 
             // --- INITIALIZATION ---
-
-            // Run toggle on page load
+            // Run toggle on page load to set the correct view.
             toggleProductType();
 
             // Initial calculation for existing rows on page load
+            /*
             $('.variation-row').each(function() {
                 calculateSalePrice(this);
             });
             if ($('#single-product-fields').is(':visible')) {
                 calculateSalePrice($('#single-product-fields'));
             }
+            */
 
             let activeTaxSelect = null;
 

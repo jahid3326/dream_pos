@@ -14,7 +14,7 @@
                     @if (hasActionPermission('Product', 'create'))
                         <a href="{{ route('products.create') }}" class="btn btn-primary"><i
                                 class="ti ti-circle-plus me-1"></i>Add New Product</a>
-                        <a href="#" class="btn btn-secondary">Import Products</a>
+                        <a href="{{ route('products.import.show') }}" class="btn btn-secondary">Import Products</a>
                     @endif
                 </div>
             </div>
@@ -27,7 +27,7 @@
                         <div class="col-md-3"><select name="supplier_id" class="form-select">
                                 <option value="">All Suppliers</option>
                                 @foreach ($suppliers as $s)
-                                    <option value="{{ $s->id }}" @selected(request('supplier_id') == $s->id)>{{ $s->user->name }}
+                                    <option value="{{ $s->id }}" @selected(request('supplier_id') == $s->id)>{{ $s->company_name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -96,9 +96,9 @@
                                             @endif
                                         </td>
                                         <td>{{ $item->category->name ?? 'N/A' }}</td>
-                                        <td>{{ number_format($item->sale_price, 2) }}€</td>
-                                        <td>{{ number_format($item->purchase_price, 2) }}€</td>
-                                        <td>{{ $item->supplier->user->name ?? 'N/A' }}</td>
+                                        <td>${{ number_format($item->sale_price, 2) }}</td>
+                                        <td>${{ number_format($item->purchase_price, 2) }}</td>
+                                        <td>{{ $item->supplier->company_name ?? 'N/A' }}</td>
                                         @if (hasActionPermission('Product', 'update') || hasActionPermission('Product', 'delete'))
                                             <td class="text-end">
                                                 <div class="d-flex gap-0 justify-content-end">
@@ -156,3 +156,33 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+    <script>
+        $(document).on('click', '.delete-button', function() {
+
+            // Prevent the form from submitting immediately
+            event.preventDefault();
+
+            // Find the closest parent form of the clicked button
+            const form = this.closest('form');
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete it!", // ✅ This works
+                cancelButtonText: "Cancel",
+                customClass: {
+                    confirmButton: "btn btn-primary",
+                    cancelButton: "btn btn-danger ml-1"
+                },
+                buttonsStyling: false
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        })
+    </script>
+@endpush

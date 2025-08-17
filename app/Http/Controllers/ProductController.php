@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\ProductVariation;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ProductImport;
 
 class ProductController extends Controller
 {
@@ -231,12 +233,33 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
 
+    public function showImportForm()
+    {
+        return view('products.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['product_file' => 'required|mimes:xlsx,csv']);
+        $import = new ProductImport;
+        Excel::import($import, $request->file('product_file'));
+
+        if (!empty($import->errors)) {
+            return redirect()->route('products.import.show')
+                ->with('import_errors', $import->errors)
+                ->with('error', "Import finished with errors. {$import->importedCount} parent products were imported.");
+        }
+        return redirect()->route('products.index')->with('success', "All {$import->importedCount} products imported successfully!");
+    }
+
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Product $product)
     {
-        //
+        $product->load(['category', 'supplier.user', 'variations.tax', 'tax']);
+
+        return view('products.show', compact('product'));
     }
 
     /**
@@ -378,18 +401,32 @@ class ProductController extends Controller
 
         // Also check if this is the last variation.
         // You might want to prevent deleting the last one to avoid an empty variation product.
-        if ($variation->product->variations()->count() === 1) {
-            return back()->with('error', 'Cannot delete the last variation of a product. Please delete the entire product instead or add another variation first.');
+        $parentProduct = $variation->product;
+        if ($parentProduct->variations()->count() === 1) {
+            // This is the LAST variation, so delete the entire parent product.
+            // The database cascade will handle deleting this final variation.
+
+            // Delete the parent product's main image if it has one
+            if ($parentProduct->product_image) {
+                Storage::disk('public')->delete($parentProduct->product_image);
+            }
+
+            // Delete the parent product
+            $parentProduct->delete();
+
+            return redirect()->route('products.index')->with('success', 'The last variation was deleted, and the parent product has been removed.');
+        } else {
+            // There are other variations, so ONLY delete this specific one.
+
+            // Delete the variation's image from storage if it exists
+            if ($variation->image) {
+                Storage::disk('public')->delete($variation->image);
+            }
+
+            // Delete the variation record from the database
+            $variation->delete();
+
+            return back()->with('success', 'Product variation deleted successfully.');
         }
-
-        // Delete the variation's image from storage if it exists
-        if ($variation->image) {
-            Storage::disk('public')->delete($variation->image);
-        }
-
-        // Delete the variation record from the database
-        $variation->delete();
-
-        return back()->with('success', 'Product variation deleted successfully.');
     }
 }

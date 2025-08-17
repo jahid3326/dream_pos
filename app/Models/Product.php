@@ -33,8 +33,14 @@ class Product extends Model
         return $this->hasMany(ProductVariation::class);
     }
 
+    public function tax()
+    {
+        return $this->belongsTo(Tax::class);
+    }
+
     protected $casts = [
-        'cbm' => 'float',    // <-- ADD THIS
-        'weight' => 'float', // <-- ADD THIS
+        'cbm' => 'float',
+        'weight' => 'float',
+        'margin' => 'float',
     ];
 }

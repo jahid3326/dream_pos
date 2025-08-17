@@ -152,7 +152,12 @@ Route::middleware(['auth'])->group(function () {
 
             // Product-related routes
 
-            // ADD THIS NEW ROUTE FOR DELETING A SINGLE VARIATION
+            Route::get('products/import', [ProductController::class, 'showImportForm'])->name('products.import.show');
+            Route::post('products/import', [ProductController::class, 'import'])->name('products.import.store');
+            Route::get('products/import/sample-download', function () {
+                return response()->download(public_path('samples/products_import_sample.csv'));
+            })->name('products.import.sample');
+
             Route::delete('product-variations/{variation}', [ProductController::class, 'destroyVariation'])->name('product-variations.destroy');
 
             Route::resource('products', ProductController::class);

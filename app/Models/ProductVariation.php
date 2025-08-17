@@ -12,9 +12,9 @@ class ProductVariation extends Model
     protected $fillable = [
         'product_id',
         'sku',
-        'measurement', // <-- ESSENTIAL
-        'cbm',         // <-- ESSENTIAL
-        'weight',      // <-- ESSENTIAL
+        'measurement',
+        'cbm',
+        'weight',
         'purchase_price',
         'sale_price',
         'margin',
@@ -27,8 +27,14 @@ class ProductVariation extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function tax()
+    {
+        return $this->belongsTo(Tax::class);
+    }
+
     protected $casts = [
-        'cbm' => 'float',    // <-- ADD THIS
-        'weight' => 'float', // <-- ADD THIS
+        'cbm' => 'float',
+        'weight' => 'float',
+        'margin' => 'float',
     ];
 }

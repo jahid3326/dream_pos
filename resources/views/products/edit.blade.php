@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('title', 'Products')
-@extends('layouts.app')
-@section('title', 'Products')
 @section('content')
     <div class="page-wrapper">
         <div class="content">
