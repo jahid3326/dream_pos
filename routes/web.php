@@ -116,11 +116,19 @@ Route::middleware(['auth'])->group(function () {
             Route::get('customers/import', [CustomerController::class, 'showImportForm'])->name('customers.import.show');
             Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
 
+            Route::get('customers/import/sample-download', function () {
+                return response()->download(public_path('samples/customers_import_sample.xlsx'));
+            })->name('customers.import.sample');
+
             Route::resource('customers', CustomerController::class);
 
             // Supplier-related routes
             Route::get('suppliers/import', [SupplierController::class, 'showImportForm'])->name('suppliers.import.show');
             Route::post('suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import.store');
+
+            Route::get('suppliers/import/sample-download', function () {
+                return response()->download(public_path('samples/suppliers_import_sample.xlsx'));
+            })->name('suppliers.import.sample');
 
             Route::resource('suppliers', SupplierController::class);
 

@@ -32,7 +32,13 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title">Upload Excel or CSV File</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">Upload Excel or CSV File</h5>
+                        {{-- Download Sample File Button --}}
+                        <a href="{{ route('customers.import.sample') }}" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-download me-1"></i> Download Sample File
+                        </a>
+                    </div>
                     <p>
                         Please ensure your file has a header row with the following column names:
                         <strong>name, email, password, company, phone_number, tax_number, billing_address, status</strong>.
