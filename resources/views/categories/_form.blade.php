@@ -3,14 +3,18 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
-                <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $category->name ?? '') }}" required>
-                @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <input type="text" id="name" name="name"
+                    class="form-control @error('name') is-invalid @enderror"
+                    value="{{ old('name', $category->name ?? '') }}" required>
+                @error('name')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-6 mb-3">
                 <label for="parent_id" class="form-label">Parent Category</label>
                 <select id="parent_id" name="parent_id" class="form-select">
                     <option value="">-- None (Top-Level Category) --</option>
-                    @foreach($parentCategories as $pCat)
+                    @foreach ($parentCategories as $pCat)
                         <option value="{{ $pCat->id }}" @selected(old('parent_id', $category->parent_id ?? '') == $pCat->id)>
                             {{ $pCat->name }}
                         </option>
@@ -19,12 +23,38 @@
             </div>
             <div class="col-md-12 mb-3">
                 <label for="logo" class="form-label">Category Logo</label>
-                <input type="file" id="logo" name="logo" class="form-control @error('logo') is-invalid @enderror">
-                @error('logo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                @if(isset($category) && $category->logo)
+                <input type="file" id="logo" name="logo"
+                    class="form-control @error('logo') is-invalid @enderror">
+                @error('logo')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                @if (isset($category) && $category->logo)
                     <div class="mt-2">
-                        <img src="{{ asset('storage/' . $category->logo) }}" alt="Current Logo" class="img-thumbnail" width="150">
+                        <img src="{{ asset('storage/' . $category->logo) }}" alt="Current Logo" class="img-thumbnail"
+                            width="150">
                     </div>
+                @endif
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="status" class="form-label">Status</label>
+
+                {{-- Determine if the select should be disabled --}}
+                @php
+                    $isDisabled = isset($category) && $category->parent && !$category->parent->status;
+                @endphp
+
+                <select id="status" name="status" class="form-select"
+                    @if ($isDisabled) disabled @endif>
+                    <option value="1" @selected(old('status', $category->status ?? 1) == 1)>Active</option>
+                    <option value="0" @selected(old('status', $category->status ?? 1) == 0)>Inactive</option>
+                </select>
+
+                {{-- Show an informative message if it's disabled --}}
+                @if ($isDisabled)
+                    <small class="form-text text-danger">
+                        This category cannot be activated because its parent category ({{ $category->parent->name }}) is
+                        inactive.
+                    </small>
                 @endif
             </div>
         </div>

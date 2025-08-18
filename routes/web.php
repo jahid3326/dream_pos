@@ -15,6 +15,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaxController;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,10 @@ use Illuminate\Support\Facades\Response;
 |
 */
 
+Route::get('/linkstorage', function () {
+    Artisan::call('storage:link');
+    return 'Storage link has been created.';
+});
 // Authentication Routes
 
 // GUEST ROUTES: Only accessible if the user is NOT logged in.

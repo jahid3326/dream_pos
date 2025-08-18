@@ -15,8 +15,9 @@ class ActionPermissionController extends Controller
         'Customer',
         'Supplier',
         'Category',
-        'Tax',
         'Product',
+        'Tax',
+
     ];
 
     public function index()

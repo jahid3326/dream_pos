@@ -453,19 +453,20 @@
                         <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
                             <span class="user-info p-0">
                                 <span class="user-letter">
-                                    <img src="{{ asset('public/assets/img/profiles/avator1.jpg') }}" alt="Img"
-                                        class="img-fluid">
+                                    <img src="{{ Auth::user()->profile_picture ? asset('public/storage/' . Auth::user()->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                        alt="Profile Picture" class="img-fluid">
                                 </span>
                             </span>
                         </a>
                         <div class="dropdown-menu menu-drop-user">
                             <div class="profileset d-flex align-items-center">
                                 <span class="user-img me-2">
-                                    <img src="{{ asset('public/assets/img/profiles/avator1.jpg') }}" alt="Img">
+                                    <img src="{{ Auth::user()->profile_picture ? asset('public/storage/' . Auth::user()->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                        alt="Profile Picture">
                                 </span>
                                 <div>
-                                    <h6 class="fw-medium">John Smilga</h6>
-                                    <p>Admin</p>
+                                    <h6 class="fw-medium">{{ Auth::user()->name }}</h6>
+                                    <p>{{ Auth::user()->role->name }}</p>
                                 </div>
                             </div>
                             <a class="dropdown-item" href="profile.html"><i
@@ -475,8 +476,13 @@
                             <a class="dropdown-item" href="general-settings.html"><i
                                     class="ti ti-settings-2 me-2"></i>Settings</a>
                             <hr class="my-2">
-                            <a class="dropdown-item logout pb-0" href="signin.html"><i
-                                    class="ti ti-logout me-2"></i>Logout</a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button class="dropdown-item logout pb-0" type="submit"><i
+                                        class="ti ti-logout me-2"></i>Logout</button>
+                            </form>
+                            {{-- <a class="dropdown-item logout pb-0" href="signin.html"><i
+                                    class="ti ti-logout me-2"></i>Logout</a> --}}
                         </div>
                     </li>
                 </ul>

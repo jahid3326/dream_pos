@@ -10,7 +10,7 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'logo', 'parent_id'];
+    protected $fillable = ['name', 'slug', 'logo', 'parent_id', 'status'];
 
     // Automatically create a slug from the name
     protected static function boot()
@@ -32,10 +32,25 @@ class Category extends Model
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
-    
+
     // A category can have many products
     public function products()
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function updateStatusRecursively(bool $status): void
+    {
+        // 1. Update the current category's status
+        $this->status = $status;
+        $this->save();
+
+        // 2. If this category has children, loop through them
+        if ($this->children->isNotEmpty()) {
+            foreach ($this->children as $child) {
+                // 3. Call this same method on each child (recursion)
+                $child->updateStatusRecursively($status);
+            }
+        }
     }
 }

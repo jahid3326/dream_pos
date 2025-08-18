@@ -11,7 +11,7 @@
                     </div>
                 </div>
                 <div class="page-btn">
-                    <a href="{{ route('suppliers.index') }}" class="btn btn-secondary">Back to List</a>
+                    <a href="{{ route('products.index') }}" class="btn btn-secondary">Back to List</a>
                 </div>
             </div>
 

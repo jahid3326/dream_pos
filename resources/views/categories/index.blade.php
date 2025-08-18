@@ -21,28 +21,69 @@
 
             @include('layouts._messages')
 
-            <div class="card shadow-sm">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                    <div class="search-set">
+                        <div class="search-input">
+
+                        </div>
+                    </div>
+                    <div class="d-flex table-dropdown my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                        <div class="d-flex table-dropdown my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    @if (request('status') === '1')
+                                        Actived
+                                    @elseif(request('status') === '0')
+                                        Inactived
+                                    @else
+                                        Status
+                                    @endif
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="{{ route('categories.index', ['status' => '1', 'search' => request('search')]) }}"
+                                            class="dropdown-item rounded-1">Active</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('categories.index', ['status' => '0', 'search' => request('search')]) }}"
+                                            class="dropdown-item rounded-1">Inactive</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('categories.index', ['search' => request('search')]) }}"
+                                            class="dropdown-item rounded-1">All</a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="thead-dark">
+                        <table class="table tree-table">
+                            <thead class="thead-light">
                                 <tr>
-                                    <th style="width: 40%;">Name</th>
-                                    <th>Parent Category</th>
+                                    <th style="width: 35%;">Name</th>
                                     <th>Category Logo</th>
-                                    <th class="text-end" style="width: 15%;">Action</th>
+                                    <th>Created On</th>
+                                    <th>Status</th>
+                                    @if (hasActionPermission('Category', 'update') || hasActionPermission('Category', 'delete'))
+                                        <th class="text-end no-sort"></th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($categories as $category)
-                                    {{-- Call the recursive partial for each top-level category --}}
                                     @include('categories._category-list-item', [
                                         'category' => $category,
                                         'level' => 0,
                                     ])
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center p-4">No categories found.</td>
+                                        <td colspan="6" class="text-center">No categories found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -55,6 +96,53 @@
 @endsection
 @push('scripts')
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggles = document.querySelectorAll('.toggle-children');
+
+            toggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const parentId = this.dataset.id;
+                    const children = document.querySelectorAll(`.parent-of-${parentId}`);
+                    const icon = this.querySelector('i');
+
+                    if (icon.classList.contains('fa-plus-square')) {
+                        // Expand
+                        children.forEach(child => {
+                            child.style.display = 'table-row';
+                        });
+                        icon.classList.remove('fa-plus-square');
+                        icon.classList.add('fa-minus-square');
+                        icon.classList.remove('text-primary'); // Optional: change color
+                        icon.classList.add('text-danger');
+                    } else {
+                        // Collapse
+                        collapseAllChildren(parentId);
+                    }
+                });
+            });
+
+            function collapseAllChildren(parentId) {
+                const children = document.querySelectorAll(`.parent-of-${parentId}`);
+                const iconElement = document.querySelector(`.toggle-children[data-id="${parentId}"]`);
+
+                if (iconElement) {
+                    const icon = iconElement.querySelector('i');
+                    icon.classList.remove('fa-minus-square');
+                    icon.classList.add('fa-plus-square');
+                    icon.classList.remove('text-danger');
+                    icon.classList.add('text-primary');
+                }
+
+                children.forEach(child => {
+                    child.style.display = 'none';
+                    // Recursively get the ID and collapse its children
+                    const childId = child.dataset.id;
+                    collapseAllChildren(childId);
+                });
+            }
+        });
         $(document).on('click', '.delete-button', function() {
 
             // Prevent the form from submitting immediately
