@@ -7,10 +7,32 @@
     <div class="row">
         <div class="col-md-2">
             <label class="form-label">Upload</label>
-            <input type="file" name="variations[{{ $index }}][image]" class="form-control">
-            @if (isset($variation) && $variation->image)
-                <img src="{{ asset('storage/' . $variation->image) }}" class="img-thumbnail mt-2" width="80">
-            @endif
+
+            {{-- NEW: Interactive Image Uploader for Variations --}}
+            {{-- We use the variation's index to create unique IDs --}}
+            <div class="image-uploader" id="imageUploader_{{ $index }}">
+                <input type="file" name="variations[{{ $index }}][image]"
+                    id="variation_image_input_{{ $index }}" class="variation-image-input" accept="image/*">
+
+                @php
+                    $defaultImage = asset('public/storage/images/default_image.png');
+                    $imageSrc =
+                        isset($variation) && $variation->image
+                            ? asset('public/storage/' . $variation->image)
+                            : $defaultImage;
+                @endphp
+
+                <img src="{{ $imageSrc }}" alt="Preview" class="image-preview">
+
+                <div class="upload-text" style="{{ isset($variation) && $variation->image ? 'display:none;' : '' }}">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Upload</span>
+                </div>
+
+                <div class="hover-overlay">
+                    <i class="fas fa-camera"></i>
+                </div>
+            </div>
         </div>
         <div class="col-md-10">
             <div class="row">

@@ -1,6 +1,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         {{-- Product Type Selector --}}
+        @include('layouts._messages')
         <div class="mb-4">
             <label class="form-label">Product Type</label>
             <div>
@@ -54,16 +55,38 @@
         {{-- 2. SINGLE PRODUCT FIELDS (Toggled) --}}
         <div id="single-product-fields">
             <div class="row">
-                <div class="col-md-2">
-                    <label class="form-label">Upload</label>
-                    {{-- File Input Added --}}
-                    <input type="file" name="product_image" class="form-control">
-                    @if ($product->product_image)
-                        <img src="{{ asset('storage/' . $product->product_image) }}" alt="Current Image"
-                            class="img-thumbnail mt-2" width="100">
-                    @endif
+                <div class="col-md-3">
+                    <label class="form-label">Product Image</label>
+
+                    {{-- START: NEW IMAGE UPLOADER --}}
+                    <div class="image-uploader" id="imageUploader">
+                        {{-- This input is hidden but handles the file selection --}}
+                        <input type="file" name="product_image" id="product_image_input" accept="image/*">
+
+                        {{-- 1. Image Preview (or Default Image) --}}
+                        @php
+                            $defaultImage = asset('public/storage/images/default_image.png'); // Path to your default placeholder
+                            $existingImage = $product->product_image
+                                ? asset('public/storage/' . $product->product_image)
+                                : $defaultImage;
+                        @endphp
+                        <img src="{{ $existingImage }}" alt="Preview" class="image-preview" id="imagePreview">
+
+                        {{-- 2. Initial Upload Text (only shown if no image) --}}
+                        <div class="upload-text" id="uploadText"
+                            style="{{ $product->product_image ? 'display:none;' : '' }}">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Upload Image</span>
+                        </div>
+
+                        {{-- 3. Hover Overlay with Camera Icon --}}
+                        <div class="hover-overlay">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+                    {{-- END: NEW IMAGE UPLOADER --}}
                 </div>
-                <div class="col-md-10">
+                <div class="col-md-9">
                     <div class="row">
                         <div class="col-md-12 mb-3"><label class="form-label">SKU <span
                                     class="text-danger">*</span></label><input type="text" name="sku"
@@ -163,6 +186,7 @@
                 const template = $('#variation-template').html();
                 const newRowHtml = template.replace(/__INDEX__/g, variationIndex);
                 container.append(newRowHtml);
+                // No extra JS needed here, the delegated listeners will handle it
                 variationIndex++;
             }
 
@@ -315,6 +339,69 @@
                         }
                     }
                 });
+            });
+
+            const imageInput = $('#product_image_input');
+            const imagePreview = $('#imagePreview');
+            const uploadText = $('#uploadText');
+
+            // This is the click handler for the file input itself.
+            // It's crucial for stopping the infinite loop.
+            imageInput.on('click', function(event) {
+                // Stop the click from bubbling up to the parent container.
+                event.stopPropagation();
+            });
+
+            // This handler is for the visual container div.
+            $('#imageUploader').on('click', function() {
+                // When the user clicks the box, programmatically click the hidden file input.
+                imageInput.trigger('click');
+            });
+
+            // This handler fires when the user selects a file.
+            imageInput.on('change', function(event) {
+                const file = event.target.files[0];
+
+                if (file) {
+                    // Use FileReader to read the selected file and create a preview.
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // Set the src of the image preview to the new file's data URL.
+                        imagePreview.attr('src', e.target.result);
+                        // Hide the initial "Upload Image" text, as we now have a preview.
+                        uploadText.hide();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Use event delegation on a static parent (the form)
+            $('form').on('click', '.image-uploader', function(event) {
+                // Find the specific file input within the clicked uploader
+                $(this).find('.variation-image-input, #product_image_input').trigger('click');
+            });
+
+            $('form').on('click', '.variation-image-input, #product_image_input', function(event) {
+                // Stop the click from bubbling up to the parent container to prevent the infinite loop
+                event.stopPropagation();
+            });
+
+            // Delegated listener for the 'change' event on any file input
+            $('form').on('change', '.variation-image-input, #product_image_input', function(event) {
+                const file = event.target.files[0];
+                // Find the parent uploader container of the changed input
+                const uploader = $(this).closest('.image-uploader');
+                const imagePreview = uploader.find('.image-preview');
+                const uploadText = uploader.find('.upload-text');
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.attr('src', e.target.result);
+                        uploadText.hide();
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
 
         });

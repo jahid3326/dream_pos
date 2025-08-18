@@ -88,6 +88,116 @@
             color: #FE9F43;
             background-color: #E6EAED;
         }
+
+        /* Custom styles for the image uploader */
+        .image-uploader {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #ddd;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            /* Ensures the image preview fits */
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .image-uploader:hover {
+            border-color: #0d6efd;
+            background-color: #e9ecef;
+        }
+
+        .image-uploader input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            /* Make the default file input invisible */
+            cursor: pointer;
+        }
+
+        .image-uploader .upload-text {
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .image-uploader .upload-text i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .image-uploader .image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Crop the image to fit the container */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .image-uploader .hover-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            /* Hidden by default */
+            transition: opacity 0.2s ease-in-out;
+            pointer-events: none;
+            /* Allows clicks to pass through to the file input */
+        }
+
+        .image-uploader:hover .hover-overlay {
+            opacity: 1;
+            /* Show on hover */
+        }
+
+        .image-uploader .hover-overlay i {
+            font-size: 2.5rem;
+        }
+
+        /* Class for maintaining a specific aspect ratio */
+        .aspect-ratio-box {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            /* Optional: matches your theme's styling */
+            background-color: #f8f9fa;
+            /* Light background for when images are loading */
+        }
+
+        /* Calculate the padding-top percentage: (height / width) * 100 */
+        /* For 275x183, the calculation is (183 / 275) * 100 = 66.54% */
+        .aspect-ratio-box--275-183::before {
+            content: "";
+            display: block;
+            padding-top: 66.55%;
+        }
+
+        .aspect-ratio-box img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* This is the key: it scales and crops the image to fit */
+        }
     </style>
 
 </head>

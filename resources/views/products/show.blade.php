@@ -23,16 +23,15 @@
                     <div class="row">
                         {{-- Left Column: Image and General Info --}}
                         <div class="col-md-4">
-                            @if ($product->product_image)
-                                <img src="{{ asset('public/storage/' . $product->product_image) }}"
-                                    alt="{{ $product->name }}" class="img-fluid rounded mb-3">
-                            @else
-                                <div class="border rounded d-flex align-items-center justify-content-center bg-light"
-                                    style="height: 250px;">
-                                    <span>No Image</span>
-                                </div>
-                            @endif
-
+                            <div class="aspect-ratio-box aspect-ratio-box--275-183 mb-3">
+                                @php
+                                    // Define the path to your default image
+                                    $imageUrl = $product->product_image
+                                        ? asset('public/storage/' . $product->product_image)
+                                        : asset('public/storage/images/default_image.png');
+                                @endphp
+                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="img-fluid rounded mb-3">
+                            </div>
                             <h4 class="fw-bold">{{ $product->name }}</h4>
                             <p class="text-muted">{{ $product->category->name ?? 'N/A' }}</p>
                             <hr>
@@ -107,10 +106,14 @@
                                             @forelse($product->variations as $variation)
                                                 <tr>
                                                     <td>
-                                                        @if ($variation->image)
-                                                            <img src="{{ asset('storage/' . $variation->image) }}"
-                                                                class="img-thumbnail">
-                                                        @endif
+                                                        @php
+                                                            // Use the same logic to fall back to a default image
+                                                            $variationImageUrl = $variation->image
+                                                                ? asset('public/storage/' . $variation->image)
+                                                                : asset('public/storage/images/default_image.png');
+                                                        @endphp
+                                                        <img src="{{ $variationImageUrl }}" alt="Variation Image"
+                                                            class="img-thumbnail" width="80">
                                                     </td>
                                                     <td>{{ $variation->sku }}</td>
                                                     <td>{{ $variation->measurement ?? 'N/A' }}</td>
