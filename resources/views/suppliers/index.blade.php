@@ -66,6 +66,7 @@
                         <table class="table datatable" id="supplier-table">
                             <thead class="thead-light">
                                 <tr>
+                                    <th style="display: none">ID</th>
                                     <th>Company</th>
                                     <th>Email</th>
                                     <th>Contact</th>
@@ -79,6 +80,9 @@
                             <tbody>
                                 @foreach ($suppliers as $supplier)
                                     <tr>
+                                        <td style="display: none">
+                                            {{ $supplier->id }}
+                                        </td>
                                         <td>
                                             <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
                                                 alt="" class="rounded-circle me-2" width="40" height="40">

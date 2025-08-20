@@ -340,7 +340,7 @@
                     }
                 });
             });
-
+            /*
             const imageInput = $('#product_image_input');
             const imagePreview = $('#imagePreview');
             const uploadText = $('#uploadText');
@@ -374,7 +374,7 @@
                     reader.readAsDataURL(file);
                 }
             });
-
+            */
             // Use event delegation on a static parent (the form)
             $('form').on('click', '.image-uploader', function(event) {
                 // Find the specific file input within the clicked uploader

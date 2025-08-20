@@ -66,6 +66,7 @@
                         <table class="table datatable" id="customer-table">
                             <thead class="thead-light">
                                 <tr>
+                                    <th style="display: none">ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Created At</th>
@@ -78,6 +79,9 @@
                             <tbody>
                                 @foreach ($customers as $customer)
                                     <tr>
+                                        <td style="display: none">
+                                            {{ $customer->id }}
+                                        </td>
                                         <td>
                                             <img src="{{ $customer->user->profile_picture ? asset('public/storage/' . $customer->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
                                                 alt="" class="rounded-circle me-2" width="40" height="40">

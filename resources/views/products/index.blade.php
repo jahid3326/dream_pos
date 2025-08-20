@@ -69,6 +69,7 @@
                         <table class="table datatable">
                             <thead class="thead-light">
                                 <tr>
+                                    <th style="display: none">ID</th>
                                     <th>Product</th>
                                     <th>Variation</th>
                                     <th>Category</th>
@@ -83,11 +84,26 @@
                             <tbody>
                                 @foreach ($product_list as $item)
                                     <tr>
+                                        <td style="display: none">
+                                            {{ $item->id }}
+                                        </td>
                                         <td>
-                                            <a href="javascript:void(0);" class="fw-bold">{{ $item->name }}</a>
-                                            <br>
-                                            {{-- This will now display the measurement for every single row --}}
-                                            <small class="text-muted">{{ $item->measurement }}</small>
+                                            @if (hasActionPermission('Product', 'show'))
+                                                <a href="{{ route('products.show', $item->id) }}"
+                                                    class="d-flex align-items-center">
+                                                @else
+                                                    <a href="javascript:void(0);" class="d-flex align-items-center">
+                                            @endif
+                                            {{-- Product Image --}}
+                                            <img src="{{ $item->image_url }}" alt="{{ $item->name }}"
+                                                class="rounded me-2" width="40" height="40"
+                                                style="object-fit: cover;">
+                                            {{-- Product Name and Measurement --}}
+                                            <div>
+                                                <span class="fw-bold">{{ $item->name }}</span><br>
+                                                <small class="text-muted">{{ $item->measurement }}</small>
+                                            </div>
+                                            </a>
                                         </td>
                                         <td class="text-center">
                                             @if ($item->is_variation)

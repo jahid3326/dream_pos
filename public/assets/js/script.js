@@ -135,7 +135,11 @@ $(document).ready(function(){
 				$('.dataTables_filter').appendTo('#tableSearch');
 				$('.dataTables_filter').appendTo('.search-input');
 
-			},	
+			},
+			"order": [
+                [0, "desc"]
+            ],	
+			
 		});
 	}
 
