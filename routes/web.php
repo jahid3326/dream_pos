@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaxController;
@@ -165,6 +166,8 @@ Route::middleware(['auth'])->group(function () {
 
             // Product-related routes
 
+            Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
+
             Route::get('products/import', [ProductController::class, 'showImportForm'])->name('products.import.show');
             Route::post('products/import', [ProductController::class, 'import'])->name('products.import.store');
             Route::get('products/import/sample-download', function () {
@@ -174,6 +177,9 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('product-variations/{variation}', [ProductController::class, 'destroyVariation'])->name('product-variations.destroy');
 
             Route::resource('products', ProductController::class);
+
+            // Sales-related routes
+            Route::resource('sales', SaleController::class);
         });
 
         // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---

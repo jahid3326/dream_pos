@@ -51,6 +51,8 @@
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/all.min.css') }}">
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <!-- Daterangepikcer CSS -->
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/daterangepicker/daterangepicker.css') }}">
 
@@ -798,6 +800,8 @@
 
     <!-- Bootstrap Core JS -->
     <script src="{{ asset('public/assets/js/bootstrap.bundle.min.js') }}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Chart JS -->
     <script src="{{ asset('public/assets/plugins/apexchart/apexcharts.min.js') }}"></script>
