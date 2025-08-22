@@ -262,7 +262,13 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load(['category', 'supplier.user', 'variations.tax', 'tax']);
+        // Eager-load all relationships for the details view
+        $product->load([
+            'category.parent', // Load the category and its parent
+            'supplier.user',   // Load the supplier and their user details
+            'variations.tax',  // Load all variations and their specific taxes
+            'tax'              // Load the tax for the single product
+        ]);
 
         return view('products.show', compact('product'));
     }
