@@ -438,7 +438,8 @@
                     </li>
 
                     <li class="nav-item pos-nav">
-                        <a href="pos.html" class="btn btn-dark btn-md d-inline-flex align-items-center">
+                        <a href="{{ route('pos.index') }}"
+                            class="btn btn-dark btn-md d-inline-flex align-items-center">
                             <i class="ti ti-device-laptop me-1"></i>POS
                         </a>
                     </li>
@@ -593,8 +594,6 @@
                                 <button class="dropdown-item logout pb-0" type="submit"><i
                                         class="ti ti-logout me-2"></i>Logout</button>
                             </form>
-                            {{-- <a class="dropdown-item logout pb-0" href="signin.html"><i
-                                    class="ti ti-logout me-2"></i>Logout</a> --}}
                         </div>
                     </li>
                 </ul>
@@ -607,7 +606,10 @@
                     <div class="dropdown-menu dropdown-menu-right">
                         <a class="dropdown-item" href="profile.html">My Profile</a>
                         <a class="dropdown-item" href="general-settings.html">Settings</a>
-                        <a class="dropdown-item" href="signin.html">Logout</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="dropdown-item logout pb-0" type="submit">Logout</button>
+                        </form>
                     </div>
                 </div>
                 <!-- /Mobile Menu -->

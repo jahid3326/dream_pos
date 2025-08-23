@@ -101,7 +101,7 @@
                                         ? asset('public/storage/' . $product->product_image)
                                         : asset('public/storage/images/default_image.png');
                                 @endphp
-                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="img-fluid rounded w-90">
+                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="img-fluid rounded w-100">
                             @else
                                 {{-- Fallback placeholder if NO variations have an image --}}
                                 <img src="{{ asset('public/storage/images/default_image.png') }}" alt="Default Image"

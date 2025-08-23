@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StudentController;
@@ -177,6 +178,9 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('product-variations/{variation}', [ProductController::class, 'destroyVariation'])->name('product-variations.destroy');
 
             Route::resource('products', ProductController::class);
+
+            // Pos-related routes
+            Route::resource('pos', PosController::class);
 
             // Sales-related routes
             Route::resource('sales', SaleController::class);
