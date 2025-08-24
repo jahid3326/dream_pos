@@ -42104,7 +42104,7 @@ label span {
   transform: scale(1.2);
 }
 .pos-three .product-info.active {
-  border-width: 3px;
+  border-width: 1px;
 }
 .pos-three .product-info.active .product-image::before {
   content: "\eaf2";
@@ -45994,7 +45994,6 @@ span.flatpickr-weekday {
 .wishlist-products .product-info:hover .img-bg img {
   transform: scale(1.2);
 }
-
 .trend-tag {
   position: absolute;
   left: 20px;
@@ -46017,5 +46016,6 @@ span.flatpickr-weekday {
   position: relative;
   background: #E8E9EA;
 }
+
 
 /*# sourceMappingURL=style.css.map */

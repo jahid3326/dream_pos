@@ -62,7 +62,7 @@
     <link rel="stylesheet" href="{{ asset('public/assets/css/style.css') }}">
 
     <style>
-        .product-image{
+        .product-image {
             width: 197px !important;
             height: 131px !important;
         }
@@ -2473,9 +2473,9 @@
                                 <li id="all" class="active">
                                     <h6><a href="javascript:void(0);">All Categories</a></h6>
                                 </li>
-                                
+
                                 {{-- A simple loop for the flat list of child categories --}}
-                                @foreach($categories as $category)
+                                @foreach ($categories as $category)
                                     <li id="cat-{{ $category->id }}">
                                         <h6><a href="javascript:void(0);">{{ $category->name }}</a></h6>
                                     </li>
@@ -2486,25 +2486,30 @@
                                     <div class="tab_content active" data-tab="all">
                                         <div class="row g-3">
                                             {{-- DYNAMIC PRODUCT GRID --}}
-                                            @foreach($products as $product)
-                                            <div class="col-sm-6 col-md-4 col-lg-6 col-xl-4 col-xxl-3 product-item" data-category-id="{{ $product['category_id'] }}">
-                                                <div class="product-info card" 
-                                                     data-product-id="{{ $product['id'] }}" 
-                                                     data-variation-id="{{ $product['variation_id'] }}"
-                                                     data-name="{{ $product['name'] }}"
-                                                     data-price="{{ $product['price'] }}"
-                                                     data-tax-rate="{{ $product['tax_rate'] }}">
-                                                    <a href="javascript:void(0);" class="product-image">
-                                                        <img src="{{ $product['image'] }}" alt="Product Image" class="w-100">
-                                                    </a>
-                                                    <div class="product-content text-center">
-                                                        <h6 class="fs-14 fw-bold mb-1"><a href="javascript:void(0);">{{ $product['name'] }}</a></h6>
-                                                        <div class="text-center">
-                                                            <span class="fs-14 fw-semibold text-gray-6">${{ number_format($product['price'], 2) }}</span>
+                                            @foreach ($products as $product)
+                                                <div class="col-sm-6 col-md-4 col-lg-6 col-xl-4 col-xxl-3 product-item"
+                                                    data-category-id="{{ $product['category_id'] }}">
+                                                    <div class="product-info card"
+                                                        data-product-id="{{ $product['id'] }}"
+                                                        data-variation-id="{{ $product['variation_id'] }}"
+                                                        data-name="{{ $product['name'] }}"
+                                                        data-price="{{ $product['price'] }}"
+                                                        data-tax-rate="{{ $product['tax_rate'] }}">
+                                                        <a href="javascript:void(0);" class="product-image">
+                                                            <img src="{{ $product['image'] }}" alt="Product Image"
+                                                                class="w-100">
+                                                        </a>
+                                                        <div class="product-content text-center">
+                                                            <h6 class="fs-14 fw-bold mb-1"><a
+                                                                    href="javascript:void(0);">{{ $product['name'] }}</a>
+                                                            </h6>
+                                                            <div class="text-center">
+                                                                <span
+                                                                    class="fs-14 fw-semibold text-gray-6">${{ number_format($product['price'], 2) }}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
                                             @endforeach
                                         </div>
                                     </div>
@@ -2556,28 +2561,18 @@
                                     <div class="col-md-12">
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="w-100">
-                                                <select class="select">
-                                                    <option>Walk in Customer</option>
-                                                    <option>John</option>
-                                                    <option>Smith</option>
-                                                    <option>Ana</option>
-                                                    <option>Elza</option>
+                                                <select class="select" name="customer_id">
+                                                    <option value="">Walk-in Customer</option>
+                                                    @foreach ($customers as $customer)
+                                                        <option value="{{ $customer->id }}">
+                                                            {{ $customer->user->name }}</option>
+                                                    @endforeach
                                                 </select>
                                             </div>
                                             <a href="#" class="btn btn-primary btn-icon"
                                                 data-bs-toggle="modal" data-bs-target="#create"><i
                                                     class="ti ti-user-plus"></i></a>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <select class="select">
-                                            <option>USD</option>
-                                            <option>EURO</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <input type="text" class="form-control"
-                                            placeholder="Currency Exchange Rate">
                                     </div>
                                 </div>
                             </div>
@@ -2588,142 +2583,23 @@
                                         Items : <span class="text-teal">3</span></div>
                                 </div>
                                 <div class="product-wrap">
-                                    <div class="empty-cart">
-                                        <div class="mb-1">
-                                            <img src="{{ asset('public/assets/img/icons/empty-cart.svg') }}"
-                                                alt="img">
-                                        </div>
+                                    <div class="empty-cart text-center">
+                                        <div class="mb-1"><img src="{{ asset('public/assets/img/icons/empty-cart.svg') }}" alt="img"></div>
                                         <p class="fw-bold">No Products Selected</p>
                                     </div>
-                                    <div class="product-list border-0 p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-borderless">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="bg-transparent fw-bold">Product</th>
-                                                        <th class="bg-transparent fw-bold">Batch No</th>
-                                                        <th class="bg-transparent fw-bold">Price</th>
-                                                        <th class="bg-transparent fw-bold">QTY</th>
-                                                        <th class="bg-transparent fw-bold">Sub Total</th>
-                                                        <th class="bg-transparent fw-bold text-end"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>
-                                                            <h6 class="fs-16 fw-medium mb-1"><a href="#"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#products">Iphone 11S</a></h6>
-                                                            In Stock: 10
-                                                        </td>
-                                                        <td>
-                                                            <input type="text" class="form-control">
-                                                        </td>
-                                                        <td class="fw-bold">$400</td>
-                                                        <td>
-                                                            <div class="qty-item m-0">
-                                                                <a href="javascript:void(0);"
-                                                                    class="dec d-flex justify-content-center align-items-center"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="minus"><i data-feather="minus-circle"
-                                                                        class="feather-14"></i></a>
-                                                                <input type="text"
-                                                                    class="form-control text-center" name="qty"
-                                                                    value="4">
-                                                                <a href="javascript:void(0);"
-                                                                    class="inc d-flex justify-content-center align-items-center"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="plus"><i data-feather="plus-circle"
-                                                                        class="feather-14"></i></a>
-                                                            </div>
-                                                        </td>
-                                                        <td class="fw-bold">$400</td>
-                                                        <td class="text-end">
-                                                            <a class="btn-icon delete-icon"
-                                                                href="javascript:void(0);" data-bs-toggle="modal"
-                                                                data-bs-target="#delete">
-                                                                <i class="ti ti-trash"></i>
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <h6 class="fs-16 fw-medium mb-1"><a href="#"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#products">Samsung Galaxy S21</a>
-                                                            </h6>
-                                                            In Stock: 06
-                                                        </td>
-                                                        <td>
-                                                            <input type="text" class="form-control">
-                                                        </td>
-                                                        <td class="fw-bold">$400</td>
-                                                        <td>
-                                                            <div class="qty-item m-0">
-                                                                <a href="javascript:void(0);"
-                                                                    class="dec d-flex justify-content-center align-items-center"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="minus"><i data-feather="minus-circle"
-                                                                        class="feather-14"></i></a>
-                                                                <input type="text"
-                                                                    class="form-control text-center" name="qty"
-                                                                    value="1">
-                                                                <a href="javascript:void(0);"
-                                                                    class="inc d-flex justify-content-center align-items-center"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="plus"><i data-feather="plus-circle"
-                                                                        class="feather-14"></i></a>
-                                                            </div>
-                                                        </td>
-                                                        <td class="fw-bold">$400</td>
-                                                        <td class="text-end">
-                                                            <a class="btn-icon delete-icon"
-                                                                href="javascript:void(0);" data-bs-toggle="modal"
-                                                                data-bs-target="#delete">
-                                                                <i class="ti ti-trash"></i>
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <h6 class="fs-16 fw-medium mb-1"><a href="#"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#products">Red Boot Shoes</a></h6>
-                                                            In Stock: 04
-                                                        </td>
-                                                        <td>
-                                                            <input type="text" class="form-control">
-                                                        </td>
-                                                        <td class="fw-bold">$600</td>
-                                                        <td>
-                                                            <div class="qty-item m-0">
-                                                                <a href="javascript:void(0);"
-                                                                    class="dec d-flex justify-content-center align-items-center"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="minus"><i data-feather="minus-circle"
-                                                                        class="feather-14"></i></a>
-                                                                <input type="text"
-                                                                    class="form-control text-center" name="qty"
-                                                                    value="3">
-                                                                <a href="javascript:void(0);"
-                                                                    class="inc d-flex justify-content-center align-items-center"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="plus"><i data-feather="plus-circle"
-                                                                        class="feather-14"></i></a>
-                                                            </div>
-                                                        </td>
-                                                        <td class="fw-bold">$600</td>
-                                                        <td class="text-end">
-                                                            <a class="btn-icon delete-icon"
-                                                                href="javascript:void(0);" data-bs-toggle="modal"
-                                                                data-bs-target="#delete">
-                                                                <i class="ti ti-trash"></i>
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                    <div class="table-responsive" style="display: none;">
+                                        <table class="table table-borderless">
+                                            <thead>
+                                                <tr>
+                                                    <th class="bg-transparent fw-bold">Product</th>
+                                                    <th class="bg-transparent fw-bold">QTY</th>
+                                                    <th class="bg-transparent fw-bold">Price</th>
+                                                    <th class="bg-transparent fw-bold">Sub Total</th>
+                                                    <th class="bg-transparent fw-bold text-end"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="pos-cart-body"></tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -2731,39 +2607,49 @@
                                 <div class="order-total">
                                     <div class="table-responsive">
                                         <table class="table table-borderless">
-                                            <tr>
-                                                <td>Sub Total</td>
-                                                <td class="text-end">$1250</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Shipping<a href="#" class="ms-3 link-default"
-                                                        data-bs-toggle="modal" data-bs-target="#shipping-cost"><i
-                                                            class="ti ti-edit"></i></a></td>
-                                                <td class="text-end">$35</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Tax<a href="#" class="ms-3 link-default"
-                                                        data-bs-toggle="modal" data-bs-target="#order-tax"><i
-                                                            class="ti ti-edit"></i></a></td>
-                                                <td class="text-end">$25</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Coupon<a href="#" class="ms-3 link-default"
-                                                        data-bs-toggle="modal" data-bs-target="#coupon-code"><i
-                                                            class="ti ti-edit"></i></a></td>
-                                                <td class="text-end">$25</td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="text-danger">Discount</span><a href="#"
-                                                        class="ms-3 link-default" data-bs-toggle="modal"
-                                                        data-bs-target="#discount"><i class="ti ti-edit"></i></a>
-                                                </td>
-                                                <td class="text-danger text-end">-$24</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Grand Total</td>
-                                                <td class="text-end">$56590</td>
-                                            </tr>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Sub Total</td>
+                                                    <td class="text-end" id="cart-subtotal">$0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        Shipping
+                                                        {{-- This link can open a modal to set the shipping cost --}}
+                                                        <a href="#" class="ms-3 link-default" data-bs-toggle="modal" data-bs-target="#shipping-cost">
+                                                            <i class="ti ti-edit"></i>
+                                                        </a>
+                                                        {{-- Hidden input to store the shipping value --}}
+                                                        <input type="hidden" id="shipping-value" value="0">
+                                                    </td>
+                                                    <td class="text-end" id="cart-shipping">$0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        Tax (<span id="tax-name-display">None</span>)
+                                                        <a href="#" class="ms-3 link-default" data-bs-toggle="modal" data-bs-target="#order-tax">
+                                                            <i class="ti ti-edit"></i>
+                                                        </a>
+                                                        {{-- Hidden input to store the selected tax rate for calculations --}}
+                                                        <input type="hidden" id="order-tax-rate" value="0">
+                                                    </td>
+                                                    <td class="text-end" id="cart-tax">$0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <span class="text-danger">Discount</span>
+                                                        <a href="#" class="ms-3 link-default" data-bs-toggle="modal" data-bs-target="#discount">
+                                                            <i class="ti ti-edit"></i>
+                                                        </a>
+                                                        <input type="hidden" id="discount-value" value="0">
+                                                    </td>
+                                                    <td class="text-danger text-end" id="cart-discount">-$0.00</td>
+                                                </tr>
+                                                <tr class="total-row">
+                                                    <td class="fw-bold">Grand Total</td>
+                                                    <td class="text-end fw-bold" id="cart-grandtotal">$0.00</td>
+                                                </tr>
+                                            </tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -4453,29 +4339,28 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Order Tax</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
+                    <h5 class="modal-title">Select Order Tax</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="pos-5.html">
+                {{-- Give the form an ID for easy targeting --}}
+                <form id="order-tax-form">
                     <div class="modal-body pb-1">
                         <div class="mb-3">
                             <label class="form-label">Order Tax <span class="text-danger">*</span></label>
-                            <select class="select">
-                                <option>Select</option>
-                                <option>No Tax</option>
-                                <option>@10</option>
-                                <option>@15</option>
-                                <option>VAT</option>
-                                <option>SLTAX</option>
+                            {{-- Give the select element an ID --}}
+                            <select class="form-select" id="modal-tax-select">
+                                <option value="" data-rate="0" data-name="None">No Tax</option>
+                                @foreach($taxes as $tax)
+                                    <option value="{{ $tax->id }}" data-rate="{{ $tax->rate }}" data-name="{{ $tax->name }}">
+                                        {{ $tax->name }} ({{ $tax->rate }}%)
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
                     <div class="modal-footer d-flex justify-content-end flex-wrap gap-2">
-                        <button type="button" class="btn btn-md btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-md btn-primary">Submit</button>
+                        <button type="button" class="btn btn-md btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-md btn-primary">Apply Tax</button>
                     </div>
                 </form>
             </div>
@@ -4489,21 +4374,20 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Shipping Cost</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="pos-5.html">
+                {{-- Give the form an ID --}}
+                <form id="shipping-cost-form">
                     <div class="modal-body pb-1">
                         <div class="mb-3">
-                            <label class="form-label">Shipping Cost <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control">
+                            <label class="form-label">Shipping Cost ($) <span class="text-danger">*</span></label>
+                            {{-- Give the input an ID --}}
+                            <input type="number" step="0.01" id="modal-shipping-input" class="form-control" required>
                         </div>
                     </div>
                     <div class="modal-footer d-flex justify-content-end flex-wrap gap-2">
-                        <button type="button" class="btn btn-md btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-md btn-primary">Submit</button>
+                        <button type="button" class="btn btn-md btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-md btn-primary">Apply Shipping</button>
                     </div>
                 </form>
             </div>
@@ -4550,30 +4434,29 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Discount </h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
+                    <h5 class="modal-title">Apply Discount</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="pos-5.html">
+                {{-- Give the form an ID --}}
+                <form id="discount-form">
                     <div class="modal-body pb-1">
                         <div class="mb-3">
-                            <label class="form-label">Order Discount Type <span class="text-danger">*</span></label>
-                            <select class="select">
-                                <option>Select</option>
-                                <option>Flat</option>
-                                <option>Percentage</option>
+                            <label class="form-label">Discount Type <span class="text-danger">*</span></label>
+                            {{-- Give the select an ID --}}
+                            <select class="form-select" id="modal-discount-type">
+                                <option value="fixed">Flat ($)</option>
+                                <option value="percentage">Percentage (%)</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Value <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control">
+                            {{-- Give the input an ID --}}
+                            <input type="number" step="0.01" id="modal-discount-value" class="form-control" required>
                         </div>
                     </div>
                     <div class="modal-footer d-flex justify-content-end flex-wrap gap-2">
-                        <button type="button" class="btn btn-md btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-md btn-primary">Submit</button>
+                        <button type="button" class="btn btn-md btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-md btn-primary">Apply Discount</button>
                     </div>
                 </form>
             </div>
@@ -5638,7 +5521,217 @@
     <script src="{{ asset('public/assets/js/theme-colorpicker.js') }}"></script>
     <script src="{{ asset('public/assets/js/calculator.js') }}"></script>
     <script src="{{ asset('public/assets/js/script.js') }}"></script>
+    <script>
+    $(document).ready(function () {
+        // =========================================================================
+        // CONFIG & STATE
+        // =========================================================================
+        const ORDER_STORAGE_KEY = 'pos_order';
+        let order = {}; // This object holds the entire order state.
 
+        // Cache jQuery selectors for performance
+        const cartBody = $('#pos-cart-body');
+        const emptyCartMessage = $('.empty-cart');
+        const cartTableContainer = cartBody.closest('.table-responsive');
+
+        // Initialize Bootstrap 5 modals
+        const taxModal = new bootstrap.Modal(document.getElementById('order-tax'));
+        const shippingModal = new bootstrap.Modal(document.getElementById('shipping-cost'));
+        const discountModal = new bootstrap.Modal(document.getElementById('discount'));
+
+
+        // =========================================================================
+        // HELPER FUNCTIONS FOR LOCALSTORAGE
+        // =========================================================================
+
+        /**
+         * Loads the entire order from localStorage into our 'order' variable.
+         * Sets defaults if no order is found.
+         */
+        function loadOrderFromStorage() {
+            const storedOrder = localStorage.getItem(ORDER_STORAGE_KEY);
+            order = storedOrder ? JSON.parse(storedOrder) : {
+                items: {},
+                shipping: 0,
+                discount: 0,
+                discount_type: 'fixed',
+                tax_rate: 0,
+                tax_name: 'None'
+            };
+        }
+
+        /**
+         * Saves the current 'order' variable to localStorage.
+         */
+        function saveOrderToStorage() {
+            localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order));
+        }
+
+        /**
+         * Clears the order from both memory and localStorage.
+         */
+        function clearOrder() {
+            order = { items: {}, shipping: 0, discount: 0, discount_type: 'fixed', tax_rate: 0, tax_name: 'None' };
+            saveOrderToStorage(); // Persist the cleared state
+            renderCart(); // Re-render to show the empty state and reset totals
+        }
+        
+        // =========================================================================
+        // CORE UI & CALCULATION FUNCTIONS
+        // =========================================================================
+        
+        /**
+         * Renders the cart items table based on the 'order.items' object
+         * and calls calculateTotals() to update the summary.
+         */
+        function renderCart() {
+            cartBody.empty();
+            $('.product-info').removeClass('active');
+
+            if (Object.keys(order.items).length > 0) {
+                emptyCartMessage.hide();
+                cartTableContainer.show();
+            } else {
+                emptyCartMessage.show();
+                cartTableContainer.hide();
+            }
+
+            for (const cartId in order.items) {
+                const item = order.items[cartId];
+                $(`.product-info[data-product-id="${item.id}"][data-variation-id="${item.variation_id || ''}"]`).addClass('active');
+
+                const itemSubTotal = item.price * item.quantity;
+                const rowHtml = `
+                    <tr data-product-id="${cartId}">
+                        <td><h6 class="fs-16 fw-medium mb-1">${item.name}</h6></td>
+                        <td><div class="qty-item m-0"><input type="number" class="form-control text-center cart-quantity" value="${item.quantity}" min="1"></div></td>
+                        <td class="fw-bold">$${item.price.toFixed(2)}</td>
+                        <td class="fw-bold">$${itemSubTotal.toFixed(2)}</td>
+                        <td class="text-end"><a class="btn-icon delete-icon remove-item-btn" href="javascript:void(0);"><i class="ti ti-trash"></i></a></td>
+                    </tr>`;
+                cartBody.append(rowHtml);
+            }
+            
+            // Update all totals after the cart has been rendered
+            calculateTotals();
+        }
+        
+        /**
+         * Calculates all summary totals based on the 'order' object and updates the UI.
+         */
+        function calculateTotals() {
+            let subTotal = 0;
+            for (const cartId in order.items) {
+                subTotal += order.items[cartId].price * order.items[cartId].quantity;
+            }
+            
+            let discountAmount = 0;
+            if (order.discount_type === 'percentage') {
+                discountAmount = subTotal * (order.discount / 100);
+            } else { // 'fixed'
+                discountAmount = order.discount;
+            }
+
+            const orderTaxAmount = subTotal * (order.tax_rate / 100);
+            const grandTotal = subTotal + orderTaxAmount + order.shipping - discountAmount;
+
+            // Update all display elements in the summary
+            $('#cart-subtotal').text(`$${subTotal.toFixed(2)}`);
+            $('#cart-shipping').text(`$${order.shipping.toFixed(2)}`);
+            $('#cart-tax').text(`$${orderTaxAmount.toFixed(2)}`);
+            $('#tax-name-display').text(order.tax_name);
+            $('#cart-discount').text(`-$${discountAmount.toFixed(2)}`);
+            $('#cart-grandtotal').text(`$${grandTotal.toFixed(2)}`);
+            
+            const totalItems = Object.values(order.items).reduce((sum, item) => sum + item.quantity, 0);
+            $('.badge:contains("Items") .text-teal').text(totalItems);
+            $('.btn-block a').text(`Pay : $${grandTotal.toFixed(2)}`);
+        }
+
+        // =========================================================================
+        // EVENT LISTENERS
+        // =========================================================================
+        
+        // --- Product Grid Click (Select/Unselect) ---
+        $('div.pos-products').on('click', 'div.product-info', function(event) {
+            event.stopPropagation();
+            const productData = $(this).data();
+            const cartId = productData.productId + '-' + (productData.variationId || '0');
+            if (order.items[cartId]) {
+                delete order.items[cartId];
+            } else {
+                order.items[cartId] = { id: productData.productId, variation_id: productData.variationId, name: productData.name, price: parseFloat(productData.price), quantity: 1 };
+            }
+            saveOrderToStorage();
+            renderCart();
+            return false;
+        });
+        
+        // --- Cart Item Interactions ---
+        cartBody.on('input', '.cart-quantity', function() {
+            let cartId = $(this).closest('tr').data('product-id');
+            let newQuantity = parseInt($(this).val());
+            if (order.items[cartId]) {
+                if (newQuantity > 0) { order.items[cartId].quantity = newQuantity; } 
+                else { delete order.items[cartId]; }
+                saveOrderToStorage();
+                renderCart();
+            }
+        });
+
+        cartBody.on('click', '.remove-item-btn', function() {
+            let cartId = $(this).closest('tr').data('product-id');
+            delete order.items[cartId];
+            saveOrderToStorage();
+            renderCart();
+        });
+
+        // --- Modal Logic ---
+        $('#order-tax-form').on('submit', function(e) {
+            e.preventDefault();
+            const selectedOption = $('#modal-tax-select').find('option:selected');
+            order.tax_rate = parseFloat(selectedOption.data('rate')) || 0;
+            order.tax_name = selectedOption.data('name') || 'None';
+            saveOrderToStorage();
+            calculateTotals();
+            taxModal.hide();
+        });
+
+        $('#shipping-cost-form').on('submit', function(e) {
+            e.preventDefault();
+            order.shipping = parseFloat($('#modal-shipping-input').val()) || 0;
+            saveOrderToStorage();
+            calculateTotals();
+            shippingModal.hide();
+        });
+
+        $('#discount-form').on('submit', function(e) {
+            e.preventDefault();
+            order.discount_type = $('#modal-discount-type').val();
+            order.discount = parseFloat($('#modal-discount-value').val()) || 0;
+            saveOrderToStorage();
+            calculateTotals();
+            discountModal.hide();
+        });
+
+        // --- Sync Modals on Open ---
+        $('#order-tax').on('show.bs.modal', () => $('#modal-tax-select').find(`option[data-rate="${order.tax_rate}"]`).prop('selected', true));
+        $('#shipping-cost').on('show.bs.modal', () => $('#modal-shipping-input').val(order.shipping));
+        $('#discount').on('show.bs.modal', () => {
+            $('#modal-discount-type').val(order.discount_type);
+            $('#modal-discount-value').val(order.discount);
+        });
+
+        // --- Other Listeners for category filtering, search, etc. ---
+        // ...
+
+        // =========================================================================
+        // INITIALIZATION
+        // =========================================================================
+        loadOrderFromStorage();
+        renderCart(); // Render the UI based on the loaded (or empty) cart.
+    });
+    </script>
 </body>
 
 </html>
