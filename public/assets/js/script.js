@@ -839,11 +839,11 @@ $(document).ready(function(){
 		}
 	}
 
-	
+	/*
 	$('ul.tabs li').click(function(){
 		var $this = $(this);
 		var $theTab = $(this).attr('id');
-		console.log($theTab);
+		// console.log($theTab);
 		if($this.hasClass('active')){
 		  // do nothing
 		} else{
@@ -852,6 +852,7 @@ $(document).ready(function(){
 		}
 		
 	});
+	*/
 
 	// Otp Verfication  
 	$('.digit-group').find('input').each(function () { 
