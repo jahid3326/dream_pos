@@ -43,4 +43,9 @@ class Product extends Model
         'weight' => 'float',
         'margin' => 'float',
     ];
+
+    public function packGroupOptions()
+    {
+        return $this->belongsToMany(PackGroupOption::class, 'pack_product');
+    }
 }
