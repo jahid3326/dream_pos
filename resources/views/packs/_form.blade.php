@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<div class="mt-3">
+<div class="mt-3 mb-5">
     <button type="button" class="btn btn-primary" onclick="addGroup()">Add Group</button>
     <button type="submit" class="btn btn-success">{{ $buttonText ?? 'Save Pack' }}</button>
 </div>

@@ -22,7 +22,7 @@ class PackController extends Controller
      */
     public function index()
     {
-        $packs = Pack::latest()->paginate(15);
+        $packs = Pack::withCount('groups')->latest()->paginate(15);
         return view('packs.index', compact('packs'));
     }
 
@@ -40,7 +40,40 @@ class PackController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255|unique:packs,name',
+            'groups' => 'required|array|min:1',
+            'groups.*.surface' => 'required|string|max:255',
+            'groups.*.options' => 'required|array|min:1',
+            'groups.*.options.*.option' => 'required|integer',
+            'groups.*.options.*.price' => 'required|numeric|min:0',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            // 1. Create the main Pack
+            $pack = Pack::create(['name' => $request->name]);
+
+            // 2. Loop through and create each Group
+            if ($request->has('groups')) {
+                foreach ($request->groups as $groupData) {
+                    $group = $pack->groups()->create([
+                        'surface' => $groupData['surface'],
+                    ]);
+
+                    // 3. Loop through and create each Option for the current Group
+                    if (isset($groupData['options'])) {
+                        foreach ($groupData['options'] as $optionData) {
+                            $group->options()->create([
+                                'option' => $optionData['option'],
+                                'price' => $optionData['price'],
+                            ]);
+                        }
+                    }
+                }
+            }
+        });
+
+        return redirect()->route('packs.index')->with('success', 'Pack created successfully.');
     }
 
     /**
@@ -67,22 +100,24 @@ class PackController extends Controller
     public function update(Request $request, Pack $pack)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:packs,name,' . $pack->id,
             'groups' => 'sometimes|array',
-            'groups.*.surface' => 'required|string',
+            'groups.*.surface' => 'required|string|max:255',
             'groups.*.options' => 'sometimes|array',
             'groups.*.options.*.option' => 'required|integer',
-            'groups.*.options.*.price' => 'required|numeric',
+            'groups.*.options.*.price' => 'required|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($request, $pack) {
+            // 1. Update the main Pack's name
             $pack->update(['name' => $request->name]);
 
             $submittedGroupIds = [];
             if ($request->has('groups')) {
                 foreach ($request->groups as $groupData) {
+                    // 2. Use updateOrCreate to handle existing or new groups
                     $group = $pack->groups()->updateOrCreate(
-                        ['id' => $groupData['id'] ?? null],
+                        ['id' => $groupData['id'] ?? null], // Find by ID, or create if null
                         ['surface' => $groupData['surface']]
                     );
                     $submittedGroupIds[] = $group->id;
@@ -90,6 +125,7 @@ class PackController extends Controller
                     $submittedOptionIds = [];
                     if (isset($groupData['options'])) {
                         foreach ($groupData['options'] as $optionData) {
+                            // 3. Use updateOrCreate for options within the group
                             $option = $group->options()->updateOrCreate(
                                 ['id' => $optionData['id'] ?? null],
                                 ['option' => $optionData['option'], 'price' => $optionData['price']]
@@ -97,11 +133,11 @@ class PackController extends Controller
                             $submittedOptionIds[] = $option->id;
                         }
                     }
-                    // Delete options that were removed from this group
+                    // 4. Delete any options that were removed from this group
                     $group->options()->whereNotIn('id', $submittedOptionIds)->delete();
                 }
             }
-            // Delete groups that were removed from the form
+            // 5. Delete any groups that were removed from the form
             $pack->groups()->whereNotIn('id', $submittedGroupIds)->delete();
         });
 
