@@ -20,7 +20,7 @@ class UserController extends Controller
         // Get all users except the Super Admin, with their roles, and paginate.
         $users = User::whereHas('role', function ($query) {
             $query->where('name', '!=', 'Super Admin');
-        })->with('role')->latest()->paginate(10);
+        })->with('role')->latest()->get();
 
         return view('admin.users.index', compact('users'));
     }

@@ -200,6 +200,18 @@
             object-fit: cover;
             /* This is the key: it scales and crops the image to fit */
         }
+
+        .variant-btn {
+            background-color: #155EEF !important;
+            border: 1px solid #155EEF !important;
+            box-shadow: 0 3px 10px rgba(21, 94, 239, 0.5);
+            color: #ffffff !important;
+        }
+
+        .btn-close {
+            background-color: transparent !important;
+            color: #000 !important;
+        }
     </style>
 
 </head>

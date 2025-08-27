@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ManagePackController;
 use App\Http\Controllers\PackController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
@@ -181,6 +182,18 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('products', ProductController::class);
 
             Route::resource('packs', PackController::class);
+
+            // Manage Pack related route
+
+            Route::post('manage-packs/options/{option}/products', [ManagePackController::class, 'attachProducts'])->name('manage-packs.options.products.attach');
+
+            Route::delete('manage-packs/options/{option}/products', [ManagePackController::class, 'detachAllProducts'])->name('manage-packs.options.products.detachAll');
+
+            Route::delete('manage-packs/options/{option}/products/{product}', [ManagePackController::class, 'detachProduct'])->name('manage-packs.options.products.detach');
+
+            Route::post('manage-packs/options/{option}/products/reorder', [ManagePackController::class, 'reorderProducts'])->name('manage-packs.options.products.reorder');
+
+            Route::resource('manage-packs', ManagePackController::class);
 
             // Pos-related routes
             Route::resource('pos', PosController::class);
