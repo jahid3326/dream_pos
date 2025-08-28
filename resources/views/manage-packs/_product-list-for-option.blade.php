@@ -22,7 +22,8 @@
                             <td>{{ $product->supplier->user->name ?? 'N/A' }}</td>
                             <td>
                                 @if ($product->type === 'variation')
-                                    <button class="btn btn-sm variant-btn">
+                                    <button class="btn btn-sm variant-btn"
+                                        data-pack-product-id="{{ $product->pivot->id }}">
                                         <i class="ti ti-checkbox"></i>
                                         {{-- Variants
                                         ({{ $product->variations->count() }}) --}}

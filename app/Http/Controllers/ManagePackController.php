@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Pack;
 use App\Models\Product;
 use App\Models\PackGroupOption;
+use App\Models\PackProduct;
+use App\Models\PackProductSelectedVariation;
 
 class ManagePackController extends Controller
 {
@@ -39,6 +41,10 @@ class ManagePackController extends Controller
             $product->display_sku = ($product->type === 'single') ? $product->sku : '(Variation)';
             return $product;
         });
+
+        // echo "<pre>";
+        // print_r($packs->toArray());
+        // echo "</pre>";
 
         return view('manage-packs.index', compact('packs', 'allProducts', 'childCategories'));
     }
@@ -94,6 +100,38 @@ class ManagePackController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => 'Order updated successfully.']);
+    }
+
+    /**
+     * Get data for the "Manage Items/Variations" modal.
+     */
+    public function getPackProductData(PackProduct $packProduct)
+    {
+        // Load the parent product (with all its available variations) and the currently selected variations
+        $packProduct->load('product.variations', 'selectedVariations');
+
+        // Get an array of IDs of the variations that are already selected
+        $selectedVariationIds = $packProduct->selectedVariations->pluck('id');
+
+        return response()->json([
+            'product_name' => $packProduct->product->name,
+            'available_variations' => $packProduct->product->variations,
+            'selected_variation_ids' => $selectedVariationIds,
+        ]);
+    }
+
+    /**
+     * Save the selected items/variations for a pack product.
+     */
+    public function saveSelectedVariations(Request $request, PackProduct $packProduct)
+    {
+        $request->validate(['variation_ids' => 'nullable|array']);
+        $variationIds = $request->input('variation_ids', []);
+
+        // sync() is perfect here. It will attach the checked variations and detach any that were unchecked.
+        $packProduct->selectedVariations()->sync($variationIds);
+
+        return response()->json(['success' => true, 'count' => count($variationIds)]);
     }
 
     /**

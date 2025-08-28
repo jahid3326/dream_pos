@@ -17,7 +17,7 @@ class PackGroupOption extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'pack_product')
-            ->withPivot('position')
+            ->withPivot('id', 'position')
             ->orderBy('pivot_position', 'asc');
     }
 }

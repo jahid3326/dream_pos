@@ -193,6 +193,12 @@ Route::middleware(['auth'])->group(function () {
 
             Route::post('manage-packs/options/{option}/products/reorder', [ManagePackController::class, 'reorderProducts'])->name('manage-packs.options.products.reorder');
 
+            // Manage Pack Group Options Product Variations related route
+            Route::get('manage-packs/pack-products/{packProduct}/data', [ManagePackController::class, 'getPackProductData'])->name('manage-packs.pack-products.data');
+
+            // SAVES the selected items/variations for a pack product
+            Route::post('manage-packs/pack-products/{packProduct}/items', [ManagePackController::class, 'saveSelectedItems'])->name('manage-packs.pack-products.items.save');
+
             Route::resource('manage-packs', ManagePackController::class);
 
             // Pos-related routes
