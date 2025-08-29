@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'Manage Pack')
 @section('content')
     <div class="page-wrapper">
         <div class="content">
@@ -49,8 +49,11 @@
         </div>
     </div>
 
-    {{-- Include the "Add Product" Modal (it's the same one) --}}
+    {{-- Include the "Add Product" Modal --}}
     @include('manage-packs._add-product-modal', ['allProducts' => $allProducts])
+
+    {{-- Include the "Show pack product variation" Modal --}}
+    @include('manage-packs._pack-product-variation-modal')
 @endsection
 
 @push('scripts')
@@ -63,6 +66,7 @@
             // =========================================================================
             // Initialize the Bootstrap 5 modal instance
             const addProductModal = new bootstrap.Modal(document.getElementById('addProductModal'));
+            const manageItemsModal = new bootstrap.Modal(document.getElementById('manageItemsModal'));
 
             let existingProductIds = [];
 
@@ -369,6 +373,133 @@
                         });
                     }
                 });
+            });
+
+            /**
+             * Event listener for the "Manage Variants" button on the main page.
+             * Fetches data and opens the variation selection modal.
+             */
+            $('body').on('click', '.variant-btn', function() {
+                const packProductId = $(this).data('pack-product-id');
+                $('#current-pack-product-id').val(packProductId);
+
+                const container = $('#items-checkbox-container');
+                container.html(
+                    '<tr><td colspan="3" class="text-center text-muted p-4">Loading...</td></tr>');
+                manageItemsModal.show();
+
+                $.ajax({
+                    url: `{{ url('manage-packs/pack-products') }}/${packProductId}/data`,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        // console.log(response);
+                        $('#item-product-name').text(response.product_name);
+                        container.empty();
+
+                        if (response.all_selectable_items && response.all_selectable_items
+                            .length > 0) {
+                            response.all_selectable_items.forEach(function(item) {
+                                // Check if this item's unique_id is in the list of already selected IDs
+                                const isSelected = response.selected_ids.includes(item
+                                    .unique_id);
+
+                                // --- THIS IS THE KEY CHANGE ---
+                                // Build the checked and disabled attributes based on the isSelected flag
+                                const checkedAttribute = isSelected ? 'checked' : '';
+                                const disabledAttribute = isSelected ? 'disabled' : '';
+
+                                const rowHtml = `
+                        <tr data-category-id="${item.category_id_for_filter}">
+                            <td>
+                                <input class="form-check-input item-checkbox" type="checkbox" 
+                                       value="${item.unique_id}" id="item-${item.unique_id}" 
+                                       ${checkedAttribute}>
+                            </td>
+                            <td class="item-name">
+                                <label class="form-check-label ${disabledAttribute ? 'text-muted' : ''}" for="item-${item.unique_id}">
+                                    ${item.display_name}<br/>(${item.measurement})
+                                </label>
+                            </td>
+                            <td>${item.sku}</td>
+                        </tr>`;
+                                container.append(rowHtml);
+                            });
+                        } else {
+                            container.html(
+                                '<tr><td colspan="3" class="text-center text-muted p-4">No products available to add.</td></tr>'
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        container.html(
+                            '<tr><td colspan="3" class="text-center text-danger">Failed to load items.</td></tr>'
+                        );
+                        console.error("AJAX Error:", xhr.responseText);
+                    }
+                });
+            });
+
+            /**
+             * Event listener for the "Save Selections" button inside the "Manage Items" modal.
+             */
+            $('#save-items-selections-btn').on('click', function() {
+                const packProductId = $('#current-pack-product-id').val();
+                const saveButton = $(this);
+                let selectedItemIds = [];
+                $('#items-checkbox-container .item-checkbox:checked').each(function() {
+                    selectedItemIds.push($(this).val());
+                });
+
+                saveButton.prop('disabled', true).text('Saving...');
+
+                let url =
+                    `{{ route('manage-packs.pack-products.items.save', ['packProduct' => 'REPLACE_ID']) }}`;
+                url = url.replace('REPLACE_ID', packProductId);
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        item_ids: selectedItemIds
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            manageItemsModal.hide();
+                            const button = $(
+                                `.manage-items-btn[data-pack-product-id="${packProductId}"]`
+                            );
+                            button.text(`Manage Items (${response.count})`);
+                        }
+                    },
+                    error: () => alert('An error occurred while saving.'),
+                    complete: () => saveButton.prop('disabled', false).text('Save Selections')
+                });
+            });
+
+            // --- FILTERS FOR THE "MANAGE ITEMS" MODAL ---
+            function applyModalItemFilters() {
+                const searchTerm = $('#modal-item-search').val().toLowerCase();
+                const categoryId = $('#modal-item-category-filter').val();
+                $('#items-checkbox-container tr').each(function() {
+                    const row = $(this);
+                    const itemName = row.find('.item-name').text().toLowerCase();
+                    const itemCategoryId = row.data('category-id').toString();
+                    const nameMatch = itemName.includes(searchTerm);
+                    const categoryMatch = (categoryId === "" || itemCategoryId === categoryId);
+                    row.toggle(nameMatch && categoryMatch);
+                });
+            }
+            $('#modal-item-search').on('keyup', applyModalItemFilters);
+            $('#modal-item-category-filter').on('change', applyModalItemFilters);
+
+            // --- CHECK ALL FUNCTIONALITY ---
+            $('#check-all-items').on('click', function() {
+                // Check/uncheck only the VISIBLE checkboxes
+                $('#items-checkbox-container tr:visible .item-checkbox').prop('checked', $(this).prop(
+                    'checked'));
             });
         });
     </script>
