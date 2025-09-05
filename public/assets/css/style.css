@@ -42078,7 +42078,7 @@ label span {
   -ms-transition: all 0.5s ease;
   transition: all 0.5s ease;
 }
-.pos-three .product-info .product-image::before {
+/* .pos-three .product-info .product-image::before {
   position: absolute;
   content: "\eb0b";
   background: #3EB780;
@@ -42093,7 +42093,7 @@ label span {
   top: 10px;
   right: 10px;
   z-index: 9;
-}
+} */
 .pos-three .product-info .product-content {
   padding: 16px;
 }

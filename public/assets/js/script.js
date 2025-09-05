@@ -548,6 +548,7 @@ $(document).ready(function(){
 	$(document).on("click",".productset",function () {
 		$(this).toggleClass("active");
 	});
+	/*
 	$(document).on("click",".product-info",function () {
 		$(this).toggleClass("active");
 		if ($(".product-info.active").length > 0) {
@@ -561,6 +562,7 @@ $(document).ready(function(){
 		}
 	
 	});
+	*/
 	$(document).on("click",".layout-box",function () {
 		$('.layout-hide-box').toggleClass("layout-show-box");
 	});
