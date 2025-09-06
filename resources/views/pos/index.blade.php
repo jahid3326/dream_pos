@@ -396,9 +396,12 @@
                 productsToRender.forEach(product => {
                     const productHtml = `
                     <div class="col-sm-6 col-md-4 col-lg-4 product-item">
-                        <div class="card h-100 product-info" 
+                        <div class="card h-100 product-info product-info-category" 
                             data-product-id="${product.id}" data-variation-id="${product.variation_id || ''}"
                             data-name="${product.name}" data-price="${product.price}">
+                            <div class="form-check product-checkbox-container mx-2">
+                                <input class="form-check-input product-select-check" type="checkbox">
+                            </div>
                             <div class="card-body p-2 d-flex align-items-center justify-content-center">
                                 <a href="javascript:void(0);" class="product-image">
                                     <img src="${product.image}" alt="Product">
@@ -414,6 +417,28 @@
                 });
                 syncActiveProductCards();
             }
+
+            // --- CLICK LISTENER FOR CATEGORY MODE (WITH Checkboxes) ---
+            productGridContainer.on('click', '.product-info-category', function(event) {
+                const card = $(this);
+                const checkbox = card.find('.product-select-check');
+                if (!$(event.target).is('.product-select-check')) {
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                }
+                card.toggleClass('selected', checkbox.prop('checked')); // Use a 'selected' class
+            });
+
+            // --- "ADD SELECTION" BUTTON (for Category Mode) ---
+            categoryActionsContainer.on('click', function() {
+                const selectedProducts = [];
+                productGridContainer.find('.product-select-check:checked').each(function() {
+                    const card = $(this).closest('.product-info-category');
+                    selectedProducts.push(card.data());
+                });
+                console.log("Selected Category Products:", selectedProducts);
+                // alert(`${selectedProducts.length} item(s) selected. See console.`);
+                // Here you would loop through selectedProducts and add them to the cart
+            });
 
             /** Renders the entire cart UI. */
             function renderCart() {
@@ -550,7 +575,7 @@
                         url: `{{ url('category-products') }}/${categoryId}/products`,
                         type: 'GET',
                         success: function(response) {
-                            console.log(response);
+                            // console.log(response);
                             // Render the grid with the products returned from the server
                             renderProductGrid(response, false); // false = not in pack mode
                             categoryActionsContainer.show();
@@ -614,7 +639,7 @@
                         url: `{{ url('pack-options') }}/${optionId}/products`,
                         type: 'GET',
                         success: function(response) {
-                            console.log(response)
+                            // console.log(response)
                             renderPackProductGrid(response);
                             packActionsContainer.show();
                         },
@@ -663,7 +688,7 @@
 
                                 slidesHtml += `
                                 <div class="item">
-                                    <div class="card h-100 product-info" 
+                                    <div class="card h-100 product-info product-info-pack" 
                                         data-product-id="${variation.product_id}" data-variation-id="${variation.id}"
                                         data-name="${variation.product.name} - ${variation.measurement}" data-price="${variation.sale_price}">
                                         <div class="card-body p-2 d-flex align-items-center justify-content-center">
@@ -685,7 +710,7 @@
 
                                 slidesHtml += `
                                 <div class="item">
-                                    <div class="card h-100 product-info" 
+                                    <div class="card h-100 product-info product-info-pack" 
                                         data-product-id="${product.id}" data-variation-id=""
                                         data-name="${product.name} - ${product.measurement}" data-price="${product.sale_price}">
                                         <div class="card-body p-2 d-flex align-items-center justify-content-center">
@@ -744,6 +769,21 @@
 
                 syncPackProductCheckboxes();
             }
+
+            // --- "ADD ALL" BUTTON (for Pack Mode) ---
+            packActionsContainer.on('click', function() {
+                console.log('clicked...');
+
+                productGridContainer.find('.product-info-pack').each(function() {
+                    const productCard = $(this);
+                    const productData = productCard.data();
+                    const cartId = productData.productId + '-' + (productData.variationId || '');
+                    console.log(productCard);
+                    console.log(productData);
+                    console.log(cartId);
+                });
+
+            });
 
             // --- CART ITEM INTERACTIONS ---
             cartBody.on('input', '.cart-quantity', function() {
