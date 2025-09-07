@@ -139,7 +139,15 @@
         }
 
         .owl-carousel .owl-nav {
-            top: 0% !important;
+            margin: 0;
+            position: absolute;
+            left: 0px;
+            width: 100%;
+            right: 0;
+            top: 50% !important;
+            transform: translate(0, -50%);
+            display: flex;
+            justify-content: space-between;
         }
 
         .owl-carousel .owl-nav button.owl-prev {

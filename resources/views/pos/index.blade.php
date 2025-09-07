@@ -128,11 +128,12 @@
                         <table class="table table-borderless">
                             <thead>
                                 <tr>
+                                    <th class="bg-transparent fw-bold">#</th>
                                     <th class="bg-transparent fw-bold">Product</th>
                                     <th class="bg-transparent fw-bold">QTY</th>
-                                    <th class="bg-transparent fw-bold">Price</th>
+                                    <th class="bg-transparent fw-bold">Unit Price</th>
                                     <th class="bg-transparent fw-bold">Sub Total</th>
-                                    <th class="bg-transparent fw-bold text-end"></th>
+                                    <th class="bg-transparent fw-bold text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="pos-cart-body"></tbody>
@@ -355,8 +356,9 @@
                 container.empty().show();
                 let tabsHtml = '<ul class="tabs owl-carousel pos-carousel pos-category4 mb-0">';
                 items.forEach(item => {
+                    const priceAttribute = item.price ? `data-price="${item.price}"` : '';
                     tabsHtml +=
-                        `<li id="${dataKey}-${item.id}" class="${className}" data-${dataKey}-id="${item.id}" data-id="${item.id}" data-name="${item[nameKey]}"><h6><a href="javascript:void(0);">${item[nameKey]}</a></h6></li>`;
+                        `<li id="${dataKey}-${item.id}" class="${className}" data-${dataKey}-id="${item.id}" data-id="${item.id}" data-name="${item[nameKey]}" ${priceAttribute}><h6><a href="javascript:void(0);">${item[nameKey]}</a></h6></li>`;
                 });
                 tabsHtml += '</ul>';
                 container.html(tabsHtml);
@@ -446,6 +448,7 @@
                 let subTotal = 0;
                 let totalItems = 0;
 
+                // 2. Check if the cart is empty to show/hide the placeholder message
                 if (Object.keys(order.items).length > 0) {
                     emptyCartMessage.hide();
                     cartTableContainer.show();
@@ -454,52 +457,94 @@
                     cartTableContainer.hide();
                 }
 
+                // 3. Loop through each item in the cart object
+                let itemCounter = 0;
                 for (const cartId in order.items) {
+                    itemCounter++;
                     const item = order.items[cartId];
+
+                    // 3a. Calculate totals for this item
                     const itemSubTotal = item.price * item.quantity;
                     subTotal += itemSubTotal;
                     totalItems += item.quantity;
 
+                    // 3b. Determine the display name based on the item type
+                    let displayNameHtml = '';
+                    if (item.type === 'pack') {
+                        // For pack items: Pack Name | Option | Surface
+                        displayNameHtml = `<strong>${item.name}</strong>`;
+                    } else { // 'category'
+                        // For category items: Product Name | Category
+                        displayNameHtml =
+                            `<strong>${item.name}</strong><br><small class="text-muted">${item.category}</small>`;
+                    }
+
+                    // 3c. Create the HTML row for the cart table
                     const rowHtml = `
-                <tr data-cart-id="${cartId}">
-                    <td><strong>${item.name}</strong><br><small class="text-muted">${item.category}</small></td>
-                    <td><div class="qty-item m-0"><input type="number" class="form-control text-center cart-quantity" value="${item.quantity}" min="1"></div></td>
-                    <td>$${item.price.toFixed(2)}</td>
-                    <td>$${itemSubTotal.toFixed(2)}</td>
-                    <td class="text-end"><a class="btn-icon delete-icon remove-item-btn" href="javascript:void(0);"><i class="ti ti-trash"></i></a></td>
-                </tr>`;
+            <tr data-cart-id="${cartId}">
+                <td>${itemCounter}</td>
+                <td>${displayNameHtml}</td>
+                <td><div class="qty-item m-0"><input type="number" class="form-control text-center cart-quantity" value="${item.quantity}" min="1"></div></td>
+                <td>$${item.price.toFixed(2)}</td>
+                <td>$${itemSubTotal.toFixed(2)}</td>
+                <td class="text-end"><a class="btn-icon delete-icon remove-item-btn" href="javascript:void(0);"><i class="ti ti-trash"></i></a></td>
+            </tr>`;
+
+                    // 3d. Append the new row to the table
                     cartBody.append(rowHtml);
                 }
 
+                // 4. After rendering the cart, sync the visual state of product cards
                 syncActiveProductCards();
-                calculateTotals(subTotal);
+
+                // 5. Finally, update all the summary totals
+                calculateTotals();
             }
 
-            function calculateTotals(subTotal) {
-                /*
+            function calculateTotals() {
+                // 1. Calculate SubTotal by iterating through the items in the global 'order' object.
                 let subTotal = 0;
                 for (const cartId in order.items) {
                     subTotal += order.items[cartId].price * order.items[cartId].quantity;
                 }
 
-                let discountAmount = (order.discount_type === 'percentage') ?
-                    subTotal * (order.discount / 100) :
-                    order.discount;
+                // 2. Get additional cost values directly from the 'order' state object.
+                const shipping = parseFloat(order.shipping) || 0;
+                const discountValue = parseFloat(order.discount) || 0;
+                const discountType = order.discount_type || 'fixed';
+                const orderTaxRate = parseFloat(order.tax_rate) || 0;
 
-                const orderTaxAmount = subTotal * (order.tax_rate / 100);
-                const grandTotal = subTotal + orderTaxAmount + order.shipping - discountAmount;
+                // 3. Calculate the discount amount based on its type.
+                let discountAmount = 0;
+                if (discountType === 'percentage') {
+                    discountAmount = subTotal * (discountValue / 100);
+                } else { // 'fixed'
+                    discountAmount = discountValue;
+                }
 
+                // 4. Calculate the order tax amount based on the subtotal.
+                const orderTaxAmount = subTotal * (orderTaxRate / 100);
+
+                // 5. Calculate the final Grand Total.
+                const grandTotal = subTotal + orderTaxAmount + shipping - discountAmount;
+
+                // 6. Update all display elements in the summary table.
                 $('#cart-subtotal').text(`$${subTotal.toFixed(2)}`);
-                $('#cart-shipping').text(`$${order.shipping.toFixed(2)}`);
+                $('#cart-shipping').text(`$${shipping.toFixed(2)}`);
                 $('#cart-tax').text(`$${orderTaxAmount.toFixed(2)}`);
-                $('#tax-name-display').text(order.tax_name);
+                $('#tax-name-display').text(order.tax_name || 'None');
                 $('#cart-discount').text(`-$${discountAmount.toFixed(2)}`);
                 $('#cart-grandtotal').text(`$${grandTotal.toFixed(2)}`);
 
+                // 7. Update other UI elements like the item count and 'Pay' button.
                 const totalItems = Object.values(order.items).reduce((sum, item) => sum + item.quantity, 0);
                 $('.badge:contains("Items") .text-teal').text(totalItems);
                 $('.btn-block a').text(`Pay : $${grandTotal.toFixed(2)}`);
-                */
+
+                // 8. Update hidden inputs for form submission.
+                $('#sub_total_hidden').val(subTotal.toFixed(2));
+                $('#order_tax_amount_hidden').val(orderTaxAmount.toFixed(2));
+                $('#grand_total_hidden').val(grandTotal.toFixed(2));
             }
 
             function syncActiveProductCards() {
@@ -772,54 +817,77 @@
 
             // --- "ADD ALL" BUTTON (for Pack Mode) ---
             packActionsContainer.on('click', function() {
+                addSelectedPackItemsToCart()
+            });
+
+            function addSelectedPackItemsToCart() {
                 const activePackTab = level2Container.find('li.active');
                 const activeSurfaceTab = level3Container.find('li.active');
                 const activeOptionTab = level4Container.find('li.active');
 
-                // Use .data() to safely get the IDs and names
+                // Read the price directly from the active option tab's data attribute
+                const optionPrice = parseFloat(activeOptionTab.data('price')) || 0;
+
                 const packContext = {
-                    pack_id: activePackTab.data('pack-id'),
+                    pack_id: activePackTab.data('id'),
                     pack_name: activePackTab.data('name'),
-                    group_id: activeSurfaceTab.data('group-id'),
-                    group_name: activeSurfaceTab.data('name'), // 'surface' is the name
-                    option_id: activeOptionTab.data('option-id'),
+                    group_id: activeSurfaceTab.data('id'),
+                    group_name: activeSurfaceTab.data('name'),
+                    option_id: activeOptionTab.data('id'),
                     option_name: activeOptionTab.data('name'),
+                    option_price: optionPrice // Use the price we just read
                 };
 
-                // --- 2. LOG THE CONTEXT (for your requirement) ---
-                console.log("--- Pack Context ---");
-                console.log(packContext);
+                const cartItemName =
+                    `${packContext.pack_name} | ${packContext.option_name} | ${packContext.group_name}`;
+                const cartId = `p-${packContext.option_id}`;
 
-            });
+                if (order.items[cartId]) {
+                    order.items[cartId].quantity++;
+                } else {
+                    order.items[cartId] = {
+                        type: 'pack',
+                        id: packContext.option_id,
+                        name: cartItemName,
+                        price: packContext.option_price,
+                        quantity: 1,
+                        category: 'Pack',
+                    };
+                }
+
+                saveOrderToStorage();
+                renderCart();
+
+                // console.log("Added Pack Item to Cart:", order.items[cartId]);
+                // alert('Pack option added to cart!');
+            }
 
             // --- CART ITEM INTERACTIONS ---
             cartBody.on('input', '.cart-quantity', function() {
-                // Get the unique ID of the item from the parent <tr>
-                const cartId = $(this).closest('tr').data('product-id');
+                const cartId = $(this).closest('tr').data('cart-id');
                 const newQuantity = parseInt($(this).val());
-
                 if (order.items[cartId]) {
                     if (newQuantity > 0) {
-                        // Update quantity in the cart object
                         order.items[cartId].quantity = newQuantity;
                     } else {
-                        // Remove the item if quantity is 0 or less
                         delete order.items[cartId];
                     }
-                    // Persist the changes and redraw the entire UI
                     saveOrderToStorage();
                     renderCart();
                 }
             });
             cartBody.on('click', '.remove-item-btn', function() {
-                // Get the unique ID of the item from the parent <tr>
-                const cartId = $(this).closest('tr').data('product-id');
+                // 1. Get the unique ID of the cart item from the parent <tr>'s data attribute.
+                const cartId = $(this).closest('tr').data('cart-id');
 
-                // Remove the item from the cart object
+                // 2. Check if the item exists in our cart object and delete it.
                 if (order.items[cartId]) {
                     delete order.items[cartId];
-                    // Persist the changes and redraw the entire UI
+
+                    // 3. Persist the change to localStorage.
                     saveOrderToStorage();
+
+                    // 4. Update the entire UI (cart list, totals, and product card active states).
                     renderCart();
                 }
             });
