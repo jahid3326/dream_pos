@@ -356,7 +356,7 @@
                 let tabsHtml = '<ul class="tabs owl-carousel pos-carousel pos-category4 mb-0">';
                 items.forEach(item => {
                     tabsHtml +=
-                        `<li id="${dataKey}-${item.id}" class="${className}" data-${dataKey}-id="${item.id}"><h6><a href="javascript:void(0);">${item[nameKey]}</a></h6></li>`;
+                        `<li id="${dataKey}-${item.id}" class="${className}" data-${dataKey}-id="${item.id}" data-id="${item.id}" data-name="${item[nameKey]}"><h6><a href="javascript:void(0);">${item[nameKey]}</a></h6></li>`;
                 });
                 tabsHtml += '</ul>';
                 container.html(tabsHtml);
@@ -772,16 +772,23 @@
 
             // --- "ADD ALL" BUTTON (for Pack Mode) ---
             packActionsContainer.on('click', function() {
-                console.log('clicked...');
+                const activePackTab = level2Container.find('li.active');
+                const activeSurfaceTab = level3Container.find('li.active');
+                const activeOptionTab = level4Container.find('li.active');
 
-                productGridContainer.find('.product-info-pack').each(function() {
-                    const productCard = $(this);
-                    const productData = productCard.data();
-                    const cartId = productData.productId + '-' + (productData.variationId || '');
-                    console.log(productCard);
-                    console.log(productData);
-                    console.log(cartId);
-                });
+                // Use .data() to safely get the IDs and names
+                const packContext = {
+                    pack_id: activePackTab.data('pack-id'),
+                    pack_name: activePackTab.data('name'),
+                    group_id: activeSurfaceTab.data('group-id'),
+                    group_name: activeSurfaceTab.data('name'), // 'surface' is the name
+                    option_id: activeOptionTab.data('option-id'),
+                    option_name: activeOptionTab.data('name'),
+                };
+
+                // --- 2. LOG THE CONTEXT (for your requirement) ---
+                console.log("--- Pack Context ---");
+                console.log(packContext);
 
             });
 
