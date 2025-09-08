@@ -431,7 +431,9 @@
             });
 
             // --- "ADD SELECTION" BUTTON (for Category Mode) ---
+            /*
             categoryActionsContainer.on('click', function() {
+
                 const selectedProducts = [];
                 productGridContainer.find('.product-select-check:checked').each(function() {
                     const card = $(this).closest('.product-info-category');
@@ -440,6 +442,61 @@
                 console.log("Selected Category Products:", selectedProducts);
                 // alert(`${selectedProducts.length} item(s) selected. See console.`);
                 // Here you would loop through selectedProducts and add them to the cart
+            });
+            */
+
+            categoryActionsContainer.on('click', function() {
+                const selectedCards = productGridContainer.find('.product-select-check:checked');
+
+                if (selectedCards.length === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No selected products to Add',
+                        text: 'Please select at least one product to add.',
+                    });
+                    return;
+                }
+
+                // 1. Loop through the selected products and add them to the cart object.
+                selectedCards.each(function() {
+                    const card = $(this).closest('.product-info-category');
+                    const productData = card.data();
+
+                    // Use 'c' prefix for Category items to distinguish from Pack items if needed
+                    const cartId = `c-${productData.productId}-${productData.variationId || '0'}`;
+
+                    // Get the category name from the active tab for the description
+                    const categoryName = $('#level-2-tabs').find('.active h6 a').text() ||
+                        'Category';
+
+                    // Add to the cart object, or update quantity if it already exists
+                    if (order.items[cartId]) {
+                        order.items[cartId].quantity++;
+                    } else {
+                        order.items[cartId] = {
+                            type: 'category',
+                            id: productData.productId,
+                            variation_id: productData.variationId,
+                            name: productData.name,
+                            price: parseFloat(productData.price),
+                            quantity: 1,
+                            category: categoryName // This is the descriptive text
+                        };
+                    }
+                });
+
+                // 2. Persist the updated cart to localStorage.
+                saveOrderToStorage();
+
+                // 3. Redraw the entire UI to reflect the changes.
+                renderCart();
+
+                // 4. Provide feedback to the user.
+                console.log(`${selectedCards.length} item(s) added to the cart.`);
+
+                // 5. Uncheck the boxes after adding them.
+                selectedCards.prop('checked', false);
+                $('.product-info-category').removeClass('selected');
             });
 
             /** Renders the entire cart UI. */
@@ -548,12 +605,17 @@
             }
 
             function syncActiveProductCards() {
-                $('.product-info').removeClass('active');
+
+                $('.product-info-category').removeClass('active');
                 for (const cartId in order.items) {
                     const item = order.items[cartId];
-                    $(`.product-info[data-product-id="${item.id}"][data-variation-id="${item.variation_id || ''}"]`)
-                        .addClass('active');
+                    if (item.type == 'category') {
+                        console.log(item);
+                        $(`.product-info-category[data-product-id="${item.id}"][data-variation-id="${item.variation_id || ''}"]`)
+                            .addClass('active');
+                    }
                 }
+
             }
 
             /** Syncs checkboxes on product cards with the current cart state (for Pack Mode). */
@@ -561,7 +623,7 @@
                 $('.product-select-check').prop('checked', false);
                 for (const cartId in order.items) {
                     const item = order.items[cartId];
-                    $(`.product-info[data-product-id="${item.id}"][data-variation-id="${item.variation_id || ''}"]`)
+                    $(`.product-info-category[data-product-id="${item.id}"][data-variation-id="${item.variation_id || ''}"]`)
                         .find('.product-select-check').prop('checked', true);
                 }
             }
@@ -783,8 +845,8 @@
                             `{{ asset('public/storage') }}/${product.product_image}` :
                             `{{ asset('public/storage/images/default_image.png') }}`;
                         finalHtml = `
-                        <div class="col-sm-6 col-md-4 col-lg-4 product-item">
-                            <div class="card h-100 product-info" 
+                        <div class="col-sm-6 col-md-4 col-lg-4 item">
+                            <div class="card h-100 product-info product-info-pack" 
                                 data-product-id="${product.id}" data-variation-id=""
                                 data-name="${product.name}" data-price="${product.sale_price}">
                                 <div class="card-body p-2 d-flex align-items-center justify-content-center">
@@ -812,7 +874,7 @@
                     dots: false
                 });
 
-                syncPackProductCheckboxes();
+                // syncPackProductCheckboxes();
             }
 
             // --- "ADD ALL" BUTTON (for Pack Mode) ---
@@ -821,6 +883,19 @@
             });
 
             function addSelectedPackItemsToCart() {
+
+                const productItems = productGridContainer.find('.product-item');
+
+                if (productItems.length === 0) {
+                    // If the grid is empty, show an alert and stop.
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Products to Add',
+                        text: 'This pack option appears to be empty.',
+                    });
+                    return; // Exit the function
+                }
+
                 const activePackTab = level2Container.find('li.active');
                 const activeSurfaceTab = level3Container.find('li.active');
                 const activeOptionTab = level4Container.find('li.active');
@@ -882,13 +957,26 @@
 
                 // 2. Check if the item exists in our cart object and delete it.
                 if (order.items[cartId]) {
-                    delete order.items[cartId];
 
-                    // 3. Persist the change to localStorage.
-                    saveOrderToStorage();
-
-                    // 4. Update the entire UI (cart list, totals, and product card active states).
-                    renderCart();
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "You want to delete the item?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, delete it!", // ✅ This works
+                        cancelButtonText: "Cancel",
+                        customClass: {
+                            confirmButton: "btn btn-primary",
+                            cancelButton: "btn btn-danger ml-1"
+                        },
+                        buttonsStyling: false
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            delete order.items[cartId];
+                            saveOrderToStorage();
+                            renderCart();
+                        }
+                    });
                 }
             });
 
@@ -904,15 +992,29 @@
             });
             $('#shipping-cost-form').on('submit', function(e) {
                 e.preventDefault();
-                order.shipping = parseFloat($('#modal-shipping-input').val()) || 0;
+                const shippingCost = parseFloat($('#modal-shipping-input').val()) || 0;
+
+                // Update the order object
+                order.shipping = shippingCost;
+                // Update the hidden input (for consistency, though calculations use the order object)
+                $('#shipping-value').val(shippingCost);
+
                 saveOrderToStorage();
                 calculateTotals();
                 shippingModal.hide();
             });
             $('#discount-form').on('submit', function(e) {
                 e.preventDefault();
-                order.discount_type = $('#modal-discount-type').val();
-                order.discount = parseFloat($('#modal-discount-value').val()) || 0;
+                const discountType = $('#modal-discount-type').val();
+                const discountValue = parseFloat($('#modal-discount-value').val()) || 0;
+
+                // Update the order object
+                order.discount_type = discountType;
+                order.discount = discountValue;
+                // Update hidden inputs
+                $('#discount-type-hidden').val(discountType);
+                $('#discount-value').val(discountValue);
+
                 saveOrderToStorage();
                 calculateTotals();
                 discountModal.hide();
@@ -924,7 +1026,11 @@
                 $('#modal-tax-select').find(
                     `option[data-rate="${tr.toFixed(2)}"]`).prop('selected', true)
             });
-            $('#shipping-cost').on('show.bs.modal', () => $('#modal-shipping-input').val(order.shipping));
+
+            $('#shipping-cost').on('show.bs.modal', function() {
+                $('#modal-shipping-input').val(order.shipping);
+            });
+
             $('#discount').on('show.bs.modal', () => {
                 $('#modal-discount-type').val(order.discount_type);
                 $('#modal-discount-value').val(order.discount);

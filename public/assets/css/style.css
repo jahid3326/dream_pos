@@ -42107,8 +42107,8 @@ label span {
   border-width: 1px;
 }
 .pos-three .product-info.active .product-image::before {
-  content: "\eaf2";
-  background: #FF0000;
+  /* content: "\eaf2";
+  background: #FF0000; */
 }
 .pos-three aside.product-order-list {
   padding: 0;

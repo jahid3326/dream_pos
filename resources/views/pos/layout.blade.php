@@ -330,6 +330,10 @@
     <!-- Color Picker JS -->
     <script src="{{ asset('public/assets/plugins/@simonwep/pickr/pickr.es5.min.js') }}"></script>
 
+    <!-- Bootstrap Core JS -->
+    <script src="{{ asset('public/assets/plugins/sweetalert/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ asset('public/assets/plugins/sweetalert/sweetalerts.min.js') }}"></script>
+
     <!-- Custom JS -->
     <script src="{{ asset('public/assets/js/theme-colorpicker.js') }}"></script>
     <script src="{{ asset('public/assets/js/calculator.js') }}"></script>
