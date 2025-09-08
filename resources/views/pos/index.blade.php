@@ -195,79 +195,27 @@
                     </div>
                 </div>
                 <div class="row gx-2">
-                    <div class="col-sm-4">
-                        <a href="javascript:void(0);"
-                            class="btn btn-orange d-flex align-items-center justify-content-center w-100 mb-2"
-                            data-bs-toggle="modal" data-bs-target="#hold-order"><i
-                                class="ti ti-player-pause me-2"></i>Hold</a>
-                        <a href="javascript:void(0);"
-                            class="btn btn-secondary d-flex align-items-center justify-content-center w-100 mb-2"
-                            data-bs-toggle="modal" data-bs-target="#orders"><i class="ti ti-shopping-cart me-2"></i>View
-                            Orders</a>
+                    <div class="col-sm-3">
+                        <button class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2">
+                            <i class="ti ti-receipt me-2"></i>Generate quote</a>
+                        </button>
                     </div>
-                    <div class="col-sm-4">
-                        <a href="javascript:void(0);"
-                            class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2"><i
-                                class="ti ti-trash me-2"></i>Void</a>
-                        <a href="javascript:void(0);"
-                            class="btn btn-indigo d-flex align-items-center justify-content-center w-100 mb-2"
-                            data-bs-toggle="modal" data-bs-target="#reset"><i class="ti ti-reload me-2"></i>Reset</a>
+                    <div class="col-sm-3">
+                        <button class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2">
+                            <i class="ti ti-receipt me-2"></i>Generate Invoice</a>
+                        </button>
                     </div>
-                    <div class="col-sm-4">
-                        <a href="javascript:void(0);"
-                            class="btn btn-cyan d-flex align-items-center justify-content-center w-100 mb-2"
-                            data-bs-toggle="modal" data-bs-target="#payment-completed"><i
-                                class="ti ti-cash-banknote me-2"></i>Payment</a>
-                        <a href="javascript:void(0);"
-                            class="btn btn-danger d-flex align-items-center justify-content-center w-100 mb-2"
-                            data-bs-toggle="modal" data-bs-target="#recents"><i
-                                class="ti ti-refresh-dot me-2"></i>Transaction</a>
+                    <div class="col-sm-3">
+                        <button class="btn btn-success d-flex align-items-center justify-content-center w-100 mb-2">
+                            <i class="ti ti-cash-banknote me-2"></i>Pay now</a>
+                        </button>
                     </div>
-                </div>
-            </div>
-            <div class="block-section payment-method">
-                <h5 class="mb-2">Select Payment</h5>
-                <div class="row align-items-center justify-content-center methods g-2 mb-4">
-                    <div class="col-sm-6 col-md-4 col-xl d-flex">
-                        <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                            data-bs-target="#payment-cash">
-                            <img src="{{ asset('public/assets/img/icons/cash-icon.svg') }}" alt="img">
-                            <p class="fw-medium">Cash</p>
-                        </a>
+                    <div class="col-sm-3">
+                        <button
+                            class="btn btn-outline-secondary d-flex align-items-center justify-content-center w-100 mb-2">
+                            <i class="ti ti-reload me-2"></i>Reset</a>
+                        </button>
                     </div>
-                    <div class="col-sm-6 col-md-4 col-xl d-flex">
-                        <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                            data-bs-target="#payment-card">
-                            <img src="{{ asset('public/assets/img/icons/card.svg') }}" alt="img">
-                            <p class="fw-medium">Card</p>
-                        </a>
-                    </div>
-                    <div class="col-sm-6 col-md-4 col-xl d-flex">
-                        <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                            data-bs-target="#payment-points">
-                            <img src="{{ asset('public/assets/img/icons/points.svg') }}" alt="img">
-                            <p class="fw-medium">Points</p>
-                        </a>
-                    </div>
-                    <div class="col-sm-6 col-md-4 col-xl d-flex">
-                        <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                            data-bs-target="#payment-deposit">
-                            <img src="{{ asset('public/assets/img/icons/deposit.svg') }}" alt="img">
-                            <p class="fw-medium">Deposit</p>
-                        </a>
-                    </div>
-                    <div class="col-sm-6 col-md-4 col-xl d-flex">
-                        <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                            data-bs-target="#payment-cheque">
-                            <img src="{{ asset('public/assets/img/icons/cheque.svg') }}" alt="img">
-                            <p class="fw-medium">Cheque</p>
-                        </a>
-                    </div>
-                </div>
-                <div class="btn-block m-0">
-                    <a class="btn btn-teal w-100" href="javascript:void(0);">
-                        Pay : $56590.00
-                    </a>
                 </div>
             </div>
         </aside>
@@ -596,7 +544,6 @@
                 // 7. Update other UI elements like the item count and 'Pay' button.
                 const totalItems = Object.values(order.items).reduce((sum, item) => sum + item.quantity, 0);
                 $('.badge:contains("Items") .text-teal').text(totalItems);
-                $('.btn-block a').text(`Pay : $${grandTotal.toFixed(2)}`);
 
                 // 8. Update hidden inputs for form submission.
                 $('#sub_total_hidden').val(subTotal.toFixed(2));

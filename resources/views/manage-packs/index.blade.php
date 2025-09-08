@@ -225,12 +225,25 @@
                             }
 
                             response.products.forEach(function(product) {
+                                const imageUrl = product.product_image ?
+                                    `{{ asset('public/storage') }}/${product.product_image}` :
+                                    `{{ asset('public/storage/images/default_image.png') }}`;
                                 const newRowHtml = `
                             <tr data-id="${product.id}">
-                                <td>${product.name}</td>
+                                <td>
+                                    <label class="d-flex align-items-center">
+                                        <img src="${imageUrl}" alt="${product.name}"
+                                            class="rounded me-2" width="40" height="40"
+                                            style="object-fit: cover;">
+                                        <div>
+                                            <span class="fw-bold">${product.name}</span><br>
+                                            <small class="text-muted">${product.measurement ?? 'N/A'}</small>
+                                        </div>
+                                    </label>
+                                </td>
                                 <td>${product.sku || '(Variation Parent)'}</td>
                                 <td>${product.supplier && product.supplier.user ? product.supplier.user.name : 'N/A'}</td>
-                                <td>${product.type === 'variation' ? `<button class="btn btn-sm variant-btn"><i class="ti ti-checkbox"></i></button>` : `<button class="btn btn-sm btn-outline-info disabled" disabled><i class="ti ti-checkbox"></i></button>`}</td>
+                                <td>${product.type === 'variation' ? `<button class="btn btn-sm variant-btn" data-pack-product-id="${product.pivot.id}"><i class="ti ti-checkbox"></i></button>` : `<button class="btn btn-sm btn-outline-info disabled" disabled><i class="ti ti-checkbox"></i></button>`}</td>
                                 <td><button class="me-2 p-2 d-flex align-items-center border rounded remove-product-btn" data-product-id="${product.id}" data-option-id="${optionId}"><i data-feather="trash-2" class="feather-trash-2"></i></button></td>
                                 <td><i class="fas fa-bars handle" style="cursor: move;"></i></td>
                             </tr>`;
@@ -417,8 +430,12 @@
                                        ${checkedAttribute}>
                             </td>
                             <td class="item-name">
-                                <label class="form-check-label ${disabledAttribute ? 'text-muted' : ''}" for="item-${item.unique_id}">
-                                    ${item.display_name}<br/>(${item.measurement})
+                                <label class="form-check-label d-flex align-items-center ${disabledAttribute ? 'text-muted' : ''}" for="item-${item.unique_id}">
+                                    <img src="${item.image}" alt="${item.name}" class="rounded me-2"
+                                    width="40" height="40" style="object-fit: cover;">
+                                    <div>
+                                    <span class="fw-bold">${item.display_name}</span><br><small class="text-muted">${item.measurement}</small>
+                                    </div>
                                 </label>
                             </td>
                             <td>${item.sku}</td>

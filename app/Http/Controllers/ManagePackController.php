@@ -53,7 +53,7 @@ class ManagePackController extends Controller
     public function attachProducts(Request $request, PackGroupOption $option)
     {
         $request->validate(['product_ids' => 'required|array']);
-
+        /*
         // Determine the starting position for the new items
         $lastPosition = $option->products()->max('position') ?? 0;
 
@@ -70,6 +70,30 @@ class ManagePackController extends Controller
         $newlyAddedProducts = Product::with('supplier.user', 'variations')
             ->whereIn('id', $request->product_ids)
             ->get();
+
+        $newlyAddedProducts->each(function ($product) {
+            $product->pivot->load('selectedVariations');
+        });
+        */
+        DB::transaction(function () use ($request, $option) {
+            $lastPosition = $option->products()->max('position') ?? 0;
+            $productsToAttach = [];
+            foreach ($request->product_ids as $index => $productId) {
+                $productsToAttach[$productId] = ['position' => $lastPosition + $index + 1];
+            }
+            $option->products()->syncWithoutDetaching($productsToAttach);
+        });
+
+        // This query will now work because the relationship provides the correct pivot model
+        $newlyAddedProducts = $option->products()
+            ->whereIn('product_id', $request->product_ids)
+            ->with(['supplier.user', 'variations'])
+            ->get();
+
+        // This loop will now work because $product->pivot is a valid PackProduct object
+        $newlyAddedProducts->each(function ($product) {
+            $product->pivot->load('selectedVariations');
+        });
 
         return response()->json([
             'success' => true,
@@ -130,6 +154,7 @@ class ManagePackController extends Controller
         // This logic for getting all possible items remains correct
         $allItems = Product::with(['variations', 'category'])->get()->flatMap(function ($product) {
             if ($product->type === 'single') {
+                $product->image = $product->product_image ? asset('public/storage/' . $product->product_image) : asset('public/storage/images/default_image.png');
                 $product->display_name = $product->name;
                 $product->measurement = $product->measurement;
                 $product->unique_id = 'p-' . $product->id;
@@ -137,6 +162,7 @@ class ManagePackController extends Controller
                 return collect([$product]);
             }
             return $product->variations->map(function ($variation) use ($product) {
+                $variation->image = $variation->image ? asset('public/storage/' . $variation->image) : asset('public/storage/images/default_image.png');
                 $variation->display_name = $product->name;
                 $variation->measurement = $variation->measurement;
                 $variation->unique_id = 'v-' . $variation->id;

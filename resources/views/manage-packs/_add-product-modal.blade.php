@@ -40,9 +40,28 @@
                             @foreach ($allProducts as $product)
                                 {{-- Add data-category-id to each row --}}
                                 <tr data-category-id="{{ $product->category_id }}">
-                                    <td><input type="checkbox" class="product-checkbox" value="{{ $product->id }}">
+                                    <td><input type="checkbox" class="product-checkbox" id="product-{{ $product->id }}"
+                                            value="{{ $product->id }}">
                                     </td>
-                                    <td class="product-name">{{ $product->name }}</td>
+                                    <td class="product-name">
+                                        @php
+                                            $imageUrl = $product->product_image
+                                                ? asset('public/storage/' . $product->product_image)
+                                                : asset('public/storage/images/default_image.png');
+                                        @endphp
+                                        <label class="form-check-label d-flex align-items-center"
+                                            for="product-{{ $product->id }}" style="cursor: pointer">
+                                            {{-- Product Image --}}
+                                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}"
+                                                class="rounded me-2" width="40" height="40"
+                                                style="object-fit: cover;">
+                                            {{-- Product Name and Measurement --}}
+                                            <div>
+                                                <span class="fw-bold">{{ $product->name }}</span><br>
+                                                <small class="text-muted">{{ $product->measurement ?? 'N/A' }}</small>
+                                            </div>
+                                        </label>
+                                    </td>
                                     <td>{{ $product->display_sku }}</td>
                                     <td class="d-none">{{ $product->category_id }}</td>
                                 </tr>

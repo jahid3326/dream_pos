@@ -17,7 +17,23 @@
                     @foreach ($option->products as $product)
                         {{-- Add data-id for sorting --}}
                         <tr data-id="{{ $product->id }}">
-                            <td>{{ $product->name }}</td>
+                            <td>
+                                @php
+                                    $imageUrl = $product->product_image
+                                        ? asset('public/storage/' . $product->product_image)
+                                        : asset('public/storage/images/default_image.png');
+                                @endphp
+                                <label class="d-flex align-items-center">
+                                    {{-- Product Image --}}
+                                    <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="rounded me-2"
+                                        width="40" height="40" style="object-fit: cover;">
+                                    {{-- Product Name and Measurement --}}
+                                    <div>
+                                        <span class="fw-bold">{{ $product->name }}</span><br>
+                                        <small class="text-muted">{{ $product->measurement ?? 'N/A' }}</small>
+                                    </div>
+                                </label>
+                            </td>
                             <td>{{ $product->sku ?? $product->type }}</td>
                             <td>{{ $product->supplier->user->name ?? 'N/A' }}</td>
                             <td>

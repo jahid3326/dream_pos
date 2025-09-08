@@ -1,3 +1,8 @@
+<style>
+    label span {
+        color: unset;
+    }
+</style>
 <div class="modal fade" id="manageItemsModal" tabindex="-1" aria-labelledby="manageItemsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
