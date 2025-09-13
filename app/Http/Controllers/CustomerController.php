@@ -13,6 +13,7 @@ use Illuminate\Validation\Rules;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\CustomerImport;
 use Maatwebsite\Excel\Validators\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class CustomerController extends Controller
 {
@@ -66,7 +67,7 @@ class CustomerController extends Controller
 
         DB::transaction(function () use ($request) {
             $customerRole = Role::firstOrCreate(['name' => 'Customer']);
-            
+
             $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
@@ -91,6 +92,68 @@ class CustomerController extends Controller
         });
 
         return redirect()->route('customers.index')->with('success', 'Customer created successfully.');
+    }
+
+    public function ajaxStore(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            // User fields
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone_number' => ['nullable', 'string', 'max:25'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+
+            // Customer fields
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'tax_number' => ['nullable', 'string', 'max:50'],
+            'billing_address' => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()->all()], 422);
+        }
+
+        $customer = null;
+        try {
+            DB::transaction(function () use ($request, &$customer) {
+                $customerRole = Role::firstOrCreate(['name' => 'Customer']);
+
+                $userData = [
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone_number' => $request->phone_number,
+                    'password' => Hash::make($request->password),
+                    'role_id' => $customerRole->id,
+                ];
+
+                if ($request->hasFile('profile_picture')) {
+                    $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+                    $userData['profile_picture'] = $path;
+                }
+
+                $user = User::create($userData);
+
+                $customer = Customer::create([
+                    'user_id' => $user->id,
+                    'company_name' => $request->company_name,
+                    'tax_number' => $request->tax_number,
+                    'billing_address' => $request->billing_address,
+                    'status' => $request->status ?? true,
+                ]);
+
+                $customer->load('user'); // Load the relationship to send back
+            });
+        } catch (\Exception $e) {
+            \Log::error('Customer creation failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'An unexpected error occurred.'], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer created successfully!',
+            'customer' => $customer
+        ]);
     }
 
     /**
@@ -127,7 +190,7 @@ class CustomerController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $customer, $user) {
-            $userData = [ 'name' => $request->name, 'email' => $request->email ];
+            $userData = ['name' => $request->name, 'email' => $request->email];
 
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
@@ -174,13 +237,12 @@ class CustomerController extends Controller
         if (!empty($import->errors)) {
             // If there are errors, redirect back with both a summary and the detailed errors
             return redirect()->route('customers.import.show')
-                            ->with('import_errors', $import->errors)
-                            ->with('error', "The import has finished, but with some errors. " . $import->importedCount . " records were imported successfully.");
+                ->with('import_errors', $import->errors)
+                ->with('error', "The import has finished, but with some errors. " . $import->importedCount . " records were imported successfully.");
         }
 
         // 4. If there were no errors, show a full success message
         return redirect()->route('customers.index')->with('success', 'All customers (' . $import->importedCount . ' records) imported successfully!');
-        
     }
 
     /**

@@ -63,61 +63,31 @@
     <div class="col-md-12 col-lg-6 ps-0 theiaStickySidebar">
         <aside class="product-order-list">
             <div class="customer-info">
-                <div class="order-head bg-light d-flex align-items-center justify-content-between w-100 mb-3">
-                    <div>
-                        <h3>Order List</h3>
-                        <span>Transaction ID : #65565</span>
-                    </div>
-                    <div>
-                        <a class="link-danger fs-16" href="javascript:void(0);"><i class="ti ti-trash-x-filled"></i></a>
-                    </div>
-                </div>
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="input-icon-end position-relative">
-                            <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy">
-                            <span class="input-icon-addon">
-                                <i class="ti ti-calendar text-gray-7"></i>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" placeholder="Type Ref Number">
-                    </div>
-                    <div class="col-md-4">
-                        <select class="select">
-                            <option>Search Shop</option>
-                            <option>IPhone 14 64GB</option>
-                            <option>MacBook Pro</option>
-                            <option>Rolex Tribute V3</option>
-                            <option>Red Nike Angelo</option>
-                            <option>Airpod 2</option>
-                            <option>Oldest</option>
-                        </select>
-                    </div>
                     <div class="col-md-12">
                         <div class="d-flex align-items-center gap-2">
                             <div class="w-100">
-                                <select class="select" name="customer_id">
-                                    <option value="">Walk-in Customer</option>
+                                {{-- Give the select an ID and a class for Select2 --}}
+                                <select class="form-select" id="customer_select" name="customer_id">
+                                    <option value="" selected>Walk-in Customer</option>
                                     @foreach ($customers as $customer)
+                                        {{-- Only show the customer's name --}}
                                         <option value="{{ $customer->id }}">
-                                            {{ $customer->user->name }}</option>
+                                            {{ $customer->user->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
+                            {{-- This button will now open our new modal --}}
                             <a href="#" class="btn btn-primary btn-icon" data-bs-toggle="modal"
-                                data-bs-target="#create"><i class="ti ti-user-plus"></i></a>
+                                data-bs-target="#addCustomerModal">
+                                <i class="ti ti-user-plus"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="product-added block-section">
-                <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-                    <h5 class="d-flex align-items-center mb-0">Order Details</h5>
-                    <div class="badge bg-light text-gray-9 fs-12 fw-semibold py-2 border rounded">
-                        Items : <span class="text-teal">3</span></div>
-                </div>
                 <div class="product-wrap">
                     <div class="empty-cart text-center">
                         <div class="mb-1"><img src="{{ asset('public/assets/img/icons/empty-cart.svg') }}" alt="img">
@@ -221,6 +191,78 @@
         </aside>
     </div>
     <!-- /Order Details -->
+    <!-- Add Customer Modal -->
+    <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addCustomerForm">
+                    @csrf
+                    <div class="modal-body">
+                        <div id="customer-errors" class="alert alert-danger" style="display: none;"></div>
+                        <div class="row">
+                            {{-- User Information --}}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Customer Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" name="phone_number" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Profile Picture</label>
+                                <input type="file" name="profile_picture" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password_confirmation" class="form-control" required>
+                            </div>
+
+                            <hr class="my-3">
+
+                            {{-- Customer-Specific Information --}}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" name="company_name" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tax Number</label>
+                                <input type="text" name="tax_number" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="1" selected>Enabled</option>
+                                    <option value="0">Disabled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Billing Address</label>
+                                <textarea name="billing_address" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('scripts')
     <script>
@@ -231,7 +273,7 @@
             // =========================================================================
             const ORDER_STORAGE_KEY = 'pos_order';
 
-            // localStorage.removeItem(ORDER_STORAGE_KEY);
+            localStorage.removeItem(ORDER_STORAGE_KEY);
 
             let order = {}; // The single source of truth for the current order state
 
@@ -1011,6 +1053,80 @@
 
             // Start in "Pack Meuble" mode by default
             $('#mode-packs').click();
+
+            const customerSelect = $('#customer_select');
+            customerSelect.select2({
+                placeholder: 'Search for a customer...',
+                width: '100%'
+            });
+
+            // 2. Initialize the modal instance
+            const addCustomerModal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
+            const customerForm = $('#addCustomerForm');
+
+            // 3. Handle the AJAX form submission for the new customer modal
+            customerForm.on('submit', function(e) {
+                e.preventDefault(); // Prevent the default page reload
+                const form = $(this);
+                const url = "{{ route('customers.ajaxStore') }}";
+                const submitButton = form.find('button[type="submit"]');
+                const originalButtonText = submitButton.html();
+
+                // Use FormData to correctly handle file uploads
+                const formData = new FormData(this);
+
+                // UI feedback
+                submitButton.prop('disabled', true).html('Saving...');
+                $('#customer-errors').hide().html('');
+
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: formData, // Send the FormData object
+                    processData: false, // Essential for file uploads
+                    contentType: false, // Essential for file uploads
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            const newCustomer = response.customer;
+                            const user = newCustomer.user;
+
+                            // Create a new <option> element
+                            const newOption = new Option(
+                                user.name, // Display Text (Only the name)
+                                newCustomer.id, // Value
+                                true, // Default Selected
+                                true // Is Selected
+                            );
+
+                            // Add the new option to the Select2 dropdown
+                            customerSelect.append(newOption).trigger('change');
+
+                            addCustomerModal.hide();
+                            form[0].reset();
+                        }
+                    },
+                    error: function(xhr) {
+                        // Handle validation and other server errors
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors;
+                            const errorContainer = $('#customer-errors');
+                            let errorHtml = '<ul>';
+                            errors.forEach(error => errorHtml += '<li>' + error + '</li>');
+                            errorHtml += '</ul>';
+                            errorContainer.html(errorHtml).show();
+                        } else {
+                            alert(
+                                'An unexpected server error occurred. Please try again later.'
+                            );
+                        }
+                    },
+                    complete: function() {
+                        // Always re-enable the button
+                        submitButton.prop('disabled', false).html(originalButtonText);
+                    }
+                });
+            });
 
         });
     </script>

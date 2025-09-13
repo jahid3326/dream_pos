@@ -129,6 +129,8 @@ Route::middleware(['auth'])->group(function () {
                 return response()->download(public_path('samples/customers_import_sample.xlsx'));
             })->name('customers.import.sample');
 
+            Route::post('/customers/ajax-store', [CustomerController::class, 'ajaxStore'])->name('customers.ajaxStore');
+
             Route::resource('customers', CustomerController::class);
 
             // Supplier-related routes

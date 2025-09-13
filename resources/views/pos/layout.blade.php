@@ -166,6 +166,41 @@
         .owl-carousel .owl-nav button.owl-prev:hover {
             background-color: #125391 !important;
         }
+
+        .form-control {
+            border-color: #bcc2c7;
+        }
+
+        .form-select {
+            border: 1px solid #bcc2c7;
+        }
+
+        .modal .close,
+        .modal .btn-close {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            align-items: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            justify-content: center;
+            -webkit-justify-content: center;
+            -ms-flex-pack: center;
+            color: #ffffff;
+            opacity: 1;
+            width: 20px;
+            height: 20px;
+            border: 0;
+            font-weight: 700;
+            background-color: transparent;
+            border-radius: 50px;
+        }
+
+        .modal .close:hover,
+        .modal .btn-close:hover {
+            background-color: transparent;
+            color: #ffffff;
+        }
     </style>
 </head>
 
