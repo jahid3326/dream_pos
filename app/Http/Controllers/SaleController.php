@@ -16,8 +16,28 @@ class SaleController extends Controller
      */
     public function index()
     {
-        // Eager load customer and user to avoid N+1 query issues
-        $sales = Sale::with('customer.user')->latest()->paginate(15);
+        // Eager-load all necessary nested data for the complex view
+        $sales = Sale::with([
+            'customer.user',
+            'payments', // To calculate paid and due amounts
+            // Load both types of sale items
+            'categoryItems' => function ($query) {
+                $query->with(['product', 'variation']);
+            },
+            'packItems' => function ($query) {
+                // For pack items, we need to go deep to get the constituent parts
+                $query->with(['constituentItems' => function ($q) {
+                    $q->with(['packProduct.product', 'packProductSelectedVariation.variation.product']);
+                }]);
+            }
+        ])->latest()->paginate(10); // Use pagination for the main list
+
+        // Add calculated properties to each sale model for easier use in the view
+        $sales->each(function ($sale) {
+            $sale->paid_amount = $sale->payments->sum('amount');
+            $sale->due_amount = $sale->grand_total - $sale->paid_amount;
+            $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Partial' : 'Unpaid');
+        });
         return view('sales.index', compact('sales'));
     }
 
@@ -139,7 +159,17 @@ class SaleController extends Controller
      */
     public function show(Sale $sale)
     {
-        $sale->load('customer.user', 'items.product', 'items.variation', 'orderTax');
+        // Eager load all necessary data for the invoice
+        $sale->load([
+            'customer.user',
+            'user', // The user who made the sale
+            'orderTax',
+            'categoryItems.product',
+            'categoryItems.variation.product',
+            'packItems.constituentItems.packProduct.product',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product',
+            'payments'
+        ]);
         return view('sales.show', compact('sale'));
     }
 

@@ -16,17 +16,14 @@ return new class extends Migration
             $table->string('invoice_number')->unique();
             $table->foreignId('customer_id')->constrained('customers');
             $table->dateTime('sales_date');
-            $table->string('order_status')->default('pending'); // e.g., pending, delivered, cancelled
-
+            $table->string('order_status')->default('on process');
             $table->decimal('sub_total', 12, 2);
             $table->foreignId('order_tax_id')->nullable()->constrained('taxes');
             $table->decimal('order_tax_amount', 12, 2)->default(0);
             $table->decimal('discount', 12, 2)->default(0);
             $table->decimal('shipping', 12, 2)->default(0);
             $table->decimal('grand_total', 12, 2);
-
-            $table->text('terms_and_conditions')->nullable();
-            $table->text('notes')->nullable();
+            $table->foreignId('order_taken_by')->constrained('users'); // Link to the user who made the sale
             $table->timestamps();
         });
     }

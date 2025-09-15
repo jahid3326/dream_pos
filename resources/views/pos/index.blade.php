@@ -166,23 +166,27 @@
                 </div>
                 <div class="row gx-2">
                     <div class="col-sm-3">
-                        <button class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2">
+                        <button class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2"
+                            id="generate-quote-btn">
                             <i class="ti ti-receipt me-2"></i>Generate quote</a>
                         </button>
                     </div>
                     <div class="col-sm-3">
-                        <button class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2">
+                        <button class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2"
+                            id="generate-invoice-btn">
                             <i class="ti ti-receipt me-2"></i>Generate Invoice</a>
                         </button>
                     </div>
                     <div class="col-sm-3">
-                        <button class="btn btn-success d-flex align-items-center justify-content-center w-100 mb-2">
+                        <button class="btn btn-success d-flex align-items-center justify-content-center w-100 mb-2"
+                            id="pay-now-btn">
                             <i class="ti ti-cash-banknote me-2"></i>Pay now</a>
                         </button>
                     </div>
                     <div class="col-sm-3">
                         <button
-                            class="btn btn-outline-secondary d-flex align-items-center justify-content-center w-100 mb-2">
+                            class="btn btn-outline-secondary d-flex align-items-center justify-content-center w-100 mb-2"
+                            id="reset-btn">
                             <i class="ti ti-reload me-2"></i>Reset</a>
                         </button>
                     </div>
@@ -256,8 +260,55 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary me-1" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Finalize Payment & Sale</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="payment-form">
+                    <div class="modal-body">
+                        <div id="payment-errors" class="alert alert-danger" style="display: none;"></div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Date</label>
+                                <input type="date" name="payment_date" id="payment-date" class="form-control"
+                                    required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Mode<span class="text-danger">*</span></label>
+                                <select name="payment_mode" class="form-select" required>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card">Card</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Amount<span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" name="amount" id="payment-amount"
+                                    class="form-control" required>
+                                <small class="form-text text-muted">Max. Amount: <span id="max-payable-text"
+                                        class="fw-bold"></span></small>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Payment Note</label>
+                                <textarea name="payment_note" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary me-1" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Payment & Invoice</button>
                     </div>
                 </form>
             </div>
@@ -1127,6 +1178,167 @@
                     }
                 });
             });
+
+
+            // =========================================================================
+            // FOOTER ACTION BUTTONS & SALE SUBMISSION (FRESH CODE)
+            // =========================================================================
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+
+            /** Universal helper function to gather all data for submission from the current POS state. */
+            function gatherSaleData() {
+                calculateTotals();
+                const subTotal = calculateSubTotal();
+                let discountAmount = (order.discount_type === 'percentage') ?
+                    subTotal * (order.discount / 100) :
+                    order.discount;
+                return {
+                    _token: '{{ csrf_token() }}',
+                    customer_id: $('#customer_select').val(),
+                    order_status: 'on process',
+                    items: Object.values(order.items),
+                    sub_total: calculateSubTotal(),
+                    shipping: order.shipping,
+                    discount_amount: discountAmount, // The final calculated amount in $
+                    discount_type: order.discount_type, // 'fixed' or 'percentage'
+                    discount_value: order.discount, // The raw value (e.g., 10 or 10.00)
+                    order_tax_id: findTaxIdByRate(order.tax_rate),
+                    order_tax_amount: calculateOrderTaxAmount(calculateSubTotal(), order.tax_rate),
+                    grand_total: calculateGrandTotal(),
+                };
+            }
+
+            /** Universal helper to handle the AJAX call and server response. */
+            function submitSale(url, data, button) {
+                const originalButtonText = button.html();
+                $('#generate-invoice-btn, #pay-now-btn').prop('disabled', true);
+                button.html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: JSON.stringify(data),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                })
+                                .then(() => {
+                                    clearOrder();
+                                    window.location.href = response.redirect_url;
+                                });
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An unexpected server error occurred.';
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            errorMessage = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Submission Failed',
+                            html: errorMessage
+                        });
+                    },
+                    complete: function() {
+                        $('#generate-invoice-btn, #pay-now-btn').prop('disabled', false);
+                        button.html(originalButtonText);
+                    }
+                });
+            }
+
+            // --- "GENERATE INVOICE" BUTTON (No Payment) ---
+            $('#generate-invoice-btn').on('click', function(e) {
+                e.preventDefault();
+                if (Object.keys(order.items).length === 0) {
+                    Swal.fire('Validation Error', 'Please add items.', 'warning');
+                    return;
+                }
+                if (!$('#customer_select').val()) {
+                    Swal.fire('Validation Error', 'Please select a customer.', 'warning');
+                    return;
+                }
+                const saleData = gatherSaleData();
+                console.log(saleData);
+                submitSale("{{ route('sales.store.invoice') }}", saleData, $(this));
+            });
+
+            // --- "PAY NOW" BUTTON (Opens Modal) ---
+            $('#pay-now-btn').on('click', function(e) {
+                e.preventDefault();
+                if (Object.keys(order.items).length === 0) {
+                    Swal.fire('Validation Error', 'Please add items.', 'warning');
+                    return;
+                }
+                if (!$('#customer_select').val()) {
+                    Swal.fire('Validation Error', 'Please select a customer.', 'warning');
+                    return;
+                }
+
+                const grandTotal = calculateGrandTotal();
+                const today = new Date().toISOString().split('T')[0];
+
+                $('#payment-date').val(today);
+                $('#max-payable-text').text(`$${grandTotal.toFixed(2)}`);
+                $('#payment-amount').attr('max', grandTotal.toFixed(2)).val(grandTotal.toFixed(2));
+
+                $('#payment-errors').hide().html('');
+                paymentModal.show();
+            });
+
+            // --- PAYMENT MODAL SUBMIT (Invoice WITH Payment) ---
+            $('#payment-form').on('submit', function(e) {
+                e.preventDefault();
+                const paymentForm = $(this);
+                const saleData = gatherSaleData();
+
+                saleData.payment_mode = paymentForm.find('[name="payment_mode"]').val();
+                saleData.payment_date = paymentForm.find('[name="payment_date"]').val();
+                saleData.payment_note = paymentForm.find('[name="payment_note"]').val();
+                saleData.amount = parseFloat(paymentForm.find('[name="amount"]').val());
+                saleData.order_status = 'delivered';
+
+                if (saleData.amount > saleData.grand_total || saleData.amount < 0) {
+                    $('#payment-errors').html(
+                        'Amount paid cannot be negative or greater than the total payable.').show();
+                    return;
+                }
+
+                paymentModal.hide();
+                console.log(saleData);
+                submitSale("{{ route('sales.store.withPayment') }}", saleData, $('#pay-now-btn'));
+            });
+
+            // Helper function to find the tax ID from the rate (since the order object only stores the rate)
+            function findTaxIdByRate(rateToFind) {
+                const taxes = {!! Js::from($taxes->pluck('id', 'rate')) !!};
+                return taxes[rateToFind.toFixed(2)] || null;
+            }
+
+            // Helper functions to ensure consistent calculations
+            function calculateSubTotal() {
+                return Object.values(order.items).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            }
+
+            function calculateOrderTaxAmount(subTotal, taxRate) {
+                return subTotal * (taxRate / 100);
+            }
+
+            function calculateGrandTotal() {
+                const subTotal = calculateSubTotal();
+                const taxAmount = calculateOrderTaxAmount(subTotal, order.tax_rate);
+                let discountAmount = (order.discount_type === 'percentage') ? subTotal * (order.discount / 100) :
+                    order.discount;
+                return subTotal + taxAmount + order.shipping - discountAmount;
+            }
 
         });
     </script>

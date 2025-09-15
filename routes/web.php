@@ -207,6 +207,12 @@ Route::middleware(['auth'])->group(function () {
 
             Route::resource('manage-packs', ManagePackController::class);
 
+            // Route for creating an invoice WITHOUT a payment record
+            Route::post('/sales/generate-invoice', [PosController::class, 'storeInvoice'])->name('sales.store.invoice');
+
+            // Route for creating an invoice WITH a payment record
+            Route::post('/sales/store-with-payment', [PosController::class, 'storeWithPayment'])->name('sales.store.withPayment');
+
             // Pos-related routes
             Route::resource('pos', PosController::class);
 

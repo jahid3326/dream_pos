@@ -15,12 +15,24 @@ class Sale extends Model
     {
         return $this->belongsTo(Customer::class);
     }
-    public function items()
-    {
-        return $this->hasMany(SaleItem::class);
-    }
     public function orderTax()
     {
         return $this->belongsTo(Tax::class, 'order_tax_id');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'order_taken_by');
+    }
+    public function categoryItems()
+    {
+        return $this->hasMany(SaleCategoryProductItem::class);
+    }
+    public function packItems()
+    {
+        return $this->hasMany(SalePackProduct::class);
+    }
+    public function payments()
+    {
+        return $this->hasMany(SalePayment::class);
     }
 }
