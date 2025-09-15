@@ -152,6 +152,7 @@ class PosController extends Controller
         ]);
 
         $sale = null;
+
         try {
             DB::transaction(function () use ($request, &$sale) {
                 $sale = $this->createSaleRecord($request, 'on process');
@@ -167,6 +168,46 @@ class PosController extends Controller
             'message' => 'Invoice generated successfully!',
             'redirect_url' => route('sales.show', $sale->id)
         ]);
+
+        /*
+        $item_array = array();
+        foreach ($request->items as $cartItem) {
+            if ($cartItem['type'] === 'pack') {
+                $option = PackGroupOption::find($cartItem['id']);
+                if ($option) {
+                    $packProducts = PackProduct::where('pack_group_option_id', $option->id)
+                        ->with('product', 'selectedVariations.product', 'selectedVariations.variation.product')
+                        ->get();
+
+                    foreach ($packProducts as $packProduct) {
+                        $selectedItems = $packProduct->selectedVariations;
+                        if ($selectedItems->isNotEmpty()) {
+
+                            foreach ($selectedItems as $selectedItem) {
+                                $packSaleItem->constituentItems()->create([
+                                    'pack_product_id' => $selectedItem->pack_product_id,
+                                    'pack_product_selected_variation_id' => $selectedItem->id,
+                                    'product_name' => $selectedItem->product->name ?? $selectedItem->product->name,
+                                ]);
+                            }
+
+                            array_push($item_array, $selectedItems);
+                        } else {
+                            $packSaleItem->constituentItems()->create([
+                                'pack_product_id' => $packProduct->id,
+                                'product_name' => $packProduct->product->name ?? $packProduct->product->name,
+                            ]);
+                            array_push($item_array, $packProduct);
+                        }
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'items' => $item_array,
+        ]);
+        */
     }
 
     /**
@@ -215,8 +256,29 @@ class PosController extends Controller
      */
     private function createSaleRecord(Request $request, string $status)
     {
+        // 1. Find the latest sale record. We must order by ID to get the most recently created one.
+        $latestSale = Sale::latest('id')->first();
+
+        $nextInvoiceNumber = 1; // Default to 1 if no sales exist yet
+
+        if ($latestSale) {
+            // 2. Get the last invoice number string (e.g., "SALE-01").
+            $lastInvoiceNumber = $latestSale->invoice_number;
+
+            // 3. Extract the numeric part from the string.
+            // This will find the number after the last hyphen "-".
+            $numericPart = (int) substr($lastInvoiceNumber, strrpos($lastInvoiceNumber, '-') + 1);
+
+            // 4. Increment the number.
+            $nextInvoiceNumber = $numericPart + 1;
+        }
+
+        // 5. Format the new invoice number with consistent zero-padding.
+        // Using a padding of 2 will give you SALE-01, SALE-02... SALE-10.
+        // A padding of 4 (e.g., SALE-0001) is common for larger systems.
+        $invoiceNumber = 'SALE-' . str_pad($nextInvoiceNumber, 2, '0', STR_PAD_LEFT);
         return Sale::create([
-            'invoice_number' => 'SALE-' . str_pad((Sale::latest()->first()?->id + 1), 2, '0', STR_PAD_LEFT),
+            'invoice_number' => $invoiceNumber,
             'customer_id' => $request->customer_id,
             'sales_date' => now(),
             'order_status' => $status,
@@ -272,15 +334,19 @@ class PosController extends Controller
                     // 3. Loop through the pivot records.
                     foreach ($packProducts as $packProduct) {
                         $selectedItems = $packProduct->selectedVariations;
-
                         if ($selectedItems->isNotEmpty()) {
                             foreach ($selectedItems as $selectedItem) {
                                 $packSaleItem->constituentItems()->create([
-                                    'pack_product_id' => $packProduct->id,
+                                    'pack_product_id' => $selectedItem->pack_product_id,
                                     'pack_product_selected_variation_id' => $selectedItem->id,
-                                    'product_name' => $selectedItem->variation->product->name ?? $selectedItem->product->name,
+                                    'product_name' => $selectedItem->product->name ?? $selectedItem->product->name,
                                 ]);
                             }
+                        } else {
+                            $packSaleItem->constituentItems()->create([
+                                'pack_product_id' => $packProduct->id,
+                                'product_name' => $packProduct->product->name ?? $packProduct->product->name,
+                            ]);
                         }
                     }
                 }

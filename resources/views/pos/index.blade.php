@@ -1221,6 +1221,8 @@
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
                     success: function(response) {
+                        console.log(response);
+                        /*
                         if (response.success) {
                             Swal.fire({
                                     icon: 'success',
@@ -1234,6 +1236,7 @@
                                     window.location.href = response.redirect_url;
                                 });
                         }
+                        */
                     },
                     error: function(xhr) {
                         let errorMessage = 'An unexpected server error occurred.';
@@ -1305,7 +1308,8 @@
                 saleData.payment_note = paymentForm.find('[name="payment_note"]').val();
                 saleData.amount = parseFloat(paymentForm.find('[name="amount"]').val());
                 saleData.order_status = 'delivered';
-
+                // console.log(saleData.amount);
+                // console.log(saleData.grand_total);
                 if (saleData.amount > saleData.grand_total || saleData.amount < 0) {
                     $('#payment-errors').html(
                         'Amount paid cannot be negative or greater than the total payable.').show();
@@ -1315,6 +1319,7 @@
                 paymentModal.hide();
                 console.log(saleData);
                 submitSale("{{ route('sales.store.withPayment') }}", saleData, $('#pay-now-btn'));
+
             });
 
             // Helper function to find the tax ID from the rate (since the order object only stores the rate)
@@ -1333,11 +1338,33 @@
             }
 
             function calculateGrandTotal() {
+                /*
                 const subTotal = calculateSubTotal();
                 const taxAmount = calculateOrderTaxAmount(subTotal, order.tax_rate);
                 let discountAmount = (order.discount_type === 'percentage') ? subTotal * (order.discount / 100) :
                     order.discount;
-                return subTotal + taxAmount + order.shipping - discountAmount;
+                const grandTotal = subTotal + taxAmount + order.shipping - discountAmount;
+                return grandTotal;
+                */
+                const subTotal = calculateSubTotal(); // Assumes this returns a float
+                const taxAmount = calculateOrderTaxAmount(subTotal, order.tax_rate); // Assumes this returns a float
+                const shipping = parseFloat(order.shipping) || 0;
+                const discountValue = parseFloat(order.discount) || 0;
+
+                // 2. Calculate the discount amount
+                let discountAmount = (order.discount_type === 'percentage') ?
+                    subTotal * (discountValue / 100) :
+                    discountValue;
+
+                // 3. Calculate the raw grand total
+                const rawGrandTotal = subTotal + taxAmount + shipping - discountAmount;
+
+                // --- THIS IS THE FIX ---
+                // 4. Round the result to 2 decimal places and ensure it's a float.
+                //    Math.round(num * 100) / 100 is the standard way to do this.
+                const roundedGrandTotal = Math.round(rawGrandTotal * 100) / 100;
+
+                return roundedGrandTotal;
             }
 
         });

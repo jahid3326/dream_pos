@@ -213,7 +213,7 @@
             color: #000 !important;
         }
     </style>
-
+    @stack('styles')
 </head>
 
 <body>

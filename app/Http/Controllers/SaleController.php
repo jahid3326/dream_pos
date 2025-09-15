@@ -8,6 +8,8 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Tax;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use PDF;
 
 class SaleController extends Controller
 {
@@ -19,26 +21,65 @@ class SaleController extends Controller
         // Eager-load all necessary nested data for the complex view
         $sales = Sale::with([
             'customer.user',
-            'payments', // To calculate paid and due amounts
-            // Load both types of sale items
-            'categoryItems' => function ($query) {
-                $query->with(['product', 'variation']);
-            },
-            'packItems' => function ($query) {
-                // For pack items, we need to go deep to get the constituent parts
-                $query->with(['constituentItems' => function ($q) {
-                    $q->with(['packProduct.product', 'packProductSelectedVariation.variation.product']);
-                }]);
+            'payments',
+            'categoryItems.product', // For standard items
+            // --- THIS IS THE CORRECTED EAGER LOADING FOR PACKS ---
+            'packItems.constituentItems' => function ($query) {
+                // For each constituent item, load its definition...
+                $query->with([
+                    'packProductSelectedVariation' => function ($q) {
+                        // ...and on that definition, load the final product and variation details.
+                        $q->with(['product', 'variation']);
+                    }
+                ]);
             }
-        ])->latest()->paginate(10); // Use pagination for the main list
+        ])->latest()->paginate(10);
 
         // Add calculated properties to each sale model for easier use in the view
         $sales->each(function ($sale) {
             $sale->paid_amount = $sale->payments->sum('amount');
             $sale->due_amount = $sale->grand_total - $sale->paid_amount;
-            $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Partial' : 'Unpaid');
+            $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Deposit' : 'Unpaid');
         });
         return view('sales.index', compact('sales'));
+    }
+
+    /**
+     * Store a new payment for an existing sale via AJAX.
+     */
+    public function addPayment(Request $request, Sale $sale)
+    {
+        // Calculate the current due amount for validation
+        $paidAmount = $sale->payments()->sum('amount');
+        $dueAmount = $sale->grand_total - $paidAmount;
+
+        $validator = Validator::make($request->all(), [
+            'payment_date' => 'required|date',
+            'payment_mode' => 'required|string',
+            // The amount paid cannot be more than the amount due
+            'amount' => 'required|numeric|gte:0|max:' . $dueAmount,
+            'note' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()->all()], 422);
+        }
+
+        // Create the new payment record
+        $sale->payments()->create($request->all());
+
+        // After adding the new payment, recalculate and update the sale's status if needed
+        $newPaidAmount = $sale->payments()->sum('amount');
+        if ($newPaidAmount >= $sale->grand_total) {
+            $sale->update(['order_status' => 'delivered']); // Or 'paid'
+        } else {
+            $sale->update(['order_status' => 'in process']); // Or keep as 'pending'
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment added successfully!',
+        ]);
     }
 
     /**
@@ -170,7 +211,40 @@ class SaleController extends Controller
             'packItems.constituentItems.packProductSelectedVariation.variation.product',
             'payments'
         ]);
+
+        // --- THIS IS THE KEY ADDITION ---
+        // Calculate and add payment details directly to the sale object
+        $sale->paid_amount = $sale->payments->sum('amount');
+        $sale->due_amount = $sale->grand_total - $sale->paid_amount;
+        $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Deposit' : 'Unpaid');
         return view('sales.show', compact('sale'));
+    }
+
+    public function viewInvoicePdf(Sale $sale)
+    {
+        // Eager load all the same data as the show view
+        $sale->load([
+            'customer.user',
+            'user',
+            'orderTax',
+            'categoryItems',
+            'packItems.constituentItems',
+            'payments'
+        ]);
+
+        // Calculate payment details
+        $sale->paid_amount = $sale->payments->sum('amount');
+        $sale->due_amount = $sale->grand_total - $sale->paid_amount;
+        $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Partial' : 'Unpaid');
+
+        // Pass the sale data to our dedicated PDF view
+        $pdf = PDF::loadView('sales.invoice-pdf', compact('sale'));
+
+        // --- THIS IS THE KEY CHANGE ---
+        // Instead of download(), use stream().
+        // This sets the Content-Disposition header to 'inline' instead of 'attachment'.
+        $filename = 'Invoice-' . $sale->invoice_number . '.pdf';
+        return $pdf->stream($filename);
     }
 
     /**

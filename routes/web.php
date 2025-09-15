@@ -216,6 +216,9 @@ Route::middleware(['auth'])->group(function () {
             // Pos-related routes
             Route::resource('pos', PosController::class);
 
+            Route::post('/sales/{sale}/payments', [SaleController::class, 'addPayment'])->name('sales.payments.store');
+            Route::get('/sales/{sale}/invoice-pdf', [SaleController::class, 'viewInvoicePdf'])->name('sales.view.pdf');
+
             // Sales-related routes
             Route::resource('sales', SaleController::class);
         });
