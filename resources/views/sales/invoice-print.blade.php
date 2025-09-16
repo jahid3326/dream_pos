@@ -288,6 +288,20 @@
         </div>
 
     </div>
+    <script>
+        window.onload = function() {
+            window.print();
+            // After the print dialog is handled (closed by print or cancel), try to close the window.
+            // This works in many modern browsers if the window was opened by script.
+            window.onafterprint = function() {
+                window.close();
+            }
+            // Fallback for browsers that don't support onafterprint well
+            setTimeout(function() {
+                window.close();
+            }, 500);
+        }
+    </script>
 </body>
 
 </html>

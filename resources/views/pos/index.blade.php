@@ -1221,8 +1221,8 @@
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
                     success: function(response) {
-                        console.log(response);
-                        /*
+                        //console.log(response);
+
                         if (response.success) {
                             Swal.fire({
                                     icon: 'success',
@@ -1236,7 +1236,7 @@
                                     window.location.href = response.redirect_url;
                                 });
                         }
-                        */
+
                     },
                     error: function(xhr) {
                         let errorMessage = 'An unexpected server error occurred.';

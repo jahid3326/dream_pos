@@ -22,18 +22,29 @@ class SaleController extends Controller
         $sales = Sale::with([
             'customer.user',
             'payments',
-            'categoryItems.product', // For standard items
+            'categoryItems.product.category', // For standard items
+            'categoryItems.variation', // For standard items
             // --- THIS IS THE CORRECTED EAGER LOADING FOR PACKS ---
             'packItems.constituentItems' => function ($query) {
                 // For each constituent item, load its definition...
                 $query->with([
+                    'packProduct.product.category',
                     'packProductSelectedVariation' => function ($q) {
                         // ...and on that definition, load the final product and variation details.
-                        $q->with(['product', 'variation']);
+                        $q->with(['product.category', 'variation']);
                     }
                 ]);
             }
         ])->latest()->paginate(10);
+
+        $salesArray = $sales->toArray();
+
+        // Now $salesArray is a pure PHP array
+        /*
+        echo '<pre>';
+        print_r($salesArray);
+        echo '</pre>';
+        */
 
         // Add calculated properties to each sale model for easier use in the view
         $sales->each(function ($sale) {
@@ -205,7 +216,7 @@ class SaleController extends Controller
             'customer.user',
             'user', // The user who made the sale
             'orderTax',
-            'categoryItems.product',
+            'categoryItems.product.category',
             'categoryItems.variation.product',
             'packItems.constituentItems.packProduct.product',
             'packItems.constituentItems.packProductSelectedVariation.variation.product',
@@ -222,20 +233,22 @@ class SaleController extends Controller
 
     public function viewInvoicePdf(Sale $sale)
     {
-        // Eager load all the same data as the show view
+        // Eager load all necessary data for the invoice
         $sale->load([
             'customer.user',
-            'user',
+            'user', // The user who made the sale
             'orderTax',
-            'categoryItems',
-            'packItems.constituentItems',
+            'categoryItems.product.category',
+            'categoryItems.variation.product',
+            'packItems.constituentItems.packProduct.product',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product',
             'payments'
         ]);
 
         // Calculate payment details
         $sale->paid_amount = $sale->payments->sum('amount');
         $sale->due_amount = $sale->grand_total - $sale->paid_amount;
-        $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Partial' : 'Unpaid');
+        $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Diposit' : 'Unpaid');
 
         // Pass the sale data to our dedicated PDF view
         $pdf = PDF::loadView('sales.invoice-pdf', compact('sale'));
@@ -245,6 +258,82 @@ class SaleController extends Controller
         // This sets the Content-Disposition header to 'inline' instead of 'attachment'.
         $filename = 'Invoice-' . $sale->invoice_number . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    public function printInvoice(Sale $sale)
+    {
+        // Eager load all necessary data for the invoice
+        $sale->load([
+            'customer.user',
+            'user', // The user who made the sale
+            'orderTax',
+            'categoryItems.product.category',
+            'categoryItems.variation.product',
+            'packItems.constituentItems.packProduct.product',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product',
+            'payments'
+        ]);
+
+        // Calculate payment details
+        $sale->paid_amount = $sale->payments->sum('amount');
+        $sale->due_amount = $sale->grand_total - $sale->paid_amount;
+        $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Diposit' : 'Unpaid');
+
+        return view('sales.invoice-print', compact('sale'));
+    }
+
+    public function downloadInvoicePdf(Sale $sale)
+    {
+        // Eager load all necessary data for the invoice
+        $sale->load([
+            'customer.user',
+            'user', // The user who made the sale
+            'orderTax',
+            'categoryItems.product.category',
+            'categoryItems.variation.product',
+            'packItems.constituentItems.packProduct.product',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product',
+            'payments'
+        ]);
+
+        // Calculate payment details
+        $sale->paid_amount = $sale->payments->sum('amount');
+        $sale->due_amount = $sale->grand_total - $sale->paid_amount;
+        $sale->payment_status = $sale->due_amount <= 0 ? 'Paid' : ($sale->paid_amount > 0 ? 'Diposit' : 'Unpaid');
+
+        // Pass the sale data to our dedicated PDF view
+        $pdf = PDF::loadView('sales.invoice-pdf', compact('sale'));
+
+        // --- THIS IS THE KEY CHANGE ---
+        // Instead of download(), use stream().
+        // This sets the Content-Disposition header to 'inline' instead of 'attachment'.
+        $filename = 'Invoice-' . $sale->invoice_number . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Fetch all payments for a specific sale via AJAX.
+     */
+    public function getPayments(Sale $sale)
+    {
+        // Eager load the payments relationship
+        $sale->load('payments');
+
+        // You can format the data here if you want, or just send the collection
+        $payments = $sale->payments->map(function ($payment) {
+            return [
+                'date' => $payment->payment_date->format('d M, Y'),
+                'mode' => $payment->payment_mode,
+                'note' => $payment->note,
+                'amount' => number_format($payment->amount, 2),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'invoice_number' => $sale->invoice_number,
+            'payments' => $payments
+        ]);
     }
 
     /**

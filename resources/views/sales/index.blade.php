@@ -56,9 +56,9 @@
                                             @if (ucfirst($sale->order_status) == 'Delivered')
                                                 <span class="badge bg-success">Delivered</span>
                                             @elseif(ucfirst($sale->order_status) == 'In process')
-                                                <span class="badge bg-warning">In process</span>
+                                                <span class="badge" style="background-color: #0d6efd">In process</span>
                                             @else
-                                                <span class="badge bg-warning">On process</span>
+                                                <span class="badge" style="background-color: #fd7e14">On process</span>
                                             @endif
                                         </td>
                                         <td class="text-end fw-bold">${{ number_format($sale->grand_total, 2) }}</td>
@@ -68,7 +68,7 @@
                                             @if ($sale->payment_status == 'Paid')
                                                 <span class="badge bg-success">Paid</span>
                                             @elseif($sale->payment_status == 'Deposit')
-                                                <span class="badge bg-warning">Deposit</span>
+                                                <span class="badge" style="background-color: #fd7e14">Deposit</span>
                                             @else
                                                 <span class="badge bg-danger">Unpaid</span>
                                             @endif
@@ -123,7 +123,10 @@
 
                                                     {{-- Payment Actions --}}
                                                     <li>
-                                                        <a class="dropdown-item d-flex align-items-center" href="#">
+                                                        <a class="dropdown-item d-flex align-items-center view-payments-btn"
+                                                            href="#" data-bs-toggle="modal"
+                                                            data-bs-target="#viewPaymentsModal"
+                                                            data-url="{{ route('sales.payments.get', $sale->id) }}">
                                                             <i class="fas fa-wallet fa-fw me-2"></i> View Payments
                                                         </a>
                                                     </li>
@@ -149,13 +152,15 @@
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item d-flex align-items-center" href="#">
+                                                        <a class="dropdown-item d-flex align-items-center"
+                                                            href="{{ route('sales.downloadInvoice.pdf', $sale->id) }}">
                                                             <i class="fas fa-download fa-fw me-2"></i> Download Invoice
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item d-flex align-items-center" href="#"
-                                                            onclick="window.print(); return false;">
+                                                        <a class="dropdown-item d-flex print-invoice-btn align-items-center"
+                                                            href="javascript:void(0);"
+                                                            data-url="{{ route('sales.print.invoice', $sale->id) }}">
                                                             <i class="fas fa-print fa-fw me-2"></i> Print Invoice
                                                         </a>
                                                     </li>
@@ -190,7 +195,8 @@
         </div>
     </div>
     <!-- Add Payment Modal -->
-    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -237,6 +243,28 @@
                         <button type="submit" class="btn btn-primary">Submit Payment</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    <!-- View Payments Modal -->
+    <div class="modal fade" id="viewPaymentsModal" tabindex="-1" aria-labelledby="viewPaymentsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewPaymentsModalLabel">Payments for Invoice #<span
+                            id="payments-invoice-number"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- The table for payments will be dynamically inserted here --}}
+                    <div id="payments-list-container">
+                        <p class="text-center text-muted">Loading payments...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -424,5 +452,84 @@
                 }
             });
         })
+
+        $(document).on('click', '.print-invoice-btn', function(e) {
+            e.preventDefault();
+
+            // Get the URL from the data-attribute
+            const url = $(this).data('url');
+
+            // Open the URL in a new window. It's important to keep a reference to it.
+            const printWindow = window.open(url, '_blank');
+
+            // Focus on the new window (optional, but good UX)
+            if (printWindow) {
+                printWindow.focus();
+            } else {
+                alert('Please allow pop-ups for this site to print the invoice.');
+            }
+        })
+
+        $(document).on('click', '.view-payments-btn', function(e) {
+            e.preventDefault();
+
+            const url = $(this).data('url');
+            const paymentsContainer = $('#payments-list-container');
+
+            // Show a loading state
+            paymentsContainer.html('<p class="text-center text-muted">Loading payments...</p>');
+
+            // Make the AJAX call to the controller
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Update the modal title
+                        $('#payments-invoice-number').text(response.invoice_number);
+
+                        // Build the payments table HTML
+                        let tableHtml = '';
+                        if (response.payments && response.payments.length > 0) {
+                            tableHtml = `
+                            <table class="table table-bordered table-striped">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Payment Mode</th>
+                                        <th>Note</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                            response.payments.forEach(function(payment) {
+                                tableHtml += `
+                                <tr>
+                                    <td>${payment.date}</td>
+                                    <td>${payment.mode}</td>
+                                    <td>${payment.note || ''}</td>
+                                    <td class="text-end">$${payment.amount}</td>
+                                </tr>`;
+                            });
+
+                            tableHtml += `</tbody></table>`;
+                        } else {
+                            tableHtml =
+                                '<p class="text-center text-muted">No payments have been recorded for this sale.</p>';
+                        }
+
+                        // Inject the finished HTML into the modal
+                        paymentsContainer.html(tableHtml);
+                    }
+                },
+                error: function() {
+                    paymentsContainer.html(
+                        '<p class="text-center text-danger">Could not load payment information.</p>'
+                    );
+                }
+            });
+        });
     </script>
 @endpush

@@ -18,11 +18,17 @@
                             <div class="d-flex align-items-center">
                                 @php
                                     // Determine the image and category from either the variation or the parent product
-                                    $productForInfo = $item->variation->product ?? $item->product;
-                                    $image = $item->variation->image ?? $productForInfo->product_image;
+                                    $image = $item->variation->image ?? $item->product->product_image;
                                     $imageUrl = $image
                                         ? asset('public/storage/' . $image)
                                         : asset('public/storage/images/default_image.png');
+
+                                    $measurement = 'N/A';
+                                    if ($item->variation) {
+                                        $measurement = $item->variation->measurement;
+                                    } else {
+                                        $measurement = $item->product->measurement;
+                                    }
                                 @endphp
 
                                 {{-- Image --}}
@@ -32,7 +38,8 @@
                                 {{-- Name and Category --}}
                                 <div>
                                     <strong>{{ $item->product_name }}</strong><br>
-                                    <small class="text-muted">{{ $productForInfo->category->name ?? 'N/A' }}</small>
+                                    <small
+                                        class="text-muted">{{ $item->product->category->name ?? 'N/A' }}({{ $measurement }})</small>
                                 </div>
                             </div>
                         </td>
@@ -50,7 +57,6 @@
 @if ($sale->packItems->isNotEmpty())
     <h4 class="mt-4">Pack Products</h4>
 
-    {{-- Loop through each pack line item (e.g., "Minimalist | Option 1") --}}
     @foreach ($sale->packItems as $packItem)
         <div class="border rounded p-3 mb-3">
             {{-- Main Pack Item Info --}}
@@ -68,30 +74,66 @@
                     <table class="items-table">
                         <thead class="thead-light">
                             <tr>
-                                <th style="width: 20%;">Product in Pack</th>
+                                <th style="width: 50%;">Product in Pack</th>
                                 <th>Type</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($packItem->constituentItems as $part)
-                                @php
-                                    // Determine the correct product/variation model to get details from
-                                    $itemModel =
-                                        $part->packProductSelectedVariation->variation ??
-                                        $part->packProductSelectedVariation->product;
-                                    $parentProduct =
-                                        $part->packProductSelectedVariation->variation->product ?? $itemModel;
-
-                                    if ($itemModel) {
-                                        $image = $itemModel->image ?? $itemModel->product_image;
-                                        $imageUrl = $image
-                                            ? asset('public/storage/' . $image)
-                                            : asset('public/storage/images/default_image.png');
-                                    } else {
-                                        $imageUrl = asset('images/default_image.png');
-                                    }
-                                @endphp
                                 <tr>
+                                    {{-- THIS IS THE BULLETPROOF LOGIC --}}
+                                    @php
+                                        // Start with null defaults
+                                        $imageUrl = asset('public/storage/images/default_image.png');
+                                        $categoryName = 'N/A';
+                                        $itemType = 'N/A';
+                                        $measurement = 'N/A';
+
+                                        // Safely access the pack definition record
+                                        $selection = $part->packProductSelectedVariation;
+
+                                        if ($selection) {
+                                            // Check if it's a variation
+    if ($selection->product) {
+        $itemType = 'Variation';
+        // Safely access the parent product for category
+        $categoryName = $selection->product->category->name ?? 'N/A';
+        if ($selection->variation) {
+            $measurement = $selection->variation->measurement;
+            // Safely get the image
+            if ($selection->variation->image) {
+                $imageUrl = asset(
+                    'public/storage/' . $selection->variation->image,
+                );
+            } else {
+                $imageUrl = asset('public/storage/images/default_image.png');
+            }
+        } else {
+            $measurement = $selection->product->measurement;
+            if ($selection->product->product_image) {
+                $imageUrl = asset(
+                    'public/storage/' . $selection->product->product_image,
+                );
+            } else {
+                $imageUrl = asset('public/storage/images/default_image.png');
+            }
+        }
+    }
+} else {
+    if ($part->packProduct) {
+        $itemType = 'Single';
+        $categoryName = $part->packProduct->product->category->name ?? 'N/A';
+        $measurement = $part->packProduct->product->measurement;
+        if ($part->packProduct->product->product_image) {
+            $imageUrl = asset(
+                'public/storage/' . $part->packProduct->product->product_image,
+            );
+        } else {
+            $imageUrl = asset('public/storage/images/default_image.png');
+                                                }
+                                            }
+                                        }
+                                    @endphp
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <img src="{{ $imageUrl }}" alt="{{ $part->product_name }}"
@@ -100,14 +142,14 @@
                                             <div>
                                                 <strong>{{ $part->product_name }}</strong><br>
                                                 <small
-                                                    class="text-muted">{{ $parentProduct->category->name ?? 'N/A' }}</small>
+                                                    class="text-muted">{{ $categoryName }}({{ $measurement }})</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         <span
-                                            class="badge {{ $itemModel && $itemModel->getTable() == 'product_variations' ? 'bg-info' : 'bg-secondary' }}">
-                                            {{ $itemModel && $itemModel->getTable() == 'product_variations' ? 'Variation' : 'Single' }}
+                                            class="badge {{ $itemType === 'Variation' ? 'bg-info' : 'bg-secondary' }}">
+                                            {{ $itemType }}
                                         </span>
                                     </td>
                                 </tr>

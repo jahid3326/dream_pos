@@ -218,6 +218,9 @@ Route::middleware(['auth'])->group(function () {
 
             Route::post('/sales/{sale}/payments', [SaleController::class, 'addPayment'])->name('sales.payments.store');
             Route::get('/sales/{sale}/invoice-pdf', [SaleController::class, 'viewInvoicePdf'])->name('sales.view.pdf');
+            Route::get('/sales/{sale}/download-invoice-pdf', [SaleController::class, 'downloadInvoicePdf'])->name('sales.downloadInvoice.pdf');
+            Route::get('/sales/{sale}/print-invoice', [SaleController::class, 'printInvoice'])->name('sales.print.invoice');
+            Route::get('/sales/{sale}/payments', [SaleController::class, 'getPayments'])->name('sales.payments.get');
 
             // Sales-related routes
             Route::resource('sales', SaleController::class);

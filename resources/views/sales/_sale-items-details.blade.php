@@ -18,11 +18,17 @@
                             <div class="d-flex align-items-center">
                                 @php
                                     // Determine the image and category from either the variation or the parent product
-                                    $productForInfo = $item->variation->product ?? $item->product;
-                                    $image = $item->variation->image ?? $productForInfo->product_image;
+                                    $image = $item->variation->image ?? $item->product->product_image;
                                     $imageUrl = $image
                                         ? asset('public/storage/' . $image)
                                         : asset('public/storage/images/default_image.png');
+
+                                    $measurement = 'N/A';
+                                    if ($item->variation) {
+                                        $measurement = $item->variation->measurement;
+                                    } else {
+                                        $measurement = $item->product->measurement;
+                                    }
                                 @endphp
 
                                 {{-- Image --}}
@@ -32,7 +38,8 @@
                                 {{-- Name and Category --}}
                                 <div>
                                     <strong>{{ $item->product_name }}</strong><br>
-                                    <small class="text-muted">{{ $productForInfo->category->name ?? 'N/A' }}</small>
+                                    <small
+                                        class="text-muted">{{ $item->product->category->name ?? 'N/A' }}({{ $measurement }})</small>
                                 </div>
                             </div>
                         </td>
@@ -80,36 +87,49 @@
                                         $imageUrl = asset('public/storage/images/default_image.png');
                                         $categoryName = 'N/A';
                                         $itemType = 'N/A';
+                                        $measurement = 'N/A';
 
                                         // Safely access the pack definition record
                                         $selection = $part->packProductSelectedVariation;
 
                                         if ($selection) {
                                             // Check if it's a variation
-    if ($selection->variation) {
+    if ($selection->product) {
         $itemType = 'Variation';
         // Safely access the parent product for category
-        if ($selection->variation->product) {
-            $categoryName =
-                $selection->variation->product->category->name ?? 'N/A';
-        }
-        // Safely get the image
-        if ($selection->variation->image) {
-            $imageUrl = asset('public/storage/' . $selection->variation->image);
+        $categoryName = $selection->product->category->name ?? 'N/A';
+        if ($selection->variation) {
+            // Safely get the image
+            $measurement = $selection->variation->measurement;
+            if ($selection->variation->image) {
+                $imageUrl = asset(
+                    'public/storage/' . $selection->variation->image,
+                );
+            } else {
+                $imageUrl = asset('public/storage/images/default_image.png');
+            }
         } else {
-            $imageUrl = asset('public/storage/images/default_image.png');
+            $measurement = $selection->product->measurement;
+            if ($selection->product->product_image) {
+                $imageUrl = asset(
+                    'public/storage/' . $selection->product->product_image,
+                );
+            } else {
+                $imageUrl = asset('public/storage/images/default_image.png');
+            }
         }
     }
-    // Else, check if it's a single product
-                                            elseif ($selection->product) {
-                                                $itemType = 'Single';
-                                                $categoryName = $selection->product->category->name ?? 'N/A';
-                                                if ($selection->product->product_image) {
-                                                    $imageUrl = asset(
-                                                        'public/storage/' . $selection->product->product_image,
-                                                    );
-                                                } else {
-                                                    $imageUrl = asset('public/storage/images/default_image.png');
+} else {
+    if ($part->packProduct) {
+        $itemType = 'Single';
+        $categoryName = $part->packProduct->product->category->name ?? 'N/A';
+        $measurement = $part->packProduct->product->measurement;
+        if ($part->packProduct->product->product_image) {
+            $imageUrl = asset(
+                'public/storage/' . $part->packProduct->product->product_image,
+            );
+        } else {
+            $imageUrl = asset('public/storage/images/default_image.png');
                                                 }
                                             }
                                         }
@@ -121,7 +141,8 @@
                                                 style="object-fit: cover;">
                                             <div>
                                                 <strong>{{ $part->product_name }}</strong><br>
-                                                <small class="text-muted">Category: {{ $categoryName }}</small>
+                                                <small
+                                                    class="text-muted">{{ $categoryName }}({{ $measurement }})</small>
                                             </div>
                                         </div>
                                     </td>
