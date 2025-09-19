@@ -183,6 +183,8 @@ Route::middleware(['auth'])->group(function () {
 
             Route::resource('products', ProductController::class);
 
+            Route::get('/pack-options/search', [SaleController::class, 'searchPackOptions'])->name('sales.pack-options.search');
+
             Route::get('/pack-options/{option}/products', [PosController::class, 'getPackOptionProducts'])->name('pos.pack-option.products');
 
             Route::get('/category-products/{category}/products', [PosController::class, 'getCategoryProducts'])->name('pos.category-product.products');

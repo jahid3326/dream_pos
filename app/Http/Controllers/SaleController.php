@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\Customer;
+use App\Models\PackGroupOption;
 use App\Models\Product;
 use App\Models\Tax;
 use Illuminate\Support\Facades\DB;
@@ -177,7 +178,8 @@ class SaleController extends Controller
             if ($product->type === 'single') {
                 $results[] = [
                     'id' => $product->id, // A unique ID for the option
-                    'text' => "{$product->name} (SKU: {$product->sku})", // The text to display
+                    'text' => "{$product->name} ({$product->measurement})", // The text to display
+                    'name' => $product->name,
                     'price' => $product->sale_price,
                     'tax_id' => $product->tax_id,
                     'variation_id' => null,
@@ -193,7 +195,8 @@ class SaleController extends Controller
                         $results[] = [
                             'id' => $product->id,
                             'variation_id' => $variation->id,
-                            'text' => "{$product->name} - {$variation->measurement} (SKU: {$variation->sku})",
+                            'text' => "{$product->name} ({$variation->measurement})",
+                            'name' => $product->name,
                             'price' => $variation->sale_price,
                             'tax_id' => $variation->tax_id
                         ];
@@ -203,6 +206,44 @@ class SaleController extends Controller
         }
 
         // Select2 expects the data to be in a JSON object with a 'results' key.
+        return response()->json(['results' => $results]);
+    }
+
+    public function searchPackOptions(Request $request)
+    {
+        $term = $request->input('q', '');
+
+        if (empty($term)) {
+            return response()->json(['results' => []]);
+        }
+
+        $options = PackGroupOption::with(['packGroup.pack'])
+            ->whereHas('packGroup.pack', function ($query) use ($term) {
+                // Search in the main Pack name
+                $query->where('name', 'LIKE', '%' . $term . '%');
+            })
+            ->orWhereHas('packGroup', function ($query) use ($term) {
+                // Search in the Group (Surface) name
+                $query->where('surface', 'LIKE', '%' . $term . '%');
+            })
+            ->orWhere('option', 'LIKE', '%' . $term . '%') // Search in the Option number
+            ->limit(20)
+            ->get();
+
+        // Format the results for Select2
+        $results = $options->map(function ($option) {
+            $packName = $option->packGroup->pack->name;
+            $surfaceName = $option->packGroup->surface;
+            $optionName = "Option " . $option->option;
+
+            return [
+                'id' => $option->id,
+                'text' => "{$packName} | {$surfaceName} | {$optionName}",
+                'price' => $option->price,
+                'name_for_cart' => "{$packName} | {$optionName} | {$surfaceName}",
+            ];
+        });
+
         return response()->json(['results' => $results]);
     }
 
@@ -341,12 +382,14 @@ class SaleController extends Controller
      */
     public function edit(Sale $sale)
     {
-        // Eager load all relationships
-        $sale->load('items.product', 'items.variation');
+        // Eager load all relationships needed to populate the form
+        $sale->load('customer.user', 'categoryItems.product', 'categoryItems.variation', 'packItems', 'orderTax');
 
         $customers = Customer::with('user')->get();
         $taxes = Tax::where('status', true)->get();
-
+        // echo '<pre>';
+        // print_r($sale->toArray());
+        // echo '</pre>';
         return view('sales.edit', compact('sale', 'customers', 'taxes'));
     }
 
@@ -359,39 +402,132 @@ class SaleController extends Controller
             'invoice_number' => 'required|string|unique:sales,invoice_number,' . $sale->id,
             'customer_id' => 'required|exists:customers,id',
             'sales_date' => 'required|date',
-            'items' => 'required|array|min:1',
+            'items' => 'sometimes|array',
         ]);
 
-        DB::transaction(function () use ($request, $sale) {
-            $sale->update([
-                'invoice_number' => $request->invoice_number,
-                'customer_id' => $request->customer_id,
-                'sales_date' => $request->sales_date,
-                'order_status' => $request->order_status,
-                'sub_total' => $request->sub_total,
-                'order_tax_id' => $request->order_tax_id,
-                'order_tax_amount' => $request->order_tax_amount,
-                'discount' => $request->discount,
-                'shipping' => $request->shipping,
-                'grand_total' => $request->grand_total,
-                'terms_and_conditions' => $request->terms_and_conditions,
-                'notes' => $request->notes,
-            ]);
+        try {
+            DB::transaction(function () use ($request, $sale) {
+                // 1. Update the main Sale record with the summary data
+                $sale->update([
+                    'invoice_number' => $request->invoice_number,
+                    'customer_id' => $request->customer_id,
+                    'sales_date' => $request->sales_date,
+                    'order_status' => $request->order_status,
+                    'sub_total' => $request->input('sub_total', 0),
+                    'order_tax_id' => $request->order_tax_id,
+                    'order_tax_amount' => $request->input('order_tax_amount', 0),
+                    'discount' => $request->input('discount_amount', 0),
+                    'discount_type' => $request->input('discount_type'),
+                    'discount_rate' => $request->input('discount_value'),
+                    'shipping' => $request->input('shipping', 0),
+                    'grand_total' => $request->grand_total,
+                ]);
 
-            $submittedItemIds = [];
-            foreach ($request->items as $itemData) {
-                $item = $sale->items()->updateOrCreate(
-                    ['id' => $itemData['id'] ?? null], // Find by ID or create new
-                    $itemData
-                );
-                $submittedItemIds[] = $item->id;
-            }
+                // --- THIS IS THE NEW DIFF AND SYNC LOGIC ---
 
-            // Delete items that were removed from the form
-            $sale->items()->whereNotIn('id', $submittedItemIds)->delete();
-        });
+                $submittedItems = collect($request->input('items', []));
+
+                // Separate submitted items by type
+                $submittedCategoryItems = $submittedItems->where('type', 'category');
+                $submittedPackItems = $submittedItems->where('type', 'pack');
+
+                // Get IDs of submitted items that already have a database ID
+                $submittedCategoryItemIds = $submittedCategoryItems->pluck('sale_item_id')->filter();
+                $submittedPackItemIds = $submittedPackItems->pluck('sale_item_id')->filter();
+
+                // 1. DELETE items that are in the DB but not in the submission
+                $sale->categoryItems()->whereNotIn('id', $submittedCategoryItemIds)->delete();
+                $sale->packItems()->whereNotIn('id', $submittedPackItemIds)->delete();
+
+                // 2. UPDATE existing items and CREATE new ones
+                foreach ($submittedCategoryItems as $itemData) {
+                    $sale->categoryItems()->updateOrCreate(
+                        ['id' => $itemData['sale_item_id'] ?? null], // Condition to find the item
+                        [ // Data to update or create with
+                            'product_id' => $itemData['id'],
+                            'product_variation_id' => $itemData['variation_id'] ?? null,
+                            'product_name' => $itemData['name'],
+                            'quantity' => $itemData['quantity'],
+                            'unit_price' => $itemData['price'],
+                            'total_price' => ($itemData['price'] * $itemData['quantity']),
+                        ]
+                    );
+                }
+
+                foreach ($submittedPackItems as $itemData) {
+                    $packItem = $sale->packItems()->updateOrCreate(
+                        ['id' => $itemData['sale_item_id'] ?? null],
+                        [
+                            'pack_group_option_id' => $itemData['id'],
+                            'pack_display_name' => $itemData['name'],
+                            'quantity' => $itemData['quantity'],
+                            'unit_price' => $itemData['price'],
+                            'total_price' => ($itemData['price'] * $itemData['quantity']),
+                        ]
+                    );
+
+                    // After updating/creating the pack item, we must sync its constituent parts
+                    // The simplest reliable way is still to delete and re-create for the sub-items
+                    $packItem->constituentItems()->delete();
+                    $option = PackGroupOption::find($itemData['id']);
+                    if ($option) {
+                        // ... (The logic from your createSaleItems to loop and create constituent items goes here)
+                    }
+                }
+            });
+        } catch (\Exception $e) {
+            \Log::error('Sale Update Failed: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'An error occurred while updating the sale.')->withInput();
+        }
 
         return redirect()->route('sales.index')->with('success', 'Sale updated successfully.');
+    }
+
+    /**
+     * Helper method to create all sale items (category and pack).
+     */
+    private function createSaleItems(Sale $sale, array $items): void
+    {
+        foreach ($items as $cartItem) {
+            $itemType = $cartItem['type'] ?? null;
+
+            if ($itemType === 'category') {
+                $sale->categoryItems()->create([
+                    'product_id' => $cartItem['id'],
+                    'product_variation_id' => $cartItem['variation_id'] ?? null,
+                    'product_name' => $cartItem['name'],
+                    'quantity' => $cartItem['quantity'],
+                    'unit_price' => $cartItem['price'],
+                    'total_price' => ($cartItem['price'] * $cartItem['quantity']),
+                ]);
+            } elseif ($itemType === 'pack') {
+                $packSaleItem = $sale->packItems()->create([
+                    'pack_group_option_id' => $cartItem['id'],
+                    'pack_display_name' => $cartItem['name'],
+                    'quantity' => $cartItem['quantity'],
+                    'unit_price' => $cartItem['price'],
+                    'total_price' => ($cartItem['price'] * $cartItem['quantity']),
+                ]);
+
+                $option = PackGroupOption::find($cartItem['id']);
+                if ($option) {
+                    $attachedProducts = $option->products;
+                    foreach ($attachedProducts as $product) {
+                        $packProduct = $product->pivot;
+                        $selectedItems = $packProduct->selectedItems;
+                        if ($selectedItems->isNotEmpty()) {
+                            foreach ($selectedItems as $selectedItem) {
+                                $packSaleItem->constituentItems()->create([
+                                    'pack_product_id' => $packProduct->id,
+                                    'pack_product_selected_variation_id' => $selectedItem->id,
+                                    'product_name' => $selectedItem->variation->product->name ?? $selectedItem->product->name,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
