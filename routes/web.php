@@ -12,6 +12,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ManagePackController;
 use App\Http\Controllers\PackController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
@@ -226,6 +227,9 @@ Route::middleware(['auth'])->group(function () {
 
             // Sales-related routes
             Route::resource('sales', SaleController::class);
+
+            // Payments-related routes
+            Route::resource('payments', PaymentController::class)->except(['show']);
         });
 
         // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---
