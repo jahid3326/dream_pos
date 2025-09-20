@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\Customer;
 use App\Models\PackGroupOption;
+use App\Models\PackProduct;
 use App\Models\Product;
 use App\Models\Tax;
 use Illuminate\Support\Facades\DB;
@@ -472,6 +473,30 @@ class SaleController extends Controller
                     $option = PackGroupOption::find($itemData['id']);
                     if ($option) {
                         // ... (The logic from your createSaleItems to loop and create constituent items goes here)
+                        // 2. Query the 'pack_product' pivot table directly to get the link records.
+                        //    This ensures we get the pivot model instances correctly.
+                        $packProducts = PackProduct::where('pack_group_option_id', $option->id)
+                            ->with('selectedVariations.product', 'selectedVariations.variation.product')
+                            ->get();
+
+                        // 3. Loop through the pivot records.
+                        foreach ($packProducts as $packProduct) {
+                            $selectedItems = $packProduct->selectedVariations;
+                            if ($selectedItems->isNotEmpty()) {
+                                foreach ($selectedItems as $selectedItem) {
+                                    $packItem->constituentItems()->create([
+                                        'pack_product_id' => $selectedItem->pack_product_id,
+                                        'pack_product_selected_variation_id' => $selectedItem->id,
+                                        'product_name' => $selectedItem->product->name ?? $selectedItem->product->name,
+                                    ]);
+                                }
+                            } else {
+                                $packItem->constituentItems()->create([
+                                    'pack_product_id' => $packProduct->id,
+                                    'product_name' => $packProduct->product->name ?? $packProduct->product->name,
+                                ]);
+                            }
+                        }
                     }
                 }
             });
