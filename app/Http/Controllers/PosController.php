@@ -18,6 +18,14 @@ use Illuminate\Support\Facades\Auth;
 
 class PosController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('action.permission:Sale,read')->only('index');
+        $this->middleware('action.permission:Sale,create')->only(['create', 'store']);
+        $this->middleware('action.permission:Sale,show')->only('show');
+        $this->middleware('action.permission:Sale,update')->only(['edit', 'update']);
+        $this->middleware('action.permission:Sale,delete')->only('destroy');
+    }
     /**
      * Display a listing of the resource.
      */

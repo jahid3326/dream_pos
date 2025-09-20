@@ -132,6 +132,8 @@ Route::middleware(['auth'])->group(function () {
 
             Route::post('/customers/ajax-store', [CustomerController::class, 'ajaxStore'])->name('customers.ajaxStore');
 
+            Route::get('/customers/{customer}/unpaid-invoices', [PaymentController::class, 'getUnpaidInvoices'])->name('customers.unpaid-invoices');
+
             Route::resource('customers', CustomerController::class);
 
             // Supplier-related routes

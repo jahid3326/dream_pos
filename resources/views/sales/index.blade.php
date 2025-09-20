@@ -12,7 +12,7 @@
                 </div>
                 <div class="page-btn">
                     @if (hasActionPermission('Sale', 'create'))
-                        <a href="{{ route('sales.create') }}" class="btn btn-primary"><i class="ti ti-circle-plus me-1"></i>Add
+                        <a href="{{ route('pos.index') }}" class="btn btn-primary"><i class="ti ti-circle-plus me-1"></i>Add
                             New Sale</a>
                     @endif
                 </div>
@@ -34,7 +34,9 @@
                                     <th class="text-end">Paid Amount</th>
                                     <th class="text-end">Due Amount</th>
                                     <th>Payment Status</th>
-                                    <th class="text-end" style="width: 5%;">Action</th>
+                                    @if (hasActionPermission('Sale', 'update') || hasActionPermission('Sale', 'delete'))
+                                        <th class="no-sort"></th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -73,100 +75,105 @@
                                                 <span class="badge bg-danger">Unpaid</span>
                                             @endif
                                         </td>
-                                        <td class="text-end">
-                                            <div class="dropdown">
-                                                <button class="btn btn-light btn-sm" type="button"
-                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                    {{-- Convert to Purchase --}}
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center" href="#">
-                                                            <i class="fas fa-exchange-alt fa-fw me-2"></i> Convert to
-                                                            Purchase
-                                                        </a>
-                                                    </li>
+                                        @if (hasActionPermission('Sale', 'update') || hasActionPermission('Sale', 'delete'))
+                                            <td class="text-end">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-light btn-sm" type="button"
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        {{-- Convert to Purchase --}}
+                                                        <li>
+                                                            <a class="dropdown-item d-flex align-items-center"
+                                                                href="#">
+                                                                <i class="fas fa-exchange-alt fa-fw me-2"></i> Convert to
+                                                                Purchase
+                                                            </a>
+                                                        </li>
 
-                                                    <li>
-                                                        <hr class="dropdown-divider">
-                                                    </li>
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
 
-                                                    {{-- View, Edit, Delete --}}
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center"
-                                                            href="{{ route('sales.show', $sale->id) }}">
-                                                            <i class="fas fa-eye fa-fw me-2"></i> View
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center"
-                                                            href="{{ route('sales.edit', $sale->id) }}">
-                                                            <i class="fas fa-edit fa-fw me-2"></i> Edit
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <form action="{{ route('sales.destroy', $sale->id) }}"
-                                                            method="POST" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" style="margin-left: .4rem"
-                                                                class="dropdown-item d-flex align-items-center delete-button text-danger">
-                                                                <i class="fas fa-trash fa-fw me-2"></i> Delete
-                                                            </button>
-                                                        </form>
-                                                    </li>
+                                                        {{-- View, Edit, Delete --}}
+                                                        <li>
+                                                            <a class="dropdown-item d-flex align-items-center"
+                                                                href="{{ route('sales.show', $sale->id) }}">
+                                                                <i class="fas fa-eye fa-fw me-2"></i> View
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item d-flex align-items-center"
+                                                                href="{{ route('sales.edit', $sale->id) }}">
+                                                                <i class="fas fa-edit fa-fw me-2"></i> Edit
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <form action="{{ route('sales.destroy', $sale->id) }}"
+                                                                method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" style="margin-left: .4rem"
+                                                                    class="dropdown-item d-flex align-items-center delete-button text-danger">
+                                                                    <i class="fas fa-trash fa-fw me-2"></i> Delete
+                                                                </button>
+                                                            </form>
+                                                        </li>
 
-                                                    <li>
-                                                        <hr class="dropdown-divider">
-                                                    </li>
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
 
-                                                    {{-- Payment Actions --}}
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center view-payments-btn"
-                                                            href="#" data-bs-toggle="modal"
-                                                            data-bs-target="#viewPaymentsModal"
-                                                            data-url="{{ route('sales.payments.get', $sale->id) }}">
-                                                            <i class="fas fa-wallet fa-fw me-2"></i> View Payments
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center add-payment-btn"
-                                                            href="#" data-bs-toggle="modal"
-                                                            data-bs-target="#addPaymentModal"
-                                                            data-sale-id="{{ $sale->id }}"
-                                                            data-invoice-number="{{ $sale->invoice_number }}"
-                                                            data-due-amount="{{ $sale->due_amount }}">
-                                                            <i class="fas fa-dollar-sign fa-fw me-2"></i> Add New Payment
-                                                        </a>
-                                                    </li>
+                                                        {{-- Payment Actions --}}
+                                                        <li>
+                                                            <a class="dropdown-item d-flex align-items-center view-payments-btn"
+                                                                href="#" data-bs-toggle="modal"
+                                                                data-bs-target="#viewPaymentsModal"
+                                                                data-url="{{ route('sales.payments.get', $sale->id) }}">
+                                                                <i class="fas fa-wallet fa-fw me-2"></i> View Payments
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item d-flex align-items-center add-payment-btn"
+                                                                href="#" data-bs-toggle="modal"
+                                                                data-bs-target="#addPaymentModal"
+                                                                data-sale-id="{{ $sale->id }}"
+                                                                data-invoice-number="{{ $sale->invoice_number }}"
+                                                                data-due-amount="{{ $sale->due_amount }}">
+                                                                <i class="fas fa-dollar-sign fa-fw me-2"></i> Add New
+                                                                Payment
+                                                            </a>
+                                                        </li>
 
-                                                    <li>
-                                                        <hr class="dropdown-divider">
-                                                    </li>
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
 
-                                                    {{-- Invoice Actions --}}
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center" href="#">
-                                                            <i class="fas fa-shopping-cart fa-fw me-2"></i> POS Invoice
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item d-flex align-items-center"
-                                                            href="{{ route('sales.downloadInvoice.pdf', $sale->id) }}">
-                                                            <i class="fas fa-download fa-fw me-2"></i> Download Invoice
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item d-flex print-invoice-btn align-items-center"
-                                                            href="javascript:void(0);"
-                                                            data-url="{{ route('sales.print.invoice', $sale->id) }}">
-                                                            <i class="fas fa-print fa-fw me-2"></i> Print Invoice
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
+                                                        {{-- Invoice Actions --}}
+                                                        <li>
+                                                            <a class="dropdown-item d-flex align-items-center"
+                                                                href="#">
+                                                                <i class="fas fa-shopping-cart fa-fw me-2"></i> POS Invoice
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item d-flex align-items-center"
+                                                                href="{{ route('sales.downloadInvoice.pdf', $sale->id) }}">
+                                                                <i class="fas fa-download fa-fw me-2"></i> Download Invoice
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item d-flex print-invoice-btn align-items-center"
+                                                                href="javascript:void(0);"
+                                                                data-url="{{ route('sales.print.invoice', $sale->id) }}">
+                                                                <i class="fas fa-print fa-fw me-2"></i> Print Invoice
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        @endif
                                     </tr>
 
                                     {{-- Collapsible Row for Sale Items --}}
@@ -195,8 +202,7 @@
         </div>
     </div>
     <!-- Add Payment Modal -->
-    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">

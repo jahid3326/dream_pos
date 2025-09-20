@@ -9,7 +9,7 @@
                     <h5 class="mb-1">Welcome, {{ Auth::user()->name }}</h5>
                     <p>{{ now()->format('F d, Y') }}</p>
                 </div>
-                <div class="d-flex align-items-center flex-wrap gap-3">
+                {{-- <div class="d-flex align-items-center flex-wrap gap-3">
                     <div class="input-icon-start pos-search position-relative">
                         <span class="input-icon-addon">
                             <i class="ti ti-search"></i>
@@ -17,7 +17,7 @@
                         <input type="text" class="form-control" placeholder="Search Product">
                     </div>
                     <a href="#" class="btn btn-sm btn-primary">View All Categories</a>
-                </div>
+                </div> --}}
             </div>
 
             {{-- Level 1: Main Horizontal Tabs (Packs + Parent Categories) --}}
@@ -1366,6 +1366,44 @@
 
                 return roundedGrandTotal;
             }
+
+            $('#reset-btn').on('click', function(e) {
+                e.preventDefault();
+
+                // Check if there's anything to reset
+                if (Object.keys(order.items).length === 0 && order.shipping === 0 && order.discount === 0 &&
+                    order.tax_rate === 0) {
+                    // If the order is already empty, do nothing.
+                    return;
+                }
+
+                // Show a SweetAlert confirmation dialog
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This will clear all items and totals from the current order.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, reset it!'
+                }).then((result) => {
+                    // If the user confirms the action
+                    if (result.isConfirmed) {
+                        // Call the existing clearOrder() function
+                        clearOrder();
+
+                        // Optionally, show a success toast
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Order Reset',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    }
+                });
+            });
 
         });
     </script>
