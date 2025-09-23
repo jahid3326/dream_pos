@@ -1367,6 +1367,25 @@
                 return roundedGrandTotal;
             }
 
+            // --- "GENERATE QUOTE" BUTTON ---
+            $('#generate-quote-btn').on('click', function(e) {
+                e.preventDefault();
+                if (Object.keys(order.items).length === 0) {
+                    Swal.fire('Validation Error', 'Please add items.', 'warning');
+                    return;
+                }
+                if (!$('#customer_select').val()) {
+                    Swal.fire('Validation Error', 'Please select a customer.', 'warning');
+                    return;
+                }
+
+                // The same data object works for both quotes and invoices
+                const quoteData = gatherSaleData();
+
+                // We call the same submit function, but with the NEW quote route
+                submitSale("{{ route('quotes.store') }}", quoteData, $(this));
+            });
+
             $('#reset-btn').on('click', function(e) {
                 e.preventDefault();
 

@@ -15,6 +15,7 @@ use App\Http\Controllers\PackController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SupplierController;
@@ -229,6 +230,13 @@ Route::middleware(['auth'])->group(function () {
 
             // Sales-related routes
             Route::resource('sales', SaleController::class);
+
+            // Route for creating a quote from the POS
+            Route::post('/quotes/generate-quote', [QuoteController::class, 'store'])->name('quotes.store');
+            Route::get('/quotes/{quote}/quote-pdf', [QuoteController::class, 'viewQuotePdf'])->name('quotes.view.pdf');
+
+            // You can add a full resource route for managing quotes later
+            Route::resource('quotes', QuoteController::class);
 
             // Payments-related routes
             Route::resource('payments', PaymentController::class)->except(['show']);
