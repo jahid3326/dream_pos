@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Quote;
 use App\Models\PackGroupOption;
 use App\Models\PackProduct;
+use App\Models\Sale;
 use App\Models\Tax;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -418,6 +419,104 @@ class QuoteController extends Controller
         }
 
         return redirect()->route('quotes.index')->with('success', 'Quote updated successfully.');
+    }
+
+    /**
+     * Convert a quote into a new sale record.
+     *
+     * @param  \App\Models\Quote  $quote
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function convertToSale(Quote $quote)
+    {
+        // 1. Prevent converting a quote that has already been converted
+        if (Sale::where('quote_id', $quote->id)->exists()) {
+            return redirect()->back()->with('error', 'This quote has already been converted to a sale.');
+        }
+
+        $sale = null;
+
+        try {
+            DB::transaction(function () use ($quote, &$sale) {
+                // 2. Create the main Sale record from the Quote data
+                $sale = Sale::create([
+                    'invoice_number'   => $this->generateNextInvoiceNumber(),
+                    'quote_id'         => $quote->id, // Link to the original quote
+                    'customer_id'      => $quote->customer_id,
+                    'sales_date'       => now(),
+                    'order_status'     => 'on process', // Default status for a new sale
+                    'sub_total'        => $quote->sub_total,
+                    'order_tax_id'     => $quote->order_tax_id,
+                    'order_tax_amount' => $quote->order_tax_amount,
+                    'discount'         => $quote->discount,
+                    'shipping'         => $quote->shipping,
+                    'grand_total'      => $quote->grand_total,
+                    'order_taken_by'   => Auth::id(),
+                ]);
+
+                // 3. Copy all category items from the quote to the new sale
+                foreach ($quote->categoryItems as $quoteItem) {
+                    $sale->categoryItems()->create([
+                        'product_id'           => $quoteItem->product_id,
+                        'product_variation_id' => $quoteItem->product_variation_id,
+                        'product_name'         => $quoteItem->product_name,
+                        'quantity'             => $quoteItem->quantity,
+                        'unit_price'           => $quoteItem->unit_price,
+                        'total_price'          => $quoteItem->total_price,
+                    ]);
+                }
+
+                // 4. Copy all pack items (and their constituent items) from the quote to the sale
+                foreach ($quote->packItems as $quotePackItem) {
+                    $newSalePackItem = $sale->packItems()->create([
+                        'pack_group_option_id' => $quotePackItem->pack_group_option_id,
+                        'pack_display_name'    => $quotePackItem->pack_display_name,
+                        'quantity'             => $quotePackItem->quantity,
+                        'unit_price'           => $quotePackItem->unit_price,
+                        'total_price'          => $quotePackItem->total_price,
+                    ]);
+
+                    // Copy the sub-items for this pack
+                    foreach ($quotePackItem->constituentItems as $constituent) {
+                        $newSalePackItem->constituentItems()->create([
+                            'pack_product_id'                    => $constituent->pack_product_id,
+                            'pack_product_selected_variation_id' => $constituent->pack_product_selected_variation_id,
+                            'product_name'                       => $constituent->product_name,
+                        ]);
+                    }
+                }
+
+                // 5. (Optional but recommended) Update the original quote's status
+                $quote->update(['status' => 'converted']);
+            });
+        } catch (\Exception $e) {
+            \Log::error('Quote to Sale Conversion Failed: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'An error occurred during the conversion process.');
+        }
+
+        // 6. Redirect to the newly created sale's detail page with a success message
+        return redirect()->route('sales.show', $sale->id)->with('success', 'Quote successfully converted to Sale!');
+    }
+
+
+    /**
+     * Helper method to generate the next unique invoice number for a Sale.
+     *
+     * @return string
+     */
+    private function generateNextInvoiceNumber(): string
+    {
+        $latestSale = Sale::latest('id')->first();
+        $nextInvoiceNumber = 1;
+
+        if ($latestSale) {
+            $lastInvoiceNumber = $latestSale->invoice_number;
+            $numericPart = (int) substr($lastInvoiceNumber, strrpos($lastInvoiceNumber, '-') + 1);
+            $nextInvoiceNumber = $numericPart + 1;
+        }
+
+        // Format: SALE-01, SALE-02, ..., SALE-10
+        return 'SALE-' . str_pad($nextInvoiceNumber, 2, '0', STR_PAD_LEFT);
     }
 
     /**

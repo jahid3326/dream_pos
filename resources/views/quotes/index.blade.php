@@ -55,8 +55,8 @@
                                         <td>{{ $quote->quote_date->format('d M, Y') }}</td>
                                         <td>{{ $quote->customer->user->name }}</td>
                                         <td>
-                                            @if (ucfirst($quote->status) == 'Delivered')
-                                                <span class="badge bg-success">Delivered</span>
+                                            @if (ucfirst($quote->status) == 'Converted')
+                                                <span class="badge bg-success">Converted to Sale</span>
                                             @elseif(ucfirst($quote->status) == 'In process')
                                                 <span class="badge" style="background-color: #0d6efd">In process</span>
                                             @else
@@ -84,14 +84,22 @@
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         {{-- Convert to Purchase --}}
-                                                        <li>
-                                                            <a class="dropdown-item d-flex align-items-center"
-                                                                href="#">
-                                                                <i class="fas fa-exchange-alt fa-fw me-2"></i> Convert to
-                                                                Sale
-                                                            </a>
-                                                        </li>
-
+                                                        @if ($quote->status != 'converted')
+                                                            <li>
+                                                                {{-- We use a form for the POST request --}}
+                                                                <form
+                                                                    action="{{ route('quotes.convertToSale', $quote->id) }}"
+                                                                    method="POST" class="d-inline convert-to-sale-form">
+                                                                    @csrf
+                                                                    <button type="submit"
+                                                                        class="dropdown-item d-flex align-items-center">
+                                                                        <i class="fas fa-exchange-alt fa-fw me-2"></i>
+                                                                        Convert
+                                                                        to Sale
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        @endif
                                                         <li>
                                                             <hr class="dropdown-divider">
                                                         </li>
@@ -262,5 +270,31 @@
                 }
             });
         })
+
+        // =========================================================================
+        // 3. SCRIPT FOR CONVERT TO SALE CONFIRMATION
+        // =========================================================================
+        $('.convert-to-sale-form').on('submit', function(event) {
+            // Prevent the form from submitting automatically
+            event.preventDefault();
+
+            const form = this; // Get a reference to the form that was submitted
+
+            Swal.fire({
+                title: 'Convert this Quote to a Sale?',
+                text: "A new invoice will be generated. This action cannot be undone.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, convert it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                // If the user confirms, submit the form
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
     </script>
 @endpush

@@ -168,8 +168,14 @@
             <tr>
                 <td>
                     <span class="label">Quote Status:</span><br>
-                    <span class="badge"
-                        style="background-color: #e2e3e5; color: #41464b;">{{ ucfirst($quote->status) }}</span>
+                    @if (ucfirst($quote->status) == 'Converted')
+                        <span class="badge bg-success" style="background-color: #e2e3e5; color: #41464b;">Converted to
+                            Sale</span>
+                    @elseif(ucfirst($quote->status) == 'In process')
+                        <span class="badge" style="background-color: #0d6efd; color:#fff3cd">In process</span>
+                    @else
+                        <span class="badge" style="background-color: #fd7e14; color:#fff3cd">On process</span>
+                    @endif
                 </td>
                 <td>
                     <span class="label">Payment Status:</span><br>

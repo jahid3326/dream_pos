@@ -64,7 +64,15 @@
                         <div class="col-sm-6 col-lg-3 mb-2">
                             <div class="form-group">
                                 <label class="custom-label">Quote Status</label>
-                                <p class="custom-label"><span class="badge bg-info">{{ ucfirst($quote->status) }}</span></p>
+                                <p class="custom-label">
+                                    @if (ucfirst($quote->status) == 'Converted')
+                                        <span class="badge bg-success">Converted to Sale</span>
+                                    @elseif(ucfirst($quote->status) == 'In process')
+                                        <span class="badge" style="background-color: #0d6efd">In process</span>
+                                    @else
+                                        <span class="badge" style="background-color: #fd7e14">On process</span>
+                                    @endif
+                                </p>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-3 mb-2">

@@ -234,6 +234,7 @@ Route::middleware(['auth'])->group(function () {
             // Route for creating a quote from the POS
             Route::post('/quotes/generate-quote', [QuoteController::class, 'store'])->name('quotes.store');
             Route::get('/quotes/{quote}/quote-pdf', [QuoteController::class, 'viewQuotePdf'])->name('quotes.view.pdf');
+            Route::post('/quotes/{quote}/convert-to-sale', [QuoteController::class, 'convertToSale'])->name('quotes.convertToSale');
 
             // You can add a full resource route for managing quotes later
             Route::resource('quotes', QuoteController::class);
