@@ -211,7 +211,7 @@
                 </td>
                 <td>
                     <span class="label">Order Tax:</span><br>
-                    {{ number_format($sale->orderTax->rate ?? 0, 2) }}%
+                    {{ number_format($sale->orderTax->rate ?? 0, 0) }}%
                 </td>
             </tr>
         </table>

@@ -111,23 +111,25 @@
                                                                 <i class="fas fa-eye fa-fw me-2"></i> View
                                                             </a>
                                                         </li>
-                                                        <li>
-                                                            <a class="dropdown-item d-flex align-items-center"
-                                                                href="{{ route('quotes.edit', $quote->id) }}">
-                                                                <i class="fas fa-edit fa-fw me-2"></i> Edit
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <form action="{{ route('quotes.destroy', $quote->id) }}"
-                                                                method="POST" class="d-inline">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" style="margin-left: .4rem"
-                                                                    class="dropdown-item d-flex align-items-center delete-button text-danger">
-                                                                    <i class="fas fa-trash fa-fw me-2"></i> Delete
-                                                                </button>
-                                                            </form>
-                                                        </li>
+                                                        @if ($quote->status != 'converted')
+                                                            <li>
+                                                                <a class="dropdown-item d-flex align-items-center"
+                                                                    href="{{ route('quotes.edit', $quote->id) }}">
+                                                                    <i class="fas fa-edit fa-fw me-2"></i> Edit
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <form action="{{ route('quotes.destroy', $quote->id) }}"
+                                                                    method="POST" class="d-inline">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" style="margin-left: .4rem"
+                                                                        class="dropdown-item d-flex align-items-center delete-button text-danger">
+                                                                        <i class="fas fa-trash fa-fw me-2"></i> Delete
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        @endif
                                                     </ul>
                                                 </div>
                                             </td>

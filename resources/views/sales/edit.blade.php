@@ -47,7 +47,10 @@
                                         <th style="width: 40%;">Name</th>
                                         <th>Quantity</th>
                                         <th>Unit Price</th>
-                                        <th>Sub Total</th>
+                                        <th>Total Price</th>
+                                        <th>Tax (%)</th>
+                                        <th>Total HT</th>
+                                        <th>Total TTC</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -58,6 +61,7 @@
                                             'item' => $item,
                                             'type' => 'category',
                                             'index' => $currentIndex++,
+                                            'sale' => $sale,
                                         ])
                                     @endforeach
                                     @foreach ($sale->packItems as $item)
@@ -65,6 +69,7 @@
                                             'item' => $item,
                                             'type' => 'pack',
                                             'index' => $currentIndex++,
+                                            'sale' => $sale,
                                         ])
                                     @endforeach
                                 </tbody>
@@ -207,10 +212,9 @@
     {{-- Include Select2 CSS/JS if not in main layout --}}
     <script>
         $(document).ready(function() {
-            // IMPORTANT: Start the index from the number of existing items
             let itemIndex = {{ $sale->categoryItems->count() + $sale->packItems->count() }};
 
-            // Select2 Initialization
+            // Select2 Initialization for Products
             $('#product_search').select2({
                 placeholder: 'Search for a product...',
                 ajax: {
@@ -225,59 +229,7 @@
                 }
             });
 
-            // Add Item to Table
-            $('#product_search').on('select2:select', function(e) {
-                var data = e.params.data;
-                if (data.id) {
-                    addCategoryItemRow(data); // Call the correct function
-                }
-                $(this).val(null).trigger('change');
-            });
-
-            /**
-             * Helper function to add a CATEGORY item row to the table.
-             */
-            function addCategoryItemRow(productData) {
-                const qty = 1;
-                const price = parseFloat(productData.price) || 0;
-                const totalPrice = qty * price;
-                const taxRate = parseFloat(productData.tax_rate) || 0;
-                const totalTTC = totalPrice * (1 + taxRate / 100);
-
-                // Check if this item (product or variation) is already in the cart
-                const cartId = `c-${productData.id}-${productData.variation_id || '0'}`;
-                const existingRow = $(`#sale-items-table tr[data-cart-id="${cartId}"]`);
-
-                if (existingRow.length > 0) {
-                    // If it exists, just increment the quantity
-                    const qtyInput = existingRow.find('.item-quantity');
-                    qtyInput.val(parseInt(qtyInput.val()) + 1).trigger('input');
-                    return;
-                }
-
-                const newRow = `
-            <tr class="sale-item-row" data-cart-id="${cartId}">
-                <td>${itemIndex + 1}</td>
-                <td>
-                    ${productData.text}
-                    <input type="hidden" name="items[${itemIndex}][type]" value="category">
-                    <input type="hidden" name="items[${itemIndex}][id]" value="${productData.id}">
-                    <input type="hidden" name="items[${itemIndex}][variation_id]" value="${productData.variation_id || ''}">
-                    <input type="hidden" name="items[${itemIndex}][name]" value="${productData.name}">
-                    <input type="hidden" class="item-price-hidden" name="items[${itemIndex}][price]" value="${price}">
-                    <input type="hidden" name="items[${itemIndex}][item_tax_percent]" value="${taxRate}">
-                </td>
-                <td><input type="number" name="items[${itemIndex}][quantity]" class="form-control item-quantity" value="${qty}" min="1"></td>
-                <td><input type="text" class="form-control item-price-display" value="${price.toFixed(2)}" readonly></td>
-                <td><input type="text" class="form-control item-total-price" value="${totalPrice.toFixed(2)}" readonly></td>
-                <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
-            </tr>`;
-
-                $('#sale-items-table').append(newRow);
-                itemIndex++;
-                calculateTotals();
-            }
-
+            // Select2 Initialization for Packs
             $('#pack_option_search').select2({
                 placeholder: 'Search by Pack, Surface, or Option...',
                 minimumInputLength: 2,
@@ -285,11 +237,6 @@
                     url: "{{ route('sales.pack-options.search') }}",
                     dataType: 'json',
                     delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
-                    },
                     processResults: function(data) {
                         return {
                             results: data.results
@@ -299,54 +246,19 @@
                 }
             });
 
-            // --- Listener for when a PACK OPTION is selected ---
-            $('#pack_option_search').on('select2:select', function(e) {
-                var data = e.params.data;
-                if (data.id) {
-                    // Check if this pack option is already in the cart
-                    const alreadyExists = $(`#sale-items-table input[name$="[type]"][value="pack"]`)
-                        .siblings(`input[name$="[id]"][value="${data.id}"]`)
-                        .length > 0;
+            // --- EVENT LISTENERS ---
 
-                    if (alreadyExists) {
-                        Swal.fire('Already Added', 'This pack option is already in the list.', 'info');
-                    } else {
-                        addPackItemRow(data);
-                    }
-                }
-                // Reset the search box
+            // Add Category Item to Table
+            $('#product_search').on('select2:select', function(e) {
+                addItemRow(e.params.data, 'category');
                 $(this).val(null).trigger('change');
             });
 
-            /**
-             * Helper function to add a PACK item row to the table.
-             */
-            function addPackItemRow(packData) {
-                const qty = 1;
-                const price = parseFloat(packData.price) || 0;
-                const totalPrice = qty * price;
-
-                // Use the new _cart-item-row partial logic
-                const newRow = `
-            <tr class="sale-item-row">
-                <td>${itemIndex + 1}</td>
-                <td>
-                    ${packData.name_for_cart}
-                    <input type="hidden" name="items[${itemIndex}][type]" value="pack">
-                    <input type="hidden" name="items[${itemIndex}][id]" value="${packData.id}">
-                    <input type="hidden" name="items[${itemIndex}][name]" value="${packData.name_for_cart}">
-                    <input type="hidden" class="item-price-hidden" name="items[${itemIndex}][price]" value="${price}">
-                </td>
-                <td><input type="number" name="items[${itemIndex}][quantity]" class="form-control item-quantity" value="${qty}" min="1"></td>
-                <td><input type="text" class="form-control item-price-display" value="${price.toFixed(2)}" readonly></td>
-                <td><input type="text" class="form-control item-total-price" value="${totalPrice.toFixed(2)}" readonly></td>
-                <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
-            </tr>`;
-
-                $('#sale-items-table').append(newRow);
-                itemIndex++;
-                calculateTotals();
-            }
+            // Add Pack Item to Table
+            $('#pack_option_search').on('select2:select', function(e) {
+                addItemRow(e.params.data, 'pack');
+                $(this).val(null).trigger('change');
+            });
 
             // Remove Item from Table
             $('#sale-items-table').on('click', '.remove-item-btn', function() {
@@ -354,93 +266,157 @@
                 calculateTotals();
             });
 
-            // Recalculate when quantity or price changes
+            // Recalculate when quantity changes
             $('#sale-items-table').on('input', '.item-quantity', function() {
-                const row = $(this).closest('tr');
-                const qty = parseFloat($(this).val()) || 0;
-                const price = parseFloat(row.find('.item-price-hidden').val()) || 0;
-                row.find('.item-total-price').val((qty * price).toFixed(2));
-                calculateTotals();
+                updateRowCalculations($(this).closest('tr'));
+                calculateTotals(); // Also update grand totals
             });
 
-            // Recalculate when summary fields change
-            $('#order_tax_select, #discountInput, #shippingInput').on('input change', calculateTotals);
+            // Recalculate when summary fields (tax, discount, shipping) change
+            $('.calculation-trigger, #discount-form').on('input change submit', calculateTotals);
 
+
+            // --- CORE FUNCTIONS ---
+
+            /**
+             * Adds a new item (product or pack) to the table.
+             */
+            function addItemRow(data, type) {
+                const price = parseFloat(data.price) || 0;
+                const name = (type === 'pack') ? data.name_for_cart : data.text;
+                const id = data.id;
+
+                // Prevent duplicates
+                const alreadyExists = $(`#sale-items-table input[name$="[type]"][value="${type}"]`)
+                    .siblings(`input[name$="[id]"][value="${id}"]`)
+                    .length > 0;
+
+                if (alreadyExists) {
+                    Swal.fire('Already Added', 'This item is already in the list.', 'info');
+                    return;
+                }
+
+                let hiddenFields = `
+                    <input type="hidden" name="items[${itemIndex}][sale_item_id]" value="">
+                    <input type="hidden" name="items[${itemIndex}][type]" value="${type}">
+                    <input type="hidden" name="items[${itemIndex}][id]" value="${id}">
+                    <input type="hidden" name="items[${itemIndex}][name]" value="${name}">
+                    <input type="hidden" class="item-price-hidden" name="items[${itemIndex}][price]" value="${price}">
+                `;
+
+                if (type === 'category') {
+                    hiddenFields +=
+                        `<input type="hidden" name="items[${itemIndex}][variation_id]" value="${data.variation_id || ''}">`;
+                }
+
+                const newRowHtml = `
+                    <tr class="sale-item-row">
+                        ${hiddenFields}
+                        <td>${itemIndex + 1}</td>
+                        <td>${name}</td>
+                        <td><input type="number" name="items[${itemIndex}][quantity]" class="form-control item-quantity" value="1" min="1"></td>
+                        <td class="text-end item-price-display">$0.00</td>
+                        <td class="text-end item-total-price-display">$0.00</td>
+                        <td class="text-end item-tax-display">0.00%</td>
+                        <td class="text-end item-total-ht-display">$0.00</td>
+                        <td class="text-end item-total-ttc-display fw-bold">$0.00</td>
+                        <td><button type="button" class="btn btn-danger btn-sm remove-item-btn">&times;</button></td>
+                    </tr>`;
+
+                const newRow = $(newRowHtml);
+                $('#sale-items-table').append(newRow);
+                itemIndex++;
+
+                updateRowCalculations(newRow); // Calculate initial values for the new row
+                calculateTotals(); // Update grand totals
+            }
+
+            /**
+             * Updates the display values for a single row based on its quantity and the main order tax.
+             */
+            function updateRowCalculations(row) {
+                const qty = parseFloat(row.find('.item-quantity').val()) || 0;
+                const price = parseFloat(row.find('.item-price-hidden').val()) || 0;
+                const totalPrice = qty * price;
+                const totalHT = totalPrice;
+
+                const orderTaxRate = parseFloat($('#order_tax_select option:selected').data('rate')) || 0;
+                const totalTTC = totalHT * (1 + orderTaxRate / 100);
+
+                // Update all display <td>s for THIS ROW
+                row.find('.item-price-display').text('$' + price.toFixed(2));
+                row.find('.item-total-price-display').text('$' + totalPrice.toFixed(2));
+                row.find('.item-total-ht-display').text('$' + totalHT.toFixed(2));
+                row.find('.item-tax-display').text(orderTaxRate.toFixed(0) + '%');
+                row.find('.item-total-ttc-display').text('$' + totalTTC.toFixed(2));
+            }
+
+            /**
+             * Calculates the SubTotal, Grand Total, and updates all summary fields.
+             * Also ensures all rows have the correct tax rate displayed.
+             */
             function calculateTotals() {
-                // 1. Calculate SubTotal from all the item rows in the table
+                // 1. Calculate SubTotal from the source-of-truth inputs
                 let subTotal = 0;
                 $('#sale-items-table tr.sale-item-row').each(function() {
-                    // Find the "Sub Total" cell for this row and add its value
-                    subTotal += parseFloat($(this).find('.item-total-price').val()) || 0;
+                    const qty = parseFloat($(this).find('.item-quantity').val()) || 0;
+                    const price = parseFloat($(this).find('.item-price-hidden').val()) || 0;
+                    subTotal += qty * price;
                 });
 
-                // 2. Get values for tax, discount, and shipping from the form inputs
+                // 2. As we're calculating totals, let's also ensure all rows are up-to-date with the current tax
+                $('#sale-items-table tr.sale-item-row').each(function() {
+                    updateRowCalculations($(this));
+                });
+
+                // 3. Get values for tax, discount, and shipping
                 const taxSelect = $('#order_tax_select');
                 const orderTaxRate = parseFloat(taxSelect.find('option:selected').data('rate')) || 0;
                 const discountType = $('#discount_type_hidden').val() || 'fixed';
                 const discountValue = parseFloat($('#discount_value_hidden').val()) || 0;
                 const shipping = parseFloat($('#shippingInput').val()) || 0;
 
-                // 3. Calculate the final amounts
-                let finalDiscountAmount = 0;
-                if (discountType === 'percentage') {
-                    finalDiscountAmount = subTotal * (discountValue / 100);
-                } else { // 'fixed'
-                    finalDiscountAmount = discountValue;
-                }
+                // 4. Calculate final amounts
+                let finalDiscountAmount = (discountType === 'percentage') ? subTotal * (discountValue / 100) :
+                    discountValue;
                 const orderTaxAmount = subTotal * (orderTaxRate / 100);
                 const grandTotal = subTotal + orderTaxAmount - finalDiscountAmount + shipping;
 
-                // --- THIS IS THE FIX ---
-                // 4. Update ALL display elements, including the SubTotal
-                $('#subTotalDisplay').text('$' + subTotal.toFixed(2)); // Updates the subtotal under the items table
-                $('#grandTotalDisplay').text('$' + grandTotal.toFixed(
-                    2)); // Updates the grand total in the summary card
-
-                // Update the readonly discount amount input
+                // 5. Update ALL display elements
+                $('#subTotalDisplay').text('$' + subTotal.toFixed(2));
+                $('#grandTotalDisplay').text('$' + grandTotal.toFixed(2));
                 $('#discountInputAmount').val(finalDiscountAmount.toFixed(2));
-
-                // Update the percentage display if needed
                 if (discountType === 'percentage') {
                     $('#discount-percentage-display').text(`${discountValue}%`).show();
                 } else {
                     $('#discount-percentage-display').hide();
                 }
-                // --- END OF FIX ---
 
-                // 5. Update hidden inputs for the form submission
+                // 6. Update hidden inputs for form submission
                 $('#sub_total_hidden').val(subTotal.toFixed(2));
                 $('#order_tax_amount_hidden').val(orderTaxAmount.toFixed(2));
                 $('#discount_amount_hidden').val(finalDiscountAmount.toFixed(2));
                 $('#grand_total_hidden').val(grandTotal.toFixed(2));
             }
 
-            // --- LOGIC FOR THE DISCOUNT MODAL ---
+            // --- DISCOUNT MODAL LOGIC ---
             $('#discount-form').on('submit', function(e) {
                 e.preventDefault();
-                const type = $('#modal-discount-type').val();
-                const value = $('#modal-discount-value').val();
-
-                // Update the hidden inputs that drive the calculation
-                $('#discount_type_hidden').val(type);
-                $('#discount_value_hidden').val(value);
-
+                $('#discount_type_hidden').val($('#modal-discount-type').val());
+                $('#discount_value_hidden').val($('#modal-discount-value').val());
                 calculateTotals(); // Recalculate everything
-
                 bootstrap.Modal.getInstance(document.getElementById('discount')).hide();
             });
 
-            // Sync modal with current values when it opens
             $('#discount').on('show.bs.modal', function() {
-                // Populate the modal from the hidden inputs
                 $('#modal-discount-type').val($('#discount_type_hidden').val());
                 $('#modal-discount-value').val($('#discount_value_hidden').val());
             });
 
             // =========================================================================
-            // INITIALIZATION
+            // INITIALIZATION: Run once on page load to set the initial state correctly
             // =========================================================================
-            calculateTotals(); // Run once on page load to set the initial state correctly
+            calculateTotals();
         });
     </script>
 @endpush

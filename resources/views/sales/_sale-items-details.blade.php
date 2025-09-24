@@ -56,7 +56,7 @@
                         <td class="text-end">{{ $item->quantity }}</td>
                         <td class="text-end">${{ number_format($item->unit_price, 2) }}</td>
                         <td class="text-end">${{ number_format($totalPrice, 2) }}</td>
-                        <td class="text-end">{{ number_format($taxRate, 2) }}%</td>
+                        <td class="text-end">{{ number_format($taxRate, 0) }}%</td>
                         <td class="text-end">${{ number_format($totalHT, 2) }}</td>
                         <td class="text-end fw-bold">${{ number_format($totalTTC, 2) }}</td>
                     </tr>
@@ -75,12 +75,12 @@
             <thead class="thead-light">
                 <tr>
                     {{-- Increased width to accommodate the detailed list --}}
-                    <th style="width: 26%;">Pack &amp; Constituent Products</th>
-                    <th class="text-end">Qty</th>
+                    <th style="width: 20%;">Pack &amp; Constituent Products</th>
+                    <th class="text-end">Quantity</th>
                     <th class="text-end">Unit Price</th>
                     <th class="text-end">Total Price</th>
-                    <th class="text-end">Total HT</th>
                     <th class="text-end">Tax (%)</th>
+                    <th class="text-end">Total HT</th>
                     <th class="text-end">Total TTC</th>
                 </tr>
             </thead>
@@ -152,8 +152,8 @@
                         <td class="text-end">{{ $packItem->quantity }}</td>
                         <td class="text-end">${{ number_format($packItem->unit_price, 2) }}</td>
                         <td class="text-end">${{ number_format($totalPrice, 2) }}</td>
+                        <td class="text-end">{{ number_format($taxRate, 0) }}%</td>
                         <td class="text-end">${{ number_format($totalHT, 2) }}</td>
-                        <td class="text-end">{{ number_format($taxRate, 2) }}%</td>
                         <td class="text-end fw-bold">${{ number_format($totalTTC, 2) }}</td>
                     </tr>
                 @endforeach

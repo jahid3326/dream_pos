@@ -102,7 +102,7 @@
                             <p class="custom-label">${{ number_format($sale->shipping, 2) }}</p>
                         </div>
                         <div class="col-sm-6 col-lg-3 mb-2"><label class="custom-label">Order Tax</label>
-                            <p class="custom-label">{{ $sale->orderTax->rate ?? 0 }}%</p>
+                            <p class="custom-label">{{ number_format($sale->orderTax->rate ?? 0, 0) }}%</p>
                         </div>
                     </div>
                 </div>

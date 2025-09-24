@@ -118,6 +118,7 @@ class PaymentController extends Controller
                 $sale = Sale::find($paymentData['sale_id']);
                 if ($sale) {
                     $sale->payments()->create([
+                        'quote_id' => $sale->quote_id,
                         'amount' => $paymentData['amount'],
                         'payment_date' => $request->payment_date,
                         'payment_mode' => $request->payment_mode,

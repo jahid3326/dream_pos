@@ -86,8 +86,12 @@ class SaleController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()->all()], 422);
         }
 
+        $paymentData = $validator->validated();
+
+        $paymentData['quote_id'] = $sale->quote_id;
+
         // Create the new payment record
-        $sale->payments()->create($request->all());
+        $sale->payments()->create($paymentData);
 
         // After adding the new payment, recalculate and update the sale's status if needed
         $newPaidAmount = $sale->payments()->sum('amount');
