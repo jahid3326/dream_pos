@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\PackGroupOption;
 use App\Models\PackProduct;
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Models\Tax;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -565,6 +566,158 @@ class SaleController extends Controller
                 }
             }
         }
+    }
+
+    public function getPurchasePreview(Sale $sale)
+    {
+        /*
+        $sale->load([
+            'categoryItems.product.supplier.user',
+            'categoryItems.product.category',
+            'categoryItems.variation.product.supplier.user',
+            'categoryItems.variation.product.category',
+            'packItems.constituentItems.packProduct.product.supplier.user',
+            'packItems.constituentItems.packProduct.product.category',
+            'packItems.constituentItems.packProductSelectedVariation.product',
+            'packItems.constituentItems.packProductSelectedVariation.product.supplier.user',
+            'packItems.constituentItems.packProductSelectedVariation.product.category',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product.supplier.user',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product.category',
+        ]);
+        */
+        // Eager load all necessary relationships
+        $sale->load([
+            'categoryItems.product.supplier.user',
+            'categoryItems.product.category',
+            'categoryItems.variation.product.supplier.user',
+            'categoryItems.variation.product.category',
+            'packItems.constituentItems.packProduct.product.supplier.user',
+            'packItems.constituentItems.packProduct.product.category',
+            'packItems.constituentItems.packProductSelectedVariation.product',
+            'packItems.constituentItems.packProductSelectedVariation.product.supplier.user',
+            'packItems.constituentItems.packProductSelectedVariation.product.category',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product.supplier.user',
+            'packItems.constituentItems.packProductSelectedVariation.variation.product.category',
+        ]);
+
+        $productsBySupplier = collect();
+
+        // 1. Process standard category items
+        foreach ($sale->categoryItems as $item) {
+            $product = null;
+            $purchasePrice = 0;
+            $imageUrl = asset('storage/images/default_image.png');
+            $categoryName = 'N/A';
+            $measurement = 'N/A';
+
+            if ($item->product_variation_id && $item->variation) {
+                $variation = $item->variation;
+                $product = $variation->product;
+                $purchasePrice = $variation->purchase_price;
+                $measurement = $variation->measurement;
+                $image = $variation->image ?? $product->product_image;
+                $imageUrl = $image ? asset('storage/' . $image) : $imageUrl;
+            } elseif ($item->product) {
+                $product = $item->product;
+                $purchasePrice = $product->purchase_price;
+                $measurement = $product->measurement;
+                $imageUrl = $product->product_image ? asset('storage/' . $product->product_image) : $imageUrl;
+            }
+
+            if ($product && $product->supplier) {
+                $categoryName = $product->category->name ?? 'N/A';
+                $productsBySupplier->push([
+                    'supplier_id' => $product->supplier->id,
+                    'product_id' => $product->id,
+                    'variation_id' => $item->product_variation_id,
+                    'product_name' => $item->product_name,
+                    'quantity' => $item->quantity,
+                    'purchase_price' => $purchasePrice ?? 0,
+                    'image_url' => $imageUrl,
+                    'category_name' => $categoryName,
+                    'measurement' => $measurement,
+                ]);
+            }
+        }
+
+        // 2. Process pack constituent items
+        foreach ($sale->packItems as $packItem) {
+            foreach ($packItem->constituentItems as $part) {
+                $product = null;
+                $purchasePrice = 0;
+                $imageUrl = asset('storage/images/default_image.png');
+                $categoryName = 'N/A';
+                $measurement = 'N/A';
+                $variationId = null;
+
+                if ($part->packProductSelectedVariation) {
+                    if ($part->packProductSelectedVariation->variation) {
+                        $variation = $part->packProductSelectedVariation->variation;
+                        $product = $variation->product;
+                        $purchasePrice = $variation->purchase_price;
+                        $measurement = $variation->measurement;
+                        $image = $variation->image ?? $product->product_image;
+                        $imageUrl = $image ? asset('storage/' . $image) : $imageUrl;
+                        $variationId = $variation->id;
+                    } else {
+                        $variation = $part->packProductSelectedVariation;
+                        $product = $variation->product;
+                        $purchasePrice = $product->purchase_price;
+                        $measurement = $product->measurement;
+                        $image = $product->product_image;
+                        $imageUrl = $image ? asset('storage/' . $image) : $imageUrl;
+                        $variationId = null;
+                    }
+                } elseif ($part->packProduct && $part->packProduct->product) {
+                    $product = $part->packProduct->product;
+                    $purchasePrice = $product->purchase_price;
+                    $measurement = $product->measurement;
+                    $imageUrl = $product->product_image ? asset('storage/' . $product->product_image) : $imageUrl;
+                }
+
+                if ($product && $product->supplier) {
+                    $categoryName = $product->category->name ?? 'N/A';
+                    $productsBySupplier->push([
+                        'supplier_id' => $product->supplier->id,
+                        'product_id' => $product->id,
+                        'variation_id' => $variationId,
+                        'product_name' => $part->product_name,
+                        'quantity' => $packItem->quantity,
+                        'purchase_price' => $purchasePrice ?? 0,
+                        'image_url' => $imageUrl,
+                        'category_name' => $categoryName,
+                        'measurement' => $measurement,
+                    ]);
+                }
+            }
+        }
+
+        // 3. Group all collected products by supplier
+        $grouped = $productsBySupplier->groupBy('supplier_id')->map(function ($items, $supplierId) {
+            $supplier = Supplier::with('user')->find($supplierId);
+            return [
+                'supplier_id' => $supplierId,
+                'supplier_name' => $supplier->company_name,
+                'supplier_image_url' => $supplier->user->profile_picture ? $supplier->user->profile_picture : 'images/default_avatar.png',
+                'products' => $items->map(function ($item) {
+                    return [
+                        'product_id' => $item['product_id'],
+                        'variation_id' => $item['variation_id'],
+                        'product_name' => $item['product_name'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['purchase_price'],
+                        'total_price' => $item['quantity'] * $item['purchase_price'],
+                        'image_url' => $item['image_url'],
+                        'category_name' => $item['category_name'],
+                        'measurement' => $item['measurement'],
+                    ];
+                })->values()->all(),
+            ];
+        });
+
+        return response()->json($grouped->values()->all());
+
+        // return response()->json($sale);
     }
 
     /**

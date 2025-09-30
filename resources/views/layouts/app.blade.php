@@ -13,6 +13,7 @@
         content="inventory management, admin dashboard, bootstrap template, invoicing, estimates, business management, responsive admin, POS system">
     <meta name="author" content="Dreams Technologies">
     <meta name="robots" content="index, follow">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} | @yield('title', 'Welcome')</title>
 
     <script src="{{ asset('public/assets/js/theme-script.js') }}"></script>
@@ -273,7 +274,8 @@
                                 </div>
                                 <div class="dropdown-menu search-dropdown" aria-labelledby="dropdownMenuClickable">
                                     <div class="search-info">
-                                        <h6><span><i data-feather="search" class="feather-16"></i></span>Recent Searches
+                                        <h6><span><i data-feather="search" class="feather-16"></i></span>Recent
+                                            Searches
                                         </h6>
                                         <ul class="search-tags">
                                             <li><a href="javascript:void(0);">Products</a></li>
@@ -491,81 +493,51 @@
                     <li class="nav-item dropdown nav-item-box">
                         <a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
                             <i class="ti ti-bell"></i>
+                            {{-- Unread count badge --}}
+                            <span class="badge rounded-pill bg-danger" id="notification-count"
+                                style="{{ $unreadNotificationsCount > 0 ? '' : 'display: none;' }}">
+                                {{ $unreadNotificationsCount }}
+                            </span>
                         </a>
                         <div class="dropdown-menu notifications">
                             <div class="topnav-dropdown-header">
                                 <h5 class="notification-title">Notifications</h5>
-                                <a href="javascript:void(0)" class="clear-noti">Mark all as read</a>
+                                <a href="javascript:void(0)" class="clear-noti" id="mark-all-as-read">Mark all as
+                                    read</a>
                             </div>
                             <div class="noti-content">
-                                <ul class="notification-list">
-                                    <li class="notification-message">
-                                        <a href="activities.html">
-                                            <div class="media d-flex">
-                                                <span class="avatar flex-shrink-0">
-                                                    <img alt="Img"
-                                                        src="{{ asset('public/assets/img/profiles/avatar-13.jpg') }}">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="noti-details"><span class="noti-title">James
-                                                            Kirwin</span> confirmed his order. Order No:
-                                                        #78901.Estimated delivery: 2 days</p>
-                                                    <p class="noti-time">4 mins ago</p>
+                                <ul class="notification-list" id="notification-list-container">
+                                    @forelse ($unreadNotifications as $notification)
+                                        <li class="notification-message">
+                                            <a href="#"> {{-- Link to the purchase details page later --}}
+                                                <div class="media d-flex">
+                                                    <span class="avatar flex-shrink-0">
+                                                        <img alt="Img"
+                                                            src="{{ $notification->data['sender_avatar'] }}">
+                                                    </span>
+                                                    <div class="flex-grow-1">
+                                                        <p class="noti-details">
+                                                            <span
+                                                                class="noti-title">{{ $notification->data['sender_name'] }}</span>
+                                                            {{ $notification->data['message'] }}
+                                                        </p>
+                                                        <p class="noti-time">
+                                                            {{ $notification->created_at->diffForHumans() }}</p>
+                                                    </div>
                                                 </div>
+                                            </a>
+                                        </li>
+                                    @empty
+                                        <li class="notification-message" id="no-new-notifications">
+                                            <div class="media d-flex justify-content-center">
+                                                <p class="text-muted mt-3">No new notifications</p>
                                             </div>
-                                        </a>
-                                    </li>
-                                    <li class="notification-message">
-                                        <a href="activities.html">
-                                            <div class="media d-flex">
-                                                <span class="avatar flex-shrink-0">
-                                                    <img alt="Img"
-                                                        src="{{ asset('public/assets/img/profiles/avatar-03.jpg') }}">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="noti-details"><span class="noti-title">Leo Kelly</span>
-                                                        cancelled his order scheduled for 17 Jan 2025</p>
-                                                    <p class="noti-time">10 mins ago</p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </li>
-                                    <li class="notification-message">
-                                        <a href="activities.html" class="recent-msg">
-                                            <div class="media d-flex">
-                                                <span class="avatar flex-shrink-0">
-                                                    <img alt="Img"
-                                                        src="{{ asset('public/assets/img/profiles/avatar-17.jpg') }}">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="noti-details">Payment of $50 received for Order #67890
-                                                        from <span class="noti-title">Antonio Engle</span></p>
-                                                    <p class="noti-time">05 mins ago</p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </li>
-                                    <li class="notification-message">
-                                        <a href="activities.html" class="recent-msg">
-                                            <div class="media d-flex">
-                                                <span class="avatar flex-shrink-0">
-                                                    <img alt="Img"
-                                                        src="{{ asset('public/assets/img/profiles/avatar-02.jpg') }}">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="noti-details"><span class="noti-title">Andrea</span>
-                                                        confirmed his order. Order No: #73401.Estimated delivery: 3 days
-                                                    </p>
-                                                    <p class="noti-time">4 mins ago</p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </li>
+                                        </li>
+                                    @endforelse
                                 </ul>
                             </div>
-                            <div class="topnav-dropdown-footer d-flex align-items-center gap-3">
-                                <a href="#" class="btn btn-secondary btn-md w-100">Cancel</a>
-                                <a href="activities.html" class="btn btn-primary btn-md w-100">View all</a>
+                            <div class="topnav-dropdown-footer">
+                                <a href="#" class="btn btn-primary btn-md w-100">View all</a>
                             </div>
                         </div>
                     </li>
@@ -853,6 +825,49 @@
     <!-- Custom JS -->
     <script src="{{ asset('public/assets/js/theme-colorpicker.js') }}"></script>
     <script src="{{ asset('public/assets/js/script.js') }}"></script>
+
+    {{-- 1. Load the main compiled app.js that DEFINES window.Echo --}}
+    @vite('resources/js/app.js')
+
+    {{-- 2. Include our listener script that USES window.Echo --}}
+    @include('layouts.partials._echo-script')
+
+    <script>
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+
+        $(document).ready(function() {
+            $('#mark-all-as-read').on('click', function(e) {
+                e.preventDefault();
+
+                // This AJAX call will now automatically include the X-CSRF-TOKEN header
+                // because of the $.ajaxSetup configuration.
+                $.ajax({
+                    url: '{{ route('notifications.markAsRead') }}',
+                    type: 'POST', // The method is POST
+                    // We don't need to manually add the token to the data if ajaxSetup is configured
+                    success: function(response) {
+                        if (response.success) {
+                            $('#notification-count').text('0').hide();
+                            $('#notification-list-container').html(`
+                        <li class="notification-message" id="no-new-notifications">
+                            <div class="media d-flex justify-content-center">
+                               <p class="text-muted mt-3">No new notifications</p>
+                            </div>
+                        </li>`);
+                        }
+                    },
+                    error: function() {
+                        alert('Could not mark notifications as read.');
+                    }
+                });
+            });
+        });
+    </script>
 
     @stack('scripts')
 </body>

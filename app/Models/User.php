@@ -68,6 +68,11 @@ class User extends Authenticatable
 
     public function supplier()
     {
-        return $this->hasOne(Supplier::class); 
+        return $this->hasOne(Supplier::class);
+    }
+
+    public function supplierProfile()
+    {
+        return $this->hasOne(Supplier::class);
     }
 }

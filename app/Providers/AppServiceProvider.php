@@ -6,6 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade; // <-- Import the Blade facade
 use Illuminate\Support\Facades\Auth;   // <-- Import the Auth facade
 use App\Models\Permission;              // <-- Import the Permission model
+use Illuminate\Pagination\Paginator;
+use App\Http\View\Composers\NotificationComposer; // <-- Add this
+use Illuminate\Support\Facades\View;              // <-- Add this
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,8 +42,8 @@ class AppServiceProvider extends ServiceProvider
 
             // 4. Check the permissions table for other roles
             $permission = Permission::where('role_id', $user->role_id)
-                                    ->where('model_name', $modelName)
-                                    ->first();
+                ->where('model_name', $modelName)
+                ->first();
 
             // 5. Determine the permission column to check (e.g., 'can_create')
             $permissionColumn = 'can_' . $action;
@@ -48,5 +51,9 @@ class AppServiceProvider extends ServiceProvider
             // 6. Return true if the permission exists and is set to true, otherwise false
             return $permission && $permission->$permissionColumn;
         });
+
+        Paginator::useBootstrap();
+
+        View::composer('layouts.app', NotificationComposer::class);
     }
 }

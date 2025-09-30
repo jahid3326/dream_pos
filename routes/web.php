@@ -15,6 +15,7 @@ use App\Http\Controllers\PackController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StudentController;
@@ -228,6 +229,13 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/sales/{sale}/print-invoice', [SaleController::class, 'printInvoice'])->name('sales.print.invoice');
             Route::get('/sales/{sale}/payments', [SaleController::class, 'getPayments'])->name('sales.payments.get');
 
+            // For fetching data for the modal
+            Route::get('/sales/{sale}/purchase-preview', [SaleController::class, 'getPurchasePreview'])->name('sales.purchasePreview');
+
+            // For handling the conversion submission
+            Route::post('/sales/{sale}/convert-to-purchase', [PurchaseController::class, 'storeFromSale'])->name('sales.convertToPurchase');
+
+
             // Sales-related routes
             Route::resource('sales', SaleController::class);
 
@@ -241,7 +249,20 @@ Route::middleware(['auth'])->group(function () {
 
             // Payments-related routes
             Route::resource('payments', PaymentController::class)->except(['show']);
+
+            // Route to fetch all payments for a specific purchase (for the modal)
+            Route::get('/purchases/{purchase}/payments', [PurchaseController::class, 'getPayments'])
+                ->name('purchases.payments.get');
+
+            // Route to store a new payment for a specific purchase
+            Route::post('/purchases/{purchase}/payments', [PurchaseController::class, 'addPayment'])
+                ->name('purchases.payments.store');
+
+            // Full resource routes for managing purchases
+            Route::resource('purchases', PurchaseController::class);
         });
+
+        Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
 
         // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---
         // Only users with the Super Admin role can access these routes.

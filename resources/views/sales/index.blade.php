@@ -85,9 +85,12 @@
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         {{-- Convert to Purchase --}}
                                                         <li>
-                                                            <a class="dropdown-item d-flex align-items-center"
-                                                                href="#">
-                                                                <i class="fas fa-exchange-alt fa-fw me-2"></i> Convert to
+                                                            <a class="dropdown-item d-flex align-items-center convert-to-purchase-btn"
+                                                                href="#" data-bs-toggle="modal"
+                                                                data-bs-target="#convertToPurchaseModal"
+                                                                data-url="{{ route('sales.purchasePreview', $sale->id) }}"
+                                                                data-action="{{ route('sales.convertToPurchase', $sale->id) }}">
+                                                                <i class="fas fa-shopping-bag fa-fw me-2"></i> Convert to
                                                                 Purchase
                                                             </a>
                                                         </li>
@@ -196,13 +199,14 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3">{{ $sales->links() }}</div>
+                    <div class="d-flex justify-content-end mt-3">{{ $sales->links() }}</div>
                 </div>
             </div>
         </div>
     </div>
     <!-- Add Payment Modal -->
-    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -271,6 +275,33 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- Convert to Purchase Modal -->
+    <div class="modal fade" id="convertToPurchaseModal" tabindex="-1" aria-labelledby="convertToPurchaseModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="convertToPurchaseModalLabel">Convert to Purchase</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="convert-purchase-form" method="POST">
+                    @csrf
+                    <div class="modal-body" id="purchase-preview-body">
+                        {{-- AJAX content will be loaded here --}}
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Confirm</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -356,6 +387,98 @@
                         }));
                     }
                 }
+            });
+
+            // --- CONVERT TO PURCHASE SCRIPT ---
+            let purchaseModal = new bootstrap.Modal(document.getElementById('convertToPurchaseModal'));
+
+            $('.convert-to-purchase-btn').on('click', function() {
+                const previewUrl = $(this).data('url');
+                const formAction = $(this).data('action');
+                const modalBody = $('#purchase-preview-body');
+                const purchaseForm = $('#convert-purchase-form');
+
+                purchaseForm.attr('action', formAction);
+                modalBody.html(
+                    '<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>'
+                );
+
+                $.ajax({
+                    url: previewUrl,
+                    type: 'GET',
+                    success: function(suppliers) {
+                        // console.log(suppliers);
+
+                        let content = '';
+                        if (suppliers.length === 0) {
+                            content =
+                                '<p class="text-center text-muted">No products with assigned suppliers found in this sale.</p>';
+                        } else {
+                            suppliers.forEach((supplier, s_idx) => {
+                                content += `
+                                <div class="mb-4 border rounded p-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <input type="hidden" name="suppliers[${s_idx}][supplier_id]" value="${supplier.supplier_id}">
+                                        <img src="public/storage/${supplier.supplier_image_url}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                        <h6 class="mb-0">${supplier.supplier_name}</h6>
+                                    </div>
+                                    <table class="table table-sm">
+                                        <thead><tr><th>#</th><th>Name</th><th class="text-end">Quantity</th><th class="text-end">Unit Price</th><th class="text-end">Total Price</th></tr></thead>
+                                        <tbody>`;
+                                supplier.products.forEach((product, p_idx) => {
+                                    content += `
+                                    <tr>
+                                    <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][product_id]" value="${product.product_id}">
+                                    <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][product_name]" value="${product.product_name}">
+                                    <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][quantity]" value="${product.quantity}">
+                                    <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][unit_price]" value="${product.unit_price}">
+                                    <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][total_price]" value="${product.total_price}">
+                                    
+                                    <td>${p_idx + 1}</td>
+                                    
+                                    {{-- DETAILED PRODUCT NAME CELL --}}
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="public/${product.image_url}" class="rounded me-2" width="40" height="40" style="object-fit: cover;">
+                                            <div>
+                                                <strong>${product.product_name}</strong><br>
+                                                <small class="text-muted">${product.category_name} (${product.measurement || 'N/A'})</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="text-end">${product.quantity}</td>
+                                    <td class="text-end">$${parseFloat(product.unit_price).toFixed(2)}</td>
+                                    <td class="text-end">$${parseFloat(product.total_price).toFixed(2)}</td>
+                                </tr>`;
+                                });
+                                content += `</tbody></table></div>`;
+                            });
+
+                            // Add Documents Section
+                            content += `
+                        <div class="mt-4">
+                            <h6>Required Documents</h6>
+                            <div class="row">
+                                <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Proforma Invoice (PI)" id="doc1"><label class="form-check-label" for="doc1">Proforma Invoice (PI)</label></div>
+                                <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Packing List" id="doc2"><label class="form-check-label" for="doc2">Packing List</label></div>
+                                <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Certificate of Origin (COO)" id="doc3"><label class="form-check-label" for="doc3">Certificate of Origin (COO)</label></div>
+                                <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="MSDS / Safety Data" id="doc4"><label class="form-check-label" for="doc4">MSDS / Safety Data</label></div>
+                                <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Insurance" id="doc5"><label class="form-check-label" for="doc5">Insurance</label></div>
+                                <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Fumigation Certificate" id="doc6"><label class="form-check-label" for="doc6">Fumigation Certificate</label></div>
+                            </div>
+                        </div>
+                    `;
+                        }
+                        modalBody.html(content);
+
+                    },
+                    error: function() {
+                        modalBody.html(
+                            '<p class="text-center text-danger">Could not load purchase preview data.</p>'
+                        );
+                    }
+                });
             });
         });
 

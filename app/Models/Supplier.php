@@ -23,4 +23,9 @@ class Supplier extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function purchases()
+    {
+        return $this->belongsToMany(Purchase::class, 'purchase_supplier');
+    }
 }
