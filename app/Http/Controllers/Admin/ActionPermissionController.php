@@ -19,6 +19,7 @@ class ActionPermissionController extends Controller
         'Tax',
         'Sale',
         'SalePayment',
+        'Purchase',
 
     ];
 

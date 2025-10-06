@@ -11,6 +11,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Collection;
 
 class PurchaseOrderCreated extends Notification implements ShouldBroadcast
 {
@@ -18,14 +19,18 @@ class PurchaseOrderCreated extends Notification implements ShouldBroadcast
 
     public Purchase $purchase;
     public User $sender;
+    public Collection $items; // Items for this specific supplier
+    public float $supplierTotalAmount; // Total amount for this specific supplier
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Purchase $purchase, User $sender)
+    public function __construct(Purchase $purchase, User $sender, Collection $items, float $supplierTotalAmount)
     {
         $this->purchase = $purchase;
         $this->sender = $sender;
+        $this->items = $items;
+        $this->supplierTotalAmount = $supplierTotalAmount;
     }
 
     /**
@@ -35,7 +40,7 @@ class PurchaseOrderCreated extends Notification implements ShouldBroadcast
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', 'mail'];
     }
 
     /**
@@ -43,10 +48,17 @@ class PurchaseOrderCreated extends Notification implements ShouldBroadcast
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $purchaseUrl = route('orders.show', $this->purchase);
+
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject("New Purchase Order: #{$this->purchase->purchase_number}")
+            ->greeting("Hello {$notifiable->name},")
+            ->line("A new purchase order has been created for you by {$this->sender->name}.")
+            ->line("Purchase Order Number: **{$this->purchase->purchase_number}**")
+            // --- THIS IS THE UPDATED LINE ---
+            ->line("Your Total Amount: **$" . number_format($this->supplierTotalAmount, 2) . "**")
+            ->action('View Your Order Details', $purchaseUrl)
+            ->line('Thank you for your cooperation!');
     }
 
     /**
@@ -73,7 +85,7 @@ class PurchaseOrderCreated extends Notification implements ShouldBroadcast
             'purchase_number' => $this->purchase->purchase_number,
             'sender_id' => $this->sender->id,
             'sender_name' => $this->sender->name,
-            'sender_avatar' => $this->sender->profile_image_url,
+            'sender_avatar' => $this->sender->profile_picture,
             'message' => "created a new Purchase Order: #{$this->purchase->purchase_number}",
         ];
     }
@@ -89,7 +101,7 @@ class PurchaseOrderCreated extends Notification implements ShouldBroadcast
             'purchase_number' => $this->purchase->purchase_number,
             'sender_id' => $this->sender->id,
             'sender_name' => $this->sender->name,
-            'sender_avatar' => $this->sender->profile_image_url,
+            'sender_avatar' => $this->sender->profile_picture,
             'message' => "created a new Purchase Order: #{$this->purchase->purchase_number}",
         ]);
     }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagePackController;
 use App\Http\Controllers\PackController;
 use App\Http\Controllers\PaymentController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\Supplier\OrderController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaxController;
 use Illuminate\Support\Facades\Response;
@@ -51,16 +53,6 @@ Route::middleware('guest')->group(function () {
 // Route::post('login', [AuthController::class, 'login']);
 // Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-// Authenticated Routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-
-    // All other routes for your app will go here...
-});
-
-
 // Redirect root to login if not authenticated, or dashboard if authenticated
 Route::get('/', function () {
     // This check handles both cases elegantly
@@ -72,15 +64,9 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
 
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // Logout route for all authenticated users
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
-
-    // ... dashboard and other authenticated routes
-
-    // Dashboard for all authenticated users
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
 
     // Super Admin Routes
     Route::middleware(['auth'])->group(function () {
@@ -261,6 +247,10 @@ Route::middleware(['auth'])->group(function () {
             // Full resource routes for managing purchases
             Route::resource('purchases', PurchaseController::class);
         });
+        // We define the 'show' route manually to customize the binding.
+        Route::get('orders/{purchase}', [OrderController::class, 'show'])->name('orders.show');
+        // You can keep the 'index' route from the resource if you want.
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 
         Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
 

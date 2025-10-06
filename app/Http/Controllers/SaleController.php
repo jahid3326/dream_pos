@@ -33,6 +33,7 @@ class SaleController extends Controller
         $sales = Sale::with([
             'customer.user',
             'payments',
+            'purchases',
             'categoryItems.product.category', // For standard items
             'categoryItems.variation', // For standard items
             // --- THIS IS THE CORRECTED EAGER LOADING FOR PACKS ---

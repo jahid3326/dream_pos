@@ -39,15 +39,59 @@ class PurchaseController extends Controller
             $query->where('status', $request->status);
         }
 
-        // 3. Eager-load relationships and paginate the filtered results
-        $purchases = $query->with('suppliers.user', 'items', 'payments')->latest()->paginate(10);
+        // Eager-load everything we could possibly need for this complex view
+        $purchases = $query->with([
+            'suppliers.user',
+            'payments',
+            'documents',
+            // Now we get all the nested details for each item
+            'items.product.category', // For single products
+            'items.variation'
+        ])->latest()->paginate(10);
 
-        // Add calculated properties for the view
+        // Now, process each purchase to calculate the complex data for the view
         $purchases->each(function ($purchase) {
+            // 1. Calculate overall purchase financials (already done)
             $purchase->paid_amount = $purchase->payments->sum('amount');
             $purchase->due_amount = $purchase->total_amount - $purchase->paid_amount;
             $purchase->payment_status = $purchase->due_amount <= 0 ? 'Paid' : ($purchase->paid_amount > 0 ? 'Partial' : 'Unpaid');
+
+            // 2. Calculate overall purchase progress status
+            $totalSuppliers = $purchase->suppliers->count();
+            $completedSuppliers = $purchase->suppliers->where('pivot.status', 'complete')->count();
+            $purchase->progress_text = "{$completedSuppliers} of {$totalSuppliers} Done";
+
+            // 3. Calculate and attach per-supplier data
+            foreach ($purchase->suppliers as $supplier) {
+                // Get all items for this specific supplier on this purchase
+                $supplierItems = $purchase->items->where('supplier_id', $supplier->id);
+
+                // Calculate total price and quantity for this supplier
+                $supplier->total_price = $supplierItems->sum('total_price');
+                $supplier->total_quantity = $supplierItems->sum('quantity');
+
+                // NOTE: Per-supplier payment tracking is complex. 
+                // The design shows it, but our DB doesn't support it yet (payments are linked to the Purchase, not the supplier).
+                // For now, we will display 0 for paid and the total as due.
+                $supplier->paid_amount = 0.00;
+                $supplier->due_amount = $supplier->total_price;
+
+                // 4. Prepare the document status list for this supplier
+                // In this design, documents are global to the purchase. We'll show the same list for each supplier.
+                $fileStatus = [];
+                foreach ($purchase->documents->where('is_required', true) as $document) {
+                    // Here you would add logic to check if the file has been uploaded.
+                    // For now, we'll use a placeholder logic.
+                    $isOk = in_array($document->document_name, ['BL', 'Certificat']); // Example
+                    $fileStatus[] = [
+                        'name' => $document->document_name,
+                        'status' => $isOk ? 'Ok' : 'Missing',
+                    ];
+                }
+                $supplier->file_status_list = $fileStatus;
+            }
         });
+
 
         // 4. Get data for the filter dropdowns
         $suppliers = Supplier::with('user')->get()->sortBy('user.name');
@@ -58,12 +102,16 @@ class PurchaseController extends Controller
             'received' => 'Received',
         ];
 
+        // echo '<pre>';
+        // print_r($purchases->toArray());
+        // echo '</pre>';
         // 5. Pass data to the view
         return view('purchases.index', compact('purchases', 'suppliers', 'statuses'));
     }
 
     public function storeFromSale(Request $request, Sale $sale)
     {
+        // dd($request->all());
         // 1. Validate the incoming data from the conversion modal
         $validator = Validator::make($request->all(), [
             'suppliers' => 'required|array|min:1',
@@ -90,7 +138,7 @@ class PurchaseController extends Controller
 
                 // 2b. Create ONE central Purchase record linked to the Sale.
                 $purchase = Purchase::create([
-                    'purchase_number' => $this->generateNextPurchaseNumber(),
+                    'purchase_number' => 'PO-' . substr($sale->invoice_number, strrpos($sale->invoice_number, '-') + 1),
                     'purchase_date'   => now(),
                     'status'          => 'ordered',
                     'total_amount'    => $grandTotalAmount,
@@ -128,6 +176,7 @@ class PurchaseController extends Controller
                         $purchase->items()->create([
                             'supplier_id'  => $supplierId,
                             'product_id'   => $product['product_id'],
+                            'variation_id' => $product['variation_id'] ?? null,
                             'product_name' => $product['product_name'],
                             'quantity'     => $product['quantity'],
                             'unit_price'   => $product['unit_price'],
@@ -149,13 +198,16 @@ class PurchaseController extends Controller
             // This is done outside the transaction to ensure we only notify on success.
             foreach ($request->suppliers as $supplierData) {
                 try {
+
                     $supplier = Supplier::with('user')->findOrFail($supplierData['supplier_id']);
 
                     // ADD THIS LOG
                     Log::info("[BROADCAST-DEBUG] Firing NewPurchaseOrderNotification for Supplier ID: {$supplier->id}");
 
+                    $itemsForSupplier = $purchase->items()->where('supplier_id', $supplier->id)->get();
+                    $supplierTotalAmount = $itemsForSupplier->sum('total_price');
                     // Fire the event for this specific supplier
-                    $supplier->user->notify(new PurchaseOrderCreated($purchase, $sender));
+                    $supplier->user->notify(new PurchaseOrderCreated($purchase, $sender, $itemsForSupplier, $supplierTotalAmount));
                 } catch (\Exception $e) {
                     // If a single notification fails, log it but don't crash.
                     Log::error("Failed to broadcast PO notification for supplier ID {$supplierData['supplier_id']}: " . $e->getMessage());
@@ -196,10 +248,39 @@ class PurchaseController extends Controller
 
     /**
      * Display the specified resource.
+     *
+     * @param  \App\Models\Purchase  $purchase
+     * @return \Illuminate\View\View
      */
-    public function show(string $id)
+    public function show(Purchase $purchase)
     {
-        //
+        // 1. Eager-load all the relationships we need for the detailed view.
+        // This is highly efficient and prevents N+1 query problems.
+        $purchase->load([
+            'sale', // The original sale, if it exists
+            'suppliers.user', // All suppliers and their user profiles
+            'items.product.category', // All items and their product/category details
+            'items.variation', // The specific variation, if applicable
+            'documents', // All tracked documents for this purchase
+            'payments' // All payments made for this purchase
+        ]);
+
+        // 2. Calculate the payment summary.
+        $purchase->paid_amount = $purchase->payments->sum('amount');
+        $purchase->due_amount = $purchase->total_amount - $purchase->paid_amount;
+        if ($purchase->paid_amount <= 0) {
+            $purchase->payment_status_text = 'Unpaid';
+        } elseif ($purchase->due_amount <= 0) {
+            $purchase->payment_status_text = 'Paid';
+        } else {
+            $purchase->payment_status_text = 'Partial';
+        }
+
+        // 3. Group the purchase items by their supplier for easy display in the view.
+        $itemsBySupplier = $purchase->items->groupBy('supplier_id');
+
+        // 4. Pass the fully-loaded purchase object and the grouped items to the view.
+        return view('purchases.show', compact('purchase', 'itemsBySupplier'));
     }
 
     /**

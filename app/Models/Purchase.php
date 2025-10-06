@@ -14,7 +14,9 @@ class Purchase extends Model
 
     public function suppliers()
     {
-        return $this->belongsToMany(Supplier::class, 'purchase_supplier');
+        return $this->belongsToMany(Supplier::class, 'purchase_supplier')
+            ->withPivot('status')
+            ->withTimestamps();
     }
 
     public function sale()

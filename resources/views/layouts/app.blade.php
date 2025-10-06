@@ -495,7 +495,7 @@
                             <i class="ti ti-bell"></i>
                             {{-- Unread count badge --}}
                             <span class="badge rounded-pill bg-danger" id="notification-count"
-                                style="{{ $unreadNotificationsCount > 0 ? '' : 'display: none;' }}">
+                                style="visibility: {{ $unreadNotificationsCount > 0 ? 'visible' : 'hidden' }};">
                                 {{ $unreadNotificationsCount }}
                             </span>
                         </a>
@@ -513,7 +513,7 @@
                                                 <div class="media d-flex">
                                                     <span class="avatar flex-shrink-0">
                                                         <img alt="Img"
-                                                            src="{{ $notification->data['sender_avatar'] }}">
+                                                            src="{{ $notification->data['sender_avatar'] ? asset('public/storage/' . $notification->data['sender_avatar']) : asset('public/storage/images/default_avatar.png') }}">
                                                     </span>
                                                     <div class="flex-grow-1">
                                                         <p class="noti-details">
@@ -852,7 +852,7 @@
                     // We don't need to manually add the token to the data if ajaxSetup is configured
                     success: function(response) {
                         if (response.success) {
-                            $('#notification-count').text('0').hide();
+                            $('#notification-count').text('0').css('visibility', 'hidden');
                             $('#notification-list-container').html(`
                         <li class="notification-message" id="no-new-notifications">
                             <div class="media d-flex justify-content-center">

@@ -34,6 +34,7 @@
                                     <th class="text-end">Paid Amount</th>
                                     <th class="text-end">Due Amount</th>
                                     <th>Payment Status</th>
+                                    <th>Purchase</th>
                                     @if (hasActionPermission('Sale', 'update') || hasActionPermission('Sale', 'delete'))
                                         <th class="no-sort"></th>
                                     @endif
@@ -73,6 +74,15 @@
                                                 <span class="badge" style="background-color: #fd7e14">Deposit</span>
                                             @else
                                                 <span class="badge bg-danger">Unpaid</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            {{-- Check if the 'purchases' collection is not empty --}}
+                                            @if ($sale->purchases->isNotEmpty())
+                                                <span class="d-inline-block bg-success rounded-circle"
+                                                    style="width: 15px; height: 15px;" data-bs-toggle="tooltip"
+                                                    title="Purchase Order Created">
+                                                </span>
                                             @endif
                                         </td>
                                         @if (hasActionPermission('Sale', 'update') || hasActionPermission('Sale', 'delete'))
@@ -429,6 +439,7 @@
                                     content += `
                                     <tr>
                                     <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][product_id]" value="${product.product_id}">
+                                    <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][variation_id]" value="${product.variation_id || ''}">
                                     <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][product_name]" value="${product.product_name}">
                                     <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][quantity]" value="${product.quantity}">
                                     <input type="hidden" name="suppliers[${s_idx}][products][${p_idx}][unit_price]" value="${product.unit_price}">

@@ -32,6 +32,13 @@ class PurchaseItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function variation()
+    {
+        // This is a "belongsTo" relationship because one purchase item
+        // belongs to one specific product variation.
+        return $this->belongsTo(ProductVariation::class, 'variation_id');
+    }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);

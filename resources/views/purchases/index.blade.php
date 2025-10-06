@@ -1,5 +1,82 @@
 @extends('layouts.app')
 @section('title', 'Purchases')
+@push('styles')
+    <style>
+        /* Custom styles to match the design */
+        .supplier-financials {
+            font-size: 0.8rem;
+            vertical-align: middle;
+        }
+
+        .supplier-financials .avatar-image {
+            object-fit: cover;
+            border: 1px solid #eee;
+        }
+
+        .file-status-list span {
+            display: block;
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .status-in.process,
+        .status-ordered,
+        .status-partial.payment {
+            background-color: #ffe8d1;
+            color: #ff8f00;
+            border-color: #ff8f00;
+        }
+
+        .status-waiting.payment {
+            background-color: #fff0f0;
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        .status-waiting.review,
+        .status-waiting.review.from.supplier {
+            background-color: #e0e0e0;
+            color: #424242;
+            border-color: #757575;
+        }
+
+        .status-complete,
+        .status-received,
+        .status-paid {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #155724;
+        }
+
+        .status-partial,
+        .status-unpaid {
+            background-color: #fff0f0;
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        .product-toggle-btn i {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .product-toggle-btn.collapsed i {
+            transform: rotate(0deg);
+        }
+
+        .product-toggle-btn:not(.collapsed) i {
+            transform: rotate(90deg);
+        }
+    </style>
+@endpush
 @section('content')
     <div class="page-wrapper">
         <div class="content">
@@ -21,48 +98,31 @@
                     {{-- Filter/Search Section --}}
                     <form action="{{ route('purchases.index') }}" method="GET">
                         <div class="row mb-4">
-                            {{-- Search by PO Number --}}
-                            <div class="col-md-3">
-                                <label for="search" class="form-label">PO Number</label>
-                                <input type="text" class="form-control" id="search" name="search"
-                                    placeholder="Search by PO #..." value="{{ request('search') }}">
-                            </div>
-
-                            {{-- Filter by Supplier --}}
-                            <div class="col-md-3">
-                                <label for="supplier_id" class="form-label">Supplier</label>
-                                <select class="form-select" id="supplier_id" name="supplier_id">
+                            <div class="col-md-3"><label class="form-label">PO Number</label><input type="text"
+                                    class="form-control" name="search" placeholder="Search by PO #..."
+                                    value="{{ request('search') }}"></div>
+                            <div class="col-md-3"><label class="form-label">Supplier</label><select class="form-select"
+                                    name="supplier_id">
                                     <option value="">All Suppliers</option>
                                     @foreach ($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}" @selected(request('supplier_id') == $supplier->id)>
-                                            {{ $supplier->user->name }}
-                                        </option>
+                                            {{ $supplier->company_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
-
-                            {{-- Filter by Status --}}
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
+                            <div class="col-md-3"><label class="form-label">Status</label><select class="form-select"
+                                    name="status">
                                     <option value="">All Statuses</option>
                                     @foreach ($statuses as $key => $value)
-                                        <option value="{{ $key }}" @selected(request('status') == $key)>
-                                            {{ $value }}
+                                        <option value="{{ $key }}" @selected(request('status') == $key)>{{ $value }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-
-                            {{-- Action Buttons --}}
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary me-2">
-                                    <i class="fas fa-search me-1"></i> Filter
-                                </button>
-                                <a href="{{ route('purchases.index') }}" class="btn btn-secondary">
-                                    <i class="fas fa-times me-1"></i> Clear
-                                </a>
-                            </div>
+                            <div class="col-md-3 d-flex align-items-end"><button type="submit"
+                                    class="btn btn-primary me-2"><i class="fas fa-search me-1"></i> Filter</button><a
+                                    href="{{ route('purchases.index') }}" class="btn btn-secondary"><i
+                                        class="fas fa-times me-1"></i> Clear</a></div>
                         </div>
                     </form>
 
@@ -71,11 +131,11 @@
                         <table class="table">
                             <thead class="thead-light">
                                 <tr>
-                                    <th style="width: 5%;"></th> {{-- For +/- toggle --}}
-                                    <th>PO #</th>
+                                    <th style="width: 5%;"></th>
+                                    <th>Purchase Number</th>
                                     <th>Purchase Date</th>
-                                    <th>Supplier(s)</th>
-                                    <th>Status</th>
+                                    <th>Supplier</th>
+                                    <th>Purchase Status</th>
                                     <th class="text-end">Total Amount</th>
                                     <th class="text-end">Paid Amount</th>
                                     <th class="text-end">Due Amount</th>
@@ -85,79 +145,72 @@
                             </thead>
                             <tbody>
                                 @forelse ($purchases as $purchase)
-                                    {{-- Main Row for the Purchase --}}
                                     <tr>
-                                        <td>
-                                            <a class="btn btn-sm btn-outline-secondary accordion-toggle"
-                                                data-bs-toggle="collapse" href="#purchaseItems{{ $purchase->id }}"
-                                                role="button">
-                                                <i class="fas fa-plus"></i>
-                                            </a>
-                                        </td>
+                                        <td><a class="btn btn-sm btn-outline-secondary accordion-toggle"
+                                                data-bs-toggle="collapse" href="#purchaseItems{{ $purchase->id }}"><i
+                                                    class="fas fa-plus"></i></a></td>
                                         <td>{{ $purchase->purchase_number }}</td>
-                                        <td>{{ $purchase->purchase_date->format('d M, Y') }}</td>
+                                        <td>{{ $purchase->purchase_date->format('d-m-Y') }}</td>
                                         <td>
                                             <div class="d-flex">
                                                 @foreach ($purchase->suppliers as $supplier)
                                                     <a href="#" class="avatar-group-item" data-bs-toggle="tooltip"
-                                                        title="{{ $supplier->user->name }}">
-                                                        <img src="{{ $supplier->user->profile_image_url }}"
-                                                            alt="{{ $supplier->user->name }}" class="rounded-circle"
-                                                            width="30" height="30"
-                                                            style="object-fit: cover; margin-left: -10px; border: 2px solid white;">
-                                                    </a>
+                                                        title="{{ $supplier->company_name }}"><img
+                                                            src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                            alt="{{ $supplier->company_name }}"
+                                                            class="rounded-circle avatar-image" width="30"
+                                                            height="30"
+                                                            style="margin-left: -10px; border: 2px solid white;"></a>
                                                 @endforeach
                                             </div>
                                         </td>
-                                        <td>
-                                            <span class="badge bg-info">{{ ucfirst($purchase->status) }}</span>
-                                        </td>
+                                        <td><span
+                                                class="status-badge status-{{ Str::slug($purchase->status) }}">{{ ucfirst($purchase->status) }}</span><small
+                                                class="d-block text-muted">{{ $purchase->progress_text }}</small></td>
                                         <td class="text-end fw-bold">${{ number_format($purchase->total_amount, 2) }}</td>
-                                        <td class="text-end text-success">${{ number_format($purchase->paid_amount, 2) }}
+                                        <td class="text-end supplier-financials">
+                                            @foreach ($purchase->suppliers as $supplier)
+                                                <div class="d-flex justify-content-end align-items-center mb-1"><img
+                                                        src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                        class="rounded-circle me-1 avatar-image" width="18"
+                                                        height="18"><span>${{ number_format($supplier->paid_amount, 2) }}</span>
+                                                </div>
+                                            @endforeach
                                         </td>
-                                        <td class="text-end text-danger">${{ number_format($purchase->due_amount, 2) }}
+                                        <td class="text-end supplier-financials">
+                                            @foreach ($purchase->suppliers as $supplier)
+                                                <div class="d-flex justify-content-end align-items-center mb-1"><img
+                                                        src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                        class="rounded-circle me-1 avatar-image" width="18"
+                                                        height="18"><span>${{ number_format($supplier->due_amount, 2) }}</span>
+                                                </div>
+                                            @endforeach
                                         </td>
-                                        <td>
-                                            @if ($purchase->payment_status == 'Paid')
-                                                <span class="badge bg-success">Paid</span>
-                                            @elseif($purchase->payment_status == 'Partial')
-                                                <span class="badge bg-warning">Partial</span>
-                                            @else
-                                                <span class="badge bg-danger">Unpaid</span>
-                                            @endif
+                                        <td><span
+                                                class="status-badge status-{{ Str::slug($purchase->payment_status) }}">{{ $purchase->payment_status }}</span>
                                         </td>
                                         <td class="text-end">
-                                            <div class="dropdown">
-                                                <button class="btn btn-light btn-sm" type="button"
-                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
+                                            <div class="dropdown"><button class="btn btn-light btn-sm" type="button"
+                                                    data-bs-toggle="dropdown" aria-expanded="false"><i
+                                                        class="fas fa-ellipsis-v"></i></button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                    {{-- View, Edit, Delete --}}
-                                                    <li><a class="dropdown-item"
-                                                            href="{{ route('purchases.show', $purchase->id) }}"><i
+                                                    <li><a class="dropdown-item" href="{{-- route('purchases.show', $purchase->id) --}}"><i
                                                                 class="fas fa-eye fa-fw me-2"></i> View</a></li>
-                                                    <li><a class="dropdown-item"
-                                                            href="{{ route('purchases.edit', $purchase->id) }}"><i
+                                                    <li><a class="dropdown-item" href="{{-- route('purchases.edit', $purchase->id) --}}"><i
                                                                 class="fas fa-edit fa-fw me-2"></i> Edit</a></li>
                                                     <li>
                                                         <hr class="dropdown-divider">
                                                     </li>
-                                                    <li>
-                                                        <a class="dropdown-item view-payments-btn" href="#"
+                                                    <li><a class="dropdown-item view-payments-btn" href="#"
                                                             data-bs-toggle="modal" data-bs-target="#viewPaymentsModal"
-                                                            data-url="{{ route('purchases.payments.get', $purchase->id) }}">
-                                                            <i class="fas fa-wallet fa-fw me-2"></i> View Payments
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item add-payment-btn" href="#"
+                                                            data-url="{{ route('purchases.payments.get', $purchase->id) }}"><i
+                                                                class="fas fa-wallet fa-fw me-2"></i> View Payments</a></li>
+                                                    <li><a class="dropdown-item add-payment-btn" href="#"
                                                             data-bs-toggle="modal" data-bs-target="#addPaymentModal"
                                                             data-purchase-id="{{ $purchase->id }}"
                                                             data-po-number="{{ $purchase->purchase_number }}"
-                                                            data-due-amount="{{ $purchase->due_amount }}">
-                                                            <i class="fas fa-dollar-sign fa-fw me-2"></i> Add Payment
-                                                        </a>
+                                                            data-due-amount="{{ $purchase->due_amount }}"><i
+                                                                class="fas fa-dollar-sign fa-fw me-2"></i> Add Payment</a>
                                                     </li>
                                                     <li>
                                                         <hr class="dropdown-divider">
@@ -167,11 +220,9 @@
                                                     </li>
                                                     <li>
                                                         <form action="{{ route('purchases.destroy', $purchase->id) }}"
-                                                            method="POST" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                class="dropdown-item text-danger delete-button"><i
+                                                            method="POST">@csrf @method('DELETE')<button type="submit"
+                                                                class="dropdown-item text-danger delete-button"
+                                                                style="margin-left: .4rem"><i
                                                                     class="fas fa-trash fa-fw me-2"></i> Delete</button>
                                                         </form>
                                                     </li>
@@ -179,58 +230,204 @@
                                             </div>
                                         </td>
                                     </tr>
-
-                                    {{-- Collapsible Row for Purchase Items --}}
                                     <tr class="collapse-row">
                                         <td colspan="10" class="p-0">
                                             <div class="collapse" id="purchaseItems{{ $purchase->id }}">
                                                 <div class="p-3 bg-light border-top">
-                                                    {{-- Group items by supplier for display --}}
-                                                    @foreach ($purchase->items->groupBy('supplier_id') as $supplierId => $items)
-                                                        @php
-                                                            // Find the supplier from the parent purchase's collection
-$supplier = $purchase->suppliers->firstWhere(
-    'id',
-                                                                $supplierId,
-                                                            );
-                                                        @endphp
-                                                        <div class="mb-3">
-                                                            <h6 class="fw-bold d-flex align-items-center">
-                                                                <img src="{{ $supplier->user->profile_image_url }}"
-                                                                    alt="{{ $supplier->user->name }}"
-                                                                    class="rounded-circle me-2" width="24"
-                                                                    height="24">
-                                                                {{ $supplier->user->name }}
-                                                            </h6>
-                                                            <table class="table table-sm table-bordered bg-white">
-                                                                <thead class="thead-light">
-                                                                    <tr>
-                                                                        <th>#</th>
-                                                                        <th>Product Name</th>
-                                                                        <th class="text-end">Qty</th>
-                                                                        <th class="text-end">Unit Price</th>
-                                                                        <th class="text-end">Total Price</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @foreach ($items as $index => $item)
-                                                                        <tr>
-                                                                            <td>{{ $index + 1 }}</td>
-                                                                            <td>{{ $item->product_name }}</td>
-                                                                            <td class="text-end">{{ $item->quantity }}
-                                                                            </td>
-                                                                            <td class="text-end">
-                                                                                ${{ number_format($item->unit_price, 2) }}
-                                                                            </td>
-                                                                            <td class="text-end">
-                                                                                ${{ number_format($item->total_price, 2) }}
-                                                                            </td>
-                                                                        </tr>
-                                                                    @endforeach
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    @endforeach
+                                                    <table class="table table-sm bg-white">
+                                                        <thead class="thead-light">
+                                                            <tr>
+                                                                <th>Supplier</th>
+                                                                <th class="text-end">Quantity Products</th>
+                                                                <th>Status</th>
+                                                                <th class="text-end">Total Price</th>
+                                                                <th>Files</th>
+                                                                <th class="text-end">Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach ($purchase->suppliers as $supplier)
+                                                                <tr>
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center"><a
+                                                                                class="btn btn-sm btn-outline-secondary me-2 product-toggle-btn collapsed"
+                                                                                data-bs-toggle="collapse"
+                                                                                href="#supplierProducts-{{ $purchase->id }}-{{ $supplier->id }}"><i
+                                                                                    class="fas fa-angle-right"></i></a><img
+                                                                                src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                                                class="rounded-circle me-2" width="30"
+                                                                                height="30"><span>{{ $supplier->company_name }}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="text-end">{{ $supplier->total_quantity }}
+                                                                    </td>
+                                                                    <td><span
+                                                                            class="status-badge status-{{ Str::slug($supplier->pivot->status) }}">{{ ucfirst($supplier->pivot->status) }}</span>
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        ${{ number_format($supplier->total_price, 2) }}
+                                                                    </td>
+                                                                    <td class="file-status-list">
+                                                                        @foreach ($supplier->file_status_list as $file)
+                                                                            <span>{{ $file['name'] }}: <span
+                                                                                    class="fw-bold {{ $file['status'] == 'Ok' ? 'text-success' : 'text-danger' }}">{{ $file['status'] }}</span></span>
+                                                                        @endforeach
+                                                                    </td>
+                                                                    <td class="text-end"><a href="#"
+                                                                            class="btn btn-sm btn-outline-secondary"><i
+                                                                                class="fas fa-eye"></i></a></td>
+                                                                </tr>
+                                                                <tr class="collapse-row">
+                                                                    <td colspan="6" class="p-0 border-0">
+                                                                        <div class="collapse"
+                                                                            id="supplierProducts-{{ $purchase->id }}-{{ $supplier->id }}">
+                                                                            <div class="p-3"
+                                                                                style="background-color: #fdfdfd;">
+                                                                                <div class="p-3"
+                                                                                    style="background-color: #fdfdfd;">
+                                                                                    <table
+                                                                                        class="table table-sm table-hover mb-0">
+                                                                                        <thead class="thead-light">
+                                                                                            <tr>
+                                                                                                <th style="width: 5%;">
+                                                                                                </th> {{-- Spacer for indent --}}
+                                                                                                <th style="width: 35%;">
+                                                                                                    Product</th>
+                                                                                                <th class="text-end">
+                                                                                                    Quantity</th>
+                                                                                                <th class="text-end">Unit
+                                                                                                    Price</th>
+                                                                                                <th class="text-end">Total
+                                                                                                    Price</th>
+                                                                                                <th class="text-end">CBM
+                                                                                                </th>
+                                                                                                <th class="text-end">Total
+                                                                                                    CBM</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            @php
+                                                                                                // Filter the purchase's items to get only those for the current supplier
+$supplierItems = $purchase->items->where(
+    'supplier_id',
+                                                                                                    $supplier->id,
+                                                                                                );
+                                                                                            @endphp
+                                                                                            @foreach ($supplierItems as $item)
+                                                                                                @php
+                                                                                                    $imageUrl = asset(
+                                                                                                        'public/storage/images/default_image.png',
+                                                                                                    );
+                                                                                                    $categoryName =
+                                                                                                        $item->product
+                                                                                                            ->category
+                                                                                                            ->name ??
+                                                                                                        'N/A';
+                                                                                                    $measurement =
+                                                                                                        'N/A';
+                                                                                                    $cbm = 0;
+
+                                                                                                    if (
+                                                                                                        $item->variation
+                                                                                                    ) {
+                                                                                                        // It's a variation
+    $measurement =
+        $item
+            ->variation
+            ->measurement;
+    $cbm =
+        $item
+            ->variation
+            ->cbm ??
+        0;
+    $image =
+        $item
+            ->variation
+            ->image ??
+        $item
+            ->product
+            ->product_image;
+    $imageUrl = $image
+        ? asset(
+            'public/storage/' .
+                $image,
+        )
+        : $imageUrl;
+} else {
+    // It's a single product
+                                                                                                        $measurement =
+                                                                                                            $item
+                                                                                                                ->product
+                                                                                                                ->measurement;
+                                                                                                        $cbm =
+                                                                                                            $item
+                                                                                                                ->product
+                                                                                                                ->cbm ??
+                                                                                                            0;
+                                                                                                        $imageUrl = $item
+                                                                                                            ->product
+                                                                                                            ->product_image
+                                                                                                            ? asset(
+                                                                                                                'public/storage/' .
+                                                                                                                    $item
+                                                                                                                        ->product
+                                                                                                                        ->product_image,
+                                                                                                            )
+                                                                                                            : $imageUrl;
+                                                                                                    }
+                                                                                                    $totalCbm =
+                                                                                                        $item->quantity *
+                                                                                                        $cbm;
+                                                                                                @endphp
+                                                                                                <tr>
+                                                                                                    <td></td>
+                                                                                                    {{-- Spacer --}}
+                                                                                                    <td>
+                                                                                                        <div
+                                                                                                            class="d-flex align-items-center">
+                                                                                                            <img src="{{ $imageUrl }}"
+                                                                                                                class="rounded me-2"
+                                                                                                                width="40"
+                                                                                                                height="40"
+                                                                                                                style="object-fit: cover;">
+                                                                                                            <div>
+                                                                                                                <strong>{{ $item->product_name }}</strong><br>
+                                                                                                                <small
+                                                                                                                    class="text-muted">{{ $categoryName }}
+                                                                                                                    ({{ $measurement }})
+                                                                                                                </small>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </td>
+                                                                                                    <td class="text-end">
+                                                                                                        {{ $item->quantity }}
+                                                                                                    </td>
+                                                                                                    <td class="text-end">
+                                                                                                        ${{ number_format($item->unit_price, 2) }}
+                                                                                                    </td>
+                                                                                                    <td
+                                                                                                        class="text-end fw-bold">
+                                                                                                        ${{ number_format($item->total_price, 2) }}
+                                                                                                    </td>
+                                                                                                    <td class="text-end">
+                                                                                                        {{ number_format($cbm, 0) }}
+                                                                                                    </td>
+                                                                                                    <td
+                                                                                                        class="text-end fw-bold">
+                                                                                                        {{ number_format($totalCbm, 0) }}
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                            @endforeach
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         </td>
@@ -308,6 +505,7 @@ $supplier = $purchase->suppliers->firstWhere(
 @push('scripts')
     <script>
         $(document).ready(function() {
+
             // Accordion +/- icon toggle script
             $('.collapse').on('show.bs.collapse', function() {
                 $('a.accordion-toggle[href="#' + this.id + '"] i').removeClass('fa-plus').addClass(
@@ -316,6 +514,12 @@ $supplier = $purchase->suppliers->firstWhere(
             $('.collapse').on('hide.bs.collapse', function() {
                 $('a.accordion-toggle[href="#' + this.id + '"] i').removeClass('fa-minus').addClass(
                     'fa-plus');
+            });
+
+            $('.collapse[id^="supplierProducts-"]').on('show.bs.collapse hide.bs.collapse', function(event) {
+                // THIS IS THE FIX: Stop the inner accordion's events (show/hide)
+                // from bubbling up to the parent accordion container.
+                event.stopPropagation();
             });
 
             // =========================================================================

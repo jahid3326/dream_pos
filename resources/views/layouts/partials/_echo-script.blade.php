@@ -13,15 +13,16 @@
                         const countBadge = document.getElementById('notification-count');
                         let currentCount = parseInt(countBadge.innerText) || 0;
                         countBadge.innerText = currentCount + 1;
-                        countBadge.style.display = 'block';
-
+                        countBadge.style.visibility = 'visible';
+                        let sender_image = notification.sender_avatar ? notification.sender_avatar :
+                            'images/default_avatar.png';
                         // 2. Build the new notification HTML
                         const newNotificationHtml = `
                     <li class="notification-message">
                         <a href="#">
                             <div class="media d-flex">
                                 <span class="avatar flex-shrink-0">
-                                    <img alt="Img" src="${notification.sender_avatar}">
+                                    <img alt="Img" src="public/storage/${sender_image}">
                                 </span>
                                 <div class="flex-grow-1">
                                     <p class="noti-details">
