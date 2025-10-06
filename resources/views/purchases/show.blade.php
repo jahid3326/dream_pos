@@ -59,8 +59,10 @@
                     </div>
                 </div>
                 <div class="page-btn">
-                    <a href="#" class="btn btn-light"><i class="fas fa-print me-2"></i> Print</a>
-                    <a href="#" class="btn btn-primary"><i class="fas fa-download me-2"></i> Download PDF</a>
+                    <a href="{{ route('purchases.print', $purchase) }}" class="btn btn-light" id="print-po-btn"><i
+                            class="fas fa-print me-2"></i> Print</a>
+                    <a href="{{ route('purchases.downloadPdf', $purchase) }}" class="btn btn-primary"><i
+                            class="fas fa-download me-2"></i> Download PDF</a>
                     <a href="{{ route('purchases.index') }}" class="btn btn-secondary">Back to List</a>
                 </div>
             </div>
@@ -118,9 +120,9 @@
                                 @endphp
                                 <div class="mb-4">
                                     <h5 class="d-flex align-items-center">
-                                        <img src="{{ $supplier->user->profile_image_url }}" class="rounded-circle me-2"
-                                            width="30" height="30">
-                                        {{ $supplier->user->name }}
+                                        <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                            class="rounded-circle me-2" width="30" height="30">
+                                        {{ $supplier->company_name }}
                                     </h5>
                                     @include('purchases._purchase-items-details', ['items' => $items])
                                 </div>
@@ -136,7 +138,6 @@
                                             <th>Document Name</th>
                                             <th>Requirement</th>
                                             <th>Status</th>
-                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -147,7 +148,6 @@
                                                     ? '<span class="badge bg-primary">Required</span>'
                                                     : '<span class="badge bg-secondary">Optional</span>' !!}</td>
                                                 <td><span class="badge bg-info">{{ ucfirst($doc->status) }}</span></td>
-                                                <td><button class="btn btn-sm btn-outline-primary">Upload File</button></td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -205,3 +205,20 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Handle the print button to open in a new window
+            $('#print-po-btn').on('click', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+                const printWindow = window.open(url, '_blank');
+                if (printWindow) {
+                    printWindow.focus();
+                } else {
+                    alert('Please allow pop-ups for this site to print the purchase order.');
+                }
+            });
+        });
+    </script>
+@endpush

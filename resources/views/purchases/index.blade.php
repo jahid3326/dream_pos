@@ -194,9 +194,11 @@
                                                     data-bs-toggle="dropdown" aria-expanded="false"><i
                                                         class="fas fa-ellipsis-v"></i></button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li><a class="dropdown-item" href="{{-- route('purchases.show', $purchase->id) --}}"><i
+                                                    <li><a class="dropdown-item"
+                                                            href="{{ route('purchases.show', $purchase->id) }}"><i
                                                                 class="fas fa-eye fa-fw me-2"></i> View</a></li>
-                                                    <li><a class="dropdown-item" href="{{-- route('purchases.edit', $purchase->id) --}}"><i
+                                                    <li><a class="dropdown-item"
+                                                            href="{{ route('purchases.edit', $purchase->id) }}"><i
                                                                 class="fas fa-edit fa-fw me-2"></i> Edit</a></li>
                                                     <li>
                                                         <hr class="dropdown-divider">

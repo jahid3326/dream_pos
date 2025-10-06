@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\PurchaseOrderCreated;
 use Illuminate\Support\Facades\Auth;
+use PDF;
 
 class PurchaseController extends Controller
 {
@@ -297,6 +298,52 @@ class PurchaseController extends Controller
     public function update(Request $request, string $id)
     {
         //
+    }
+
+    /**
+     * A private helper method to prepare data for PDF/Print.
+     */
+    private function preparePurchaseDataForPdf(Purchase $purchase)
+    {
+        $purchase->load([
+            'sale',
+            'suppliers.user',
+            'items.product.category',
+            'items.variation',
+            'documents',
+            'payments'
+        ]);
+        $itemsBySupplier = $purchase->items->groupBy('supplier_id');
+
+        // Calculate payment summary and add it to the purchase object
+        $purchase->paid_amount = $purchase->payments->sum('amount');
+        $purchase->due_amount = $purchase->total_amount - $purchase->paid_amount;
+
+        return compact('purchase', 'itemsBySupplier');
+    }
+
+    /**
+     * Generate and stream a PDF for the purchase order.
+     */
+    public function downloadPdf(Purchase $purchase)
+    {
+        $data = $this->preparePurchaseDataForPdf($purchase);
+        $pdf = PDF::loadView('purchases.pdf', $data);
+        $filename = 'PO-' . $purchase->purchase_number . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Show a printable version of the purchase order.
+     */
+    public function print(Purchase $purchase)
+    {
+        $data = $this->preparePurchaseDataForPdf($purchase);
+        // Pass a 'print' variable to the view to trigger the print script
+        $data['print'] = true;
+
+        return view('purchases.pdf', $data);
     }
 
     /**

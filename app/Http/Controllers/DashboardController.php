@@ -65,12 +65,26 @@ class DashboardController extends Controller
 
         // 2. Fetch the "Recent Activity" data for this specific supplier
         $activities = $supplier->purchases()
-            ->with(['sale', 'payments', 'documents'])
+            ->with(['sale', 'payments', 'documents', 'items'])
             ->latest('purchase_date')
             ->paginate(10);
 
         // 3. Process each activity to calculate display-specific data
-        $activities->each(function ($activity) {
+        $activities->each(function ($activity) use ($supplier) {
+
+            // --- FIX #1: CALCULATE SUPPLIER-SPECIFIC TOTAL AMOUNT ---
+            // Filter the purchase's items to get only those for THIS supplier.
+            $supplierItems = $activity->items->where('supplier_id', $supplier->id);
+
+            // Calculate the total amount for only this supplier's items.
+            $activity->supplier_total_amount = $supplierItems->sum('total_price');
+
+            // --- END OF FIX #1 ---
+
+
+            // a. Calculate detailed payment status for the overall Purchase Order.
+            // NOTE: Per-supplier payment tracking is complex and not supported by the current DB schema.
+            // The payment status shown will reflect the status of the entire PO.
             $paidAmount = $activity->payments->sum('amount');
             if ($paidAmount <= 0) {
                 $activity->payment_status_text = 'Waiting Payment';
@@ -80,10 +94,11 @@ class DashboardController extends Controller
                 $activity->payment_status_text = 'Deposit Payed';
             }
 
+            // b. Prepare the document/files list for display.
             $files = [];
             $hasMissingFiles = false;
             foreach ($activity->documents->where('is_required', true) as $document) {
-                $isOk = $document->status === 'approved'; // Example logic
+                $isOk = in_array($document->status, ['uploaded', 'approved']);
                 if (!$isOk) $hasMissingFiles = true;
                 $files[] = [
                     'name' => pathinfo($document->document_name, PATHINFO_FILENAME),

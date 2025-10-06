@@ -244,6 +244,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/purchases/{purchase}/payments', [PurchaseController::class, 'addPayment'])
                 ->name('purchases.payments.store');
 
+            Route::get('/purchases/{purchase}/download-pdf', [PurchaseController::class, 'downloadPdf'])
+                ->name('purchases.downloadPdf');
+
+            Route::get('/purchases/{purchase}/print', [PurchaseController::class, 'print'])
+                ->name('purchases.print');
+
             // Full resource routes for managing purchases
             Route::resource('purchases', PurchaseController::class);
         });
