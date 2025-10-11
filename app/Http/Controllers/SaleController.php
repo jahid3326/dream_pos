@@ -30,7 +30,16 @@ class SaleController extends Controller
     public function index()
     {
         // Eager-load all necessary nested data for the complex view
-        $sales = Sale::with([
+
+        $user = auth()->user();
+        $query = Sale::query();
+
+        // If the user is NOT a Super Admin, only show sales they created.
+        if ($user->role && $user->role->name !== 'Super Admin') {
+            $query->where('order_taken_by', $user->id);
+        }
+
+        $sales = $query->with([
             'customer.user',
             'payments',
             'purchases',
@@ -267,6 +276,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale)
     {
+        $this->authorize('view', $sale);
         // Eager load all necessary data for the invoice
         $sale->load([
             'customer.user',
@@ -397,6 +407,7 @@ class SaleController extends Controller
      */
     public function edit(Sale $sale)
     {
+        $this->authorize('update', $sale);
         // Eager load all relationships needed to populate the form
         $sale->load('customer.user', 'categoryItems.product', 'categoryItems.variation', 'packItems', 'orderTax');
 
@@ -413,6 +424,7 @@ class SaleController extends Controller
      */
     public function update(Request $request, Sale $sale)
     {
+        $this->authorize('update', $sale);
         $request->validate([
             'invoice_number' => 'required|string|unique:sales,invoice_number,' . $sale->id,
             'customer_id' => 'required|exists:customers,id',
@@ -726,6 +738,7 @@ class SaleController extends Controller
      */
     public function destroy(Sale $sale)
     {
+        $this->authorize('delete', $sale);
         // The onDelete('cascade') in the migration will delete all related sale_items
         $sale->delete();
         return redirect()->route('sales.index')->with('success', 'Sale deleted successfully.');

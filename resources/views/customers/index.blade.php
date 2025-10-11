@@ -71,6 +71,7 @@
                                     <th>Email</th>
                                     <th>Created At</th>
                                     <th>Status</th>
+                                    <th>Created By</th>
                                     @if (hasActionPermission('Customer', 'update') || hasActionPermission('Customer', 'delete'))
                                         <th class="no-sort"></th>
                                     @endif
@@ -94,6 +95,7 @@
                                                 class="d-inline-flex align-items-center p-1 pe-2 rounded-1 text-white {{ $customer->status == 1 ? 'bg-success' : 'bg-danger' }} fs-10"><i
                                                     class="ti ti-point-filled me-1 fs-11"></i>{{ $customer->status == 1 ? 'Enabled' : 'Disabled' }}</span>
                                         </td>
+                                        <td>{{ $customer->createdBy->name ?? 'N/A' }}</td>
                                         @if (hasActionPermission('Customer', 'update') || hasActionPermission('Customer', 'delete'))
                                             <td class="d-flex">
                                                 <div class="edit-delete-action d-flex align-items-center">

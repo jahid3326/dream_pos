@@ -10,20 +10,6 @@ use App\Models\NavItem;
 
 class PermissionController extends Controller
 {
-    protected $manageableModules = [
-        'System Management' => [
-            'Role',
-            'User',
-            'NavItem' // Model for managing Navigation Items
-        ],
-        'School Management' => [
-            'Student', // Example Model
-            'Class',   // Example Model
-            'Subject', // Example Model
-            'Teacher', // Example Model
-        ],
-        // Add other groups and modules here as your application grows
-    ];
 
     /**
      * Display a list of roles to manage permissions for.
@@ -44,14 +30,14 @@ class PermissionController extends Controller
     public function edit(Role $role)
     {
         $allNavItems = NavItem::whereNull('parent_id')
-                            ->with(['children' => function ($query) {
-                                $query->orderBy('order');
-                            }, 'children.children' => function ($query) {
-                                $query->orderBy('order');
-                            }])
-                            ->orderBy('order')
-                            ->get();
-                            
+            ->with(['children' => function ($query) {
+                $query->orderBy('order');
+            }, 'children.children' => function ($query) {
+                $query->orderBy('order');
+            }])
+            ->orderBy('order')
+            ->get();
+
         // Get the IDs of the nav items currently assigned to this role for checking the boxes.
         $assignedNavIds = $role->navItems()->pluck('nav_items.id')->toArray();
 
@@ -75,6 +61,6 @@ class PermissionController extends Controller
         $role->navItems()->sync($navItemIds);
 
         return redirect()->route('admin.permissions.index')
-                         ->with('success', 'Navigation permissions updated successfully!');
+            ->with('success', 'Navigation permissions updated successfully!');
     }
 }

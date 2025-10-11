@@ -94,16 +94,19 @@
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         {{-- Convert to Purchase --}}
-                                                        <li>
-                                                            <a class="dropdown-item d-flex align-items-center convert-to-purchase-btn"
-                                                                href="#" data-bs-toggle="modal"
-                                                                data-bs-target="#convertToPurchaseModal"
-                                                                data-url="{{ route('sales.purchasePreview', $sale->id) }}"
-                                                                data-action="{{ route('sales.convertToPurchase', $sale->id) }}">
-                                                                <i class="fas fa-shopping-bag fa-fw me-2"></i> Convert to
-                                                                Purchase
-                                                            </a>
-                                                        </li>
+                                                        @if (Auth::user()->role && Auth::user()->role->name == 'Super Admin')
+                                                            <li>
+                                                                <a class="dropdown-item d-flex align-items-center convert-to-purchase-btn"
+                                                                    href="#" data-bs-toggle="modal"
+                                                                    data-bs-target="#convertToPurchaseModal"
+                                                                    data-url="{{ route('sales.purchasePreview', $sale->id) }}"
+                                                                    data-action="{{ route('sales.convertToPurchase', $sale->id) }}">
+                                                                    <i class="fas fa-shopping-bag fa-fw me-2"></i> Convert
+                                                                    to
+                                                                    Purchase
+                                                                </a>
+                                                            </li>
+                                                        @endif
 
                                                         <li>
                                                             <hr class="dropdown-divider">

@@ -52,7 +52,16 @@ class PosController extends Controller
         */
 
         // 4. Common Data
-        $customers = Customer::with('user')->get();
+        $user = Auth::user();
+
+        $query = Customer::with('user', 'createdBy');
+
+        if ($user->role && $user->role->name !== 'Super Admin') {
+            // If the user is NOT a Super Admin, only show customers they created.
+            $query->where('created_by', $user->id);
+        }
+
+        $customers = $query->latest()->get();
         $taxes = Tax::where('status', true)->get();
 
         return view('pos.index', compact('packs', 'parentCategories', 'customers', 'taxes'));

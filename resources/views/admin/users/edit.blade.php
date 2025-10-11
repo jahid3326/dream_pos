@@ -1,13 +1,23 @@
 @extends('layouts.app')
 @section('title', 'Users')
 @section('content')
-    <div class="container">
-        <h1>Edit User: {{ $user->name }}</h1>
+    <div class="page-wrapper">
+        <div class="content">
+            <div class="page-header">
+                <div class="add-item d-flex">
+                    <div class="page-title">
+                        <h4 class="fw-bold">User Management</h4>
+                        <h6>Edit User: {{ $user->name }}</h6>
+                    </div>
+                </div>
+            </div>
+            @include('layouts._messages')
 
-        <form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-            @include('admin.users._form', ['buttonText' => 'Update User'])
-        </form>
+            <form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                @include('admin.users._form', ['buttonText' => 'Update User'])
+            </form>
+        </div>
     </div>
 @endsection

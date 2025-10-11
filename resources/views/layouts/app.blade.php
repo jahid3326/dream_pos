@@ -765,6 +765,15 @@
                 </div>
             </div>
         </div>
+        {{-- <div class="page-wrapper">
+            <div class="content">
+                <pre>
+                @php
+                    print_r($navItems->toArray());
+                @endphp
+                </pre>
+            </div>
+        </div> --}}
         <!-- /Sidebar -->
         @yield('content')
 

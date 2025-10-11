@@ -16,11 +16,20 @@ class Customer extends Model
         'tax_number',
         'billing_address',
         'status',
+        'created_by',
     ];
 
     // A Customer profile belongs to one User
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the user who created this customer record.
+     */
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

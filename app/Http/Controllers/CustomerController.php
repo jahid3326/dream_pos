@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\CustomerImport;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerController extends Controller
 {
@@ -31,9 +32,16 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Customer::with('user');
+        $user = Auth::user();
 
-        // Handle the status filter from the URL parameter
+        $query = Customer::with('user', 'createdBy');
+
+        if ($user->role && $user->role->name !== 'Super Admin') {
+            // If the user is NOT a Super Admin, only show customers they created.
+            $query->where('created_by', $user->id);
+        }
+
+        // Handle the status filter from the URL parameter (existing logic)
         if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->input('status'));
         }
@@ -88,6 +96,7 @@ class CustomerController extends Controller
                 'tax_number' => $request->tax_number,
                 'billing_address' => $request->billing_address,
                 'status' => $request->status ?? true,
+                'created_by' => Auth::id(),
             ]);
         });
 
@@ -137,9 +146,11 @@ class CustomerController extends Controller
                 $customer = Customer::create([
                     'user_id' => $user->id,
                     'company_name' => $request->company_name,
+                    'phone_number' => $request->phone_number,
                     'tax_number' => $request->tax_number,
                     'billing_address' => $request->billing_address,
                     'status' => $request->status ?? true,
+                    'created_by' => Auth::id(),
                 ]);
 
                 $customer->load('user'); // Load the relationship to send back
@@ -161,6 +172,8 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
+
+        $this->authorize('view', $customer);
         $customer->load('user');
         // You can pass more related data here if needed
         return view('customers.show', compact('customer'));
@@ -171,6 +184,8 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer)
     {
+        $this->authorize('update', $customer);
+
         $customer->load('user');
         return view('customers.edit', compact('customer'));
     }
@@ -180,6 +195,8 @@ class CustomerController extends Controller
      */
     public function update(Request $request, Customer $customer)
     {
+        $this->authorize('update', $customer);
+
         $user = $customer->user;
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -250,6 +267,7 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
+        $this->authorize('delete', $customer);
         // Deleting the user will cascade and delete the customer record.
         // We just need to handle the profile picture.
         // echo $customer->user->profile_picture;
