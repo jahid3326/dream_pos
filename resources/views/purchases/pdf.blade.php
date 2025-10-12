@@ -90,7 +90,7 @@
         {{-- PO Information Section --}}
         <table class="summary-table">
             <tr>
-                <td style="width: 33%;"><span class="label">PO Number:</span><br>{{ $purchase->purchase_number }}</td>
+                <td style="width: 33%;"><span class="label">Order Number:</span><br>{{ $purchase->purchase_number }}</td>
                 <td style="width: 33%;"><span class="label">PO
                         Date:</span><br>{{ $purchase->purchase_date->format('d-m-Y') }}</td>
                 <td style="width: 33%;"><span class="label">Status:</span><br>{{ ucfirst($purchase->status) }}</td>

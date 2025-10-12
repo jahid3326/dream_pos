@@ -72,7 +72,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-lg-3 col-sm-6 col-12 mb-3">
-                            <span class="summary-label">PO Number</span>
+                            <span class="summary-label">Order Number</span>
                             <p class="summary-value">{{ $purchase->purchase_number }}</p>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12 mb-3">
@@ -114,17 +114,28 @@
                     <div class="tab-content pt-3">
                         {{-- Items & Suppliers Panel --}}
                         <div class="tab-pane fade show active" id="items-panel" role="tabpanel">
-                            @foreach ($itemsBySupplier as $supplierId => $items)
-                                @php
-                                    $supplier = $purchase->suppliers->firstWhere('id', $supplierId);
-                                @endphp
+                            @foreach ($purchase->suppliers as $supplier)
                                 <div class="mb-4">
-                                    <h5 class="d-flex align-items-center">
-                                        <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                            class="rounded-circle me-2" width="30" height="30">
-                                        {{ $supplier->company_name }}
-                                    </h5>
-                                    @include('purchases._purchase-items-details', ['items' => $items])
+                                    <div
+                                        class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-2">
+                                        <h5 class="d-flex align-items-center mb-0">
+                                            <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                class="rounded-circle me-2" width="30" height="30">
+                                            {{ $supplier->user->name }}
+                                        </h5>
+                                        <div>
+                                            <span class="me-3">Review: <span
+                                                    class="badge bg-secondary">{{ ucfirst(str_replace('-', ' ', $supplier->pivot->status_review)) }}</span></span>
+                                            <span>Production: <span
+                                                    class="badge bg-info">{{ ucfirst($supplier->pivot->status_production) }}</span></span>
+                                        </div>
+                                    </div>
+                                    @php
+                                        $itemsForThisSupplier = $itemsBySupplier[$supplier->id] ?? collect();
+                                    @endphp
+                                    @include('purchases._purchase-items-details', [
+                                        'items' => $itemsForThisSupplier,
+                                    ])
                                 </div>
                             @endforeach
                         </div>
@@ -191,7 +202,8 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="4" class="text-center text-muted">No payments recorded yet.
+                                                <td colspan="4" class="text-center text-muted">No payments recorded
+                                                    yet.
                                                 </td>
                                             </tr>
                                         @endforelse

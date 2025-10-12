@@ -8,6 +8,11 @@ use App\Models\Sale;
 use App\Policies\SalePolicy;
 use App\Models\Customer;
 use App\Policies\CustomerPolicy;
+use App\Models\Quote;
+use App\Policies\QuotePolicy;
+use App\Models\SalePayment;
+use App\Policies\SalePaymentPolicy;
+
 
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -24,6 +29,8 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Customer::class => CustomerPolicy::class,
         Sale::class => SalePolicy::class,
+        Quote::class => QuotePolicy::class,
+        SalePayment::class => SalePaymentPolicy::class,
     ];
 
     /**

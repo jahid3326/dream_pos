@@ -26,6 +26,8 @@ class Supplier extends Model
 
     public function purchases()
     {
-        return $this->belongsToMany(Purchase::class, 'purchase_supplier');
+        return $this->belongsToMany(Purchase::class, 'purchase_supplier')
+            ->withPivot(['status', 'status_review', 'status_production', 'ready_date']) // <-- ADD 'ready_date'
+            ->withTimestamps();
     }
 }

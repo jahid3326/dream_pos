@@ -11,7 +11,9 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ManagePackController;
+use App\Http\Controllers\OrderActionController;
 use App\Http\Controllers\PackController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PosController;
@@ -250,13 +252,33 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/purchases/{purchase}/print', [PurchaseController::class, 'print'])
                 ->name('purchases.print');
 
+            Route::get('/purchases/{purchase}/supplier/{supplier}', [App\Http\Controllers\PurchaseController::class, 'showSupplierDetails'])
+                ->name('purchases.showSupplierDetails');
+
+            Route::post('/purchases/{purchase}/supplier/{supplier}/validate-modification', [PurchaseController::class, 'validateModification'])
+                ->name('purchases.validateModification');
+
             // Full resource routes for managing purchases
             Route::resource('purchases', PurchaseController::class);
         });
+
+        Route::get('/orders/{purchase}/details', [OrderController::class, 'details'])->name('orders.details');
         // We define the 'show' route manually to customize the binding.
         Route::get('orders/{purchase}', [OrderController::class, 'show'])->name('orders.show');
+        // Routes for the actions (confirm, reject, etc.) remain the same
+        Route::post('/orders/{purchase}/confirm', [OrderActionController::class, 'confirm'])->name('orders.confirm');
+        Route::get('/orders/{purchase}/propose-modification', [OrderActionController::class, 'showModificationForm'])->name('orders.showModificationForm');
+
+        // The POST route for submitting the proposal already exists, which is great.
+        Route::post('/orders/{purchase}/propose-modification', [OrderActionController::class, 'proposeModification'])->name('orders.proposeModification');
+
+        Route::get('/orders/{purchase}/documents', [DocumentController::class, 'showUploadForm'])->name('documents.showUploadForm');
+        Route::post('/orders/{purchase}/documents/save', [DocumentController::class, 'saveDocuments'])->name('documents.save');
+
         // You can keep the 'index' route from the resource if you want.
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
+        Route::post('/documents/{document}/upload', [DocumentController::class, 'upload'])->name('documents.upload');
 
         Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
 

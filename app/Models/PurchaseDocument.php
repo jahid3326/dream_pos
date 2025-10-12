@@ -23,4 +23,9 @@ class PurchaseDocument extends Model
     {
         return $this->belongsTo(Purchase::class);
     }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 }

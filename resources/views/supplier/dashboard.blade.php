@@ -16,31 +16,50 @@
             /* Ensures badges have a consistent width */
         }
 
+        /* Review Statuses */
         .status-complet {
-            background-color: #28a745;
-            color: white;
-            border-color: #28a745;
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
         }
 
-        .status-in-process,
+        .status-need-review-supplier,
+        .status-pending {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border-color: #dee2e6;
+        }
+
+        .status-modification-requested {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffeeba;
+        }
+
+        /* Production Statuses */
+        .status-in-process {
+            background-color: #ffc107;
+            color: #212529;
+            border-color: #ffc107;
+        }
+
+        .status-waiting {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border-color: #dee2e6;
+        }
+
+        /* Payment Statuses */
         .status-deposit-payed {
             background-color: #ffc107;
             color: #212529;
             border-color: #ffc107;
         }
 
-        .status-full-payed,
-        .status-paid {
+        .status-full-payed {
             background-color: #28a745;
             color: white;
             border-color: #28a745;
-        }
-
-        .status-waiting,
-        .status-need-review-supplier,
-        .status-need-accepte-review-customer {
-            background-color: transparent;
-            color: #6c757d;
         }
 
         .status-waiting-payment {
@@ -76,9 +95,9 @@
                         <table class="table">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>PO Number</th>
+                                    <th>Order Number</th>
                                     <th>Order Date</th>
-                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Your Total Amount</th>
                                     <th>Status Review</th>
                                     <th>Status Production</th>
                                     <th>Payment Status</th>
@@ -90,35 +109,38 @@
                                 @forelse ($activities as $activity)
                                     <tr>
                                         <td>
-                                            {{-- The PO Number is always the primary identifier for the supplier --}}
-                                            <a href="{{ route('orders.show', $activity) }}"
+                                            <a href="{{ route('orders.details', $activity) }}"
                                                 class="fw-bold">#{{ $activity->purchase_number }}</a>
-                                            {{-- If it came from a sale, show that as a reference --}}
                                             @if ($activity->sale)
                                                 <small class="d-block text-muted">Ref:
                                                     {{ $activity->sale->invoice_number }}</small>
                                             @endif
                                         </td>
                                         <td>{{ $activity->purchase_date->format('d-m-Y') }}</td>
-                                        <td class="text-end">${{ number_format($activity->supplier_total_amount, 2) }}</td>
+                                        <td class="text-end fw-bold">
+                                            ${{ number_format($activity->supplier_total_amount, 2) }}</td>
+
+                                        {{-- NEW: Displaying per-supplier statuses from the controller --}}
                                         <td><span
                                                 class="status-badge status-{{ Str::slug($activity->status_review) }}">{{ ucfirst(str_replace('-', ' ', $activity->status_review)) }}</span>
                                         </td>
                                         <td><span
                                                 class="status-badge status-{{ Str::slug($activity->status_production) }}">{{ ucfirst($activity->status_production) }}</span>
                                         </td>
+
                                         <td><span
                                                 class="status-badge status-{{ Str::slug($activity->payment_status_text) }}">{{ $activity->payment_status_text }}</span>
                                         </td>
                                         <td class="file-list small">
                                             @if ($activity->has_missing_files)
-                                                <a href="#" class="text-danger d-block mb-1"><i
+                                                <a href="{{ route('orders.show', $activity) }}?tab=documents"
+                                                    class="text-danger d-block mb-1"><i
                                                         class="fas fa-exclamation-triangle fa-fw"></i> Upload file missing
                                                     &gt;</a>
                                             @endif
                                             @foreach ($activity->file_list as $file)
                                                 <span>
-                                                    {{ $file['name'] }}
+                                                    {{ $file['name'] }}:
                                                     <strong
                                                         class="{{ $file['status'] == 'Ok' ? 'text-success' : 'text-danger' }}">{{ $file['status'] }}</strong>
                                                 </span>
@@ -130,9 +152,15 @@
                                                     data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                     <li><a class="dropdown-item"
+                                                            href="{{ route('orders.details', $activity) }}"><i
+                                                                class="fas fa-tasks fa-fw me-2"></i> View / Take Action</a>
+                                                    </li>
+                                                    <li><a class="dropdown-item"
                                                             href="{{ route('orders.show', $activity) }}"><i
-                                                                class="fas fa-eye fa-fw me-2"></i> View</a></li>
-                                                    <li><a class="dropdown-item" href="#"><i
+                                                                class="fas fa-eye fa-fw me-2"></i> View Full Summary</a>
+                                                    </li>
+                                                    <li><a class="dropdown-item"
+                                                            href="{{ route('orders.show', $activity) }}?tab=payments"><i
                                                                 class="fas fa-wallet fa-fw me-2"></i> View Payments</a></li>
                                                 </ul>
                                             </div>
@@ -149,7 +177,6 @@
                         </table>
                     </div>
                     <div class="mt-3">
-                        {{-- Pagination Links --}}
                         {{ $activities->links() }}
                     </div>
                 </div>
@@ -157,10 +184,37 @@
         </div>
     </div>
 @endsection
-
 @push('scripts')
     <script>
         $(document).ready(function() {
+
+            // =========================================================================
+            // 1. SCRIPT FOR THE ACCORDION +/- TOGGLE ICON
+            // =========================================================================
+            // We listen for Bootstrap's built-in collapse events.
+
+            // When a collapsible section starts to SHOW
+            $('.collapse').on('show.bs.collapse', function() {
+                // Find the specific button that controls this section and change its icon.
+                $('a.accordion-toggle[href="#' + this.id + '"] i')
+                    .removeClass('fa-plus')
+                    .addClass('fa-minus');
+            });
+
+            // When a collapsible section starts to HIDE
+            $('.collapse').on('hide.bs.collapse', function() {
+                // Find the specific button and change the icon back.
+                $('a.accordion-toggle[href="#' + this.id + '"] i')
+                    .removeClass('fa-minus')
+                    .addClass('fa-plus');
+            });
+
+
+            // =========================================================================
+            // 2. DEFINITIVE FIX FOR DROPDOWN VISIBILITY IN A SCROLLING TABLE
+            // =========================================================================
+            // We use event delegation on the '.table-responsive' container.
+
             // Listen for the 'show.bs.dropdown' event, which fires just before a menu is shown
             $('.table-responsive').on('show.bs.dropdown', function(e) {
                 // 'e.relatedTarget' is the button that triggered the dropdown. This is the most reliable way.

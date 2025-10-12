@@ -98,7 +98,7 @@
                     {{-- Filter/Search Section --}}
                     <form action="{{ route('purchases.index') }}" method="GET">
                         <div class="row mb-4">
-                            <div class="col-md-3"><label class="form-label">PO Number</label><input type="text"
+                            <div class="col-md-3"><label class="form-label">Order Number</label><input type="text"
                                     class="form-control" name="search" placeholder="Search by PO #..."
                                     value="{{ request('search') }}"></div>
                             <div class="col-md-3"><label class="form-label">Supplier</label><select class="form-select"
@@ -241,7 +241,8 @@
                                                             <tr>
                                                                 <th>Supplier</th>
                                                                 <th class="text-end">Quantity Products</th>
-                                                                <th>Status</th>
+                                                                <th>Status Review</th>
+                                                                <th>Status Production</th>
                                                                 <th class="text-end">Total Price</th>
                                                                 <th>Files</th>
                                                                 <th class="text-end">Action</th>
@@ -264,20 +265,28 @@
                                                                     <td class="text-end">{{ $supplier->total_quantity }}
                                                                     </td>
                                                                     <td><span
-                                                                            class="status-badge status-{{ Str::slug($supplier->pivot->status) }}">{{ ucfirst($supplier->pivot->status) }}</span>
+                                                                            class="status-badge status-{{ Str::slug($supplier->pivot->status_review) }}">{{ ucfirst(str_replace('-', ' ', $supplier->pivot->status_review)) }}</span>
+                                                                    </td>
+                                                                    <td><span
+                                                                            class="status-badge status-{{ Str::slug($supplier->pivot->status_production) }}">{{ ucfirst($supplier->pivot->status_production) }}</span>
                                                                     </td>
                                                                     <td class="text-end">
                                                                         ${{ number_format($supplier->total_price, 2) }}
                                                                     </td>
                                                                     <td class="file-status-list">
                                                                         @foreach ($supplier->file_status_list as $file)
-                                                                            <span>{{ $file['name'] }}: <span
-                                                                                    class="fw-bold {{ $file['status'] == 'Ok' ? 'text-success' : 'text-danger' }}">{{ $file['status'] }}</span></span>
+                                                                            <span>{{ $file['name'] }}: <strong
+                                                                                    class="fw-bold {{ $file['status'] == 'Ok' ? 'text-success' : 'text-danger' }}">{{ $file['status'] }}</strong></span>
                                                                         @endforeach
                                                                     </td>
-                                                                    <td class="text-end"><a href="#"
-                                                                            class="btn btn-sm btn-outline-secondary"><i
-                                                                                class="fas fa-eye"></i></a></td>
+                                                                    <td class="text-end">
+                                                                        <a href="{{ route('purchases.showSupplierDetails', ['purchase' => $purchase, 'supplier' => $supplier]) }}"
+                                                                            class="btn btn-sm btn-outline-secondary"
+                                                                            data-bs-toggle="tooltip"
+                                                                            title="View Details for {{ $supplier->user->name }}">
+                                                                            <i class="fas fa-eye"></i>
+                                                                        </a>
+                                                                    </td>
                                                                 </tr>
                                                                 <tr class="collapse-row">
                                                                     <td colspan="6" class="p-0 border-0">

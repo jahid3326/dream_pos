@@ -54,37 +54,33 @@ class DashboardController extends Controller
      */
     private function supplierDashboard()
     {
-        // 1. Get the user's associated supplier profile
+        // 1. Get the user's supplier profile.
         $supplier = Auth::user()->supplierProfile;
 
         if (!$supplier) {
-            // This is a safety check in case a user has the 'Supplier' role
-            // but no supplier profile is linked.
             abort(403, 'Supplier profile not found.');
         }
 
-        // 2. Fetch the "Recent Activity" data for this specific supplier
+        // 2. Fetch all purchases this supplier is a part of.
+        // The relationship automatically loads pivot data because we configured it in the Purchase model.
         $activities = $supplier->purchases()
             ->with(['sale', 'payments', 'documents', 'items'])
             ->latest('purchase_date')
-            ->paginate(10);
+            ->paginate(15);
 
-        // 3. Process each activity to calculate display-specific data
+        // 3. Process each activity to calculate display-specific data.
         $activities->each(function ($activity) use ($supplier) {
 
-            // --- FIX #1: CALCULATE SUPPLIER-SPECIFIC TOTAL AMOUNT ---
-            // Filter the purchase's items to get only those for THIS supplier.
+            // a. Calculate the total amount for ONLY this supplier's items.
             $supplierItems = $activity->items->where('supplier_id', $supplier->id);
-
-            // Calculate the total amount for only this supplier's items.
             $activity->supplier_total_amount = $supplierItems->sum('total_price');
 
-            // --- END OF FIX #1 ---
+            // b. Get the per-supplier statuses directly from the pivot table data.
+            // The 'pivot' attribute is automatically available on models from a many-to-many relationship.
+            $activity->status_review = $activity->pivot->status_review;
+            $activity->status_production = $activity->pivot->status_production;
 
-
-            // a. Calculate detailed payment status for the overall Purchase Order.
-            // NOTE: Per-supplier payment tracking is complex and not supported by the current DB schema.
-            // The payment status shown will reflect the status of the entire PO.
+            // c. Calculate the payment status for the OVERALL Purchase Order.
             $paidAmount = $activity->payments->sum('amount');
             if ($paidAmount <= 0) {
                 $activity->payment_status_text = 'Waiting Payment';
@@ -94,22 +90,38 @@ class DashboardController extends Controller
                 $activity->payment_status_text = 'Deposit Payed';
             }
 
-            // b. Prepare the document/files list for display.
+            // d. Prepare the document/files list.
             $files = [];
             $hasMissingFiles = false;
-            foreach ($activity->documents->where('is_required', true) as $document) {
-                $isOk = in_array($document->status, ['uploaded', 'approved']);
-                if (!$isOk) $hasMissingFiles = true;
-                $files[] = [
-                    'name' => pathinfo($document->document_name, PATHINFO_FILENAME),
-                    'status' => $isOk ? 'Ok' : 'Missing',
-                ];
+            // Get all documents for this purchase belonging to this supplier
+            $supplierDocuments = $activity->documents->where('supplier_id', $supplier->id);
+
+            foreach ($supplierDocuments as $document) {
+                $hasFile = !is_null($document->file_path);
+
+                // Check if a required file is missing
+                if ($document->is_required && !$hasFile) {
+                    $hasMissingFiles = true;
+                }
+
+                // Condition to display the document in the summary list:
+                // It's required, OR it's optional but has a file.
+                if ($document->is_required || $hasFile) {
+                    $files[] = [
+                        'name' => pathinfo($document->document_name, PATHINFO_FILENAME),
+                        'status' => $hasFile ? 'Ok' : 'Missing',
+                    ];
+                }
             }
             $activity->file_list = $files;
             $activity->has_missing_files = $hasMissingFiles;
         });
 
-        // 4. Return the dedicated supplier dashboard view with the data
+        // echo '<pre>';
+        // print_r($activities->toArray());
+        // echo '<pre>';
+        // exit;
+        // 4. Return the view with the processed data.
         return view('supplier.dashboard', compact('activities'));
     }
 }

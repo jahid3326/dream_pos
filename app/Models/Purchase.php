@@ -10,12 +10,12 @@ class Purchase extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
-    protected $casts = ['purchase_date' => 'date'];
+    protected $casts = ['purchase_date' => 'date', 'ready_date' => 'date'];
 
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'purchase_supplier')
-            ->withPivot('status')
+            ->withPivot(['status', 'status_review', 'status_production', 'ready_date']) // <-- ADD 'ready_date'
             ->withTimestamps();
     }
 

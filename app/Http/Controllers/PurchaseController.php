@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\PurchaseOrderCreated;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\ModificationRequestApproved;
 use PDF;
 
 class PurchaseController extends Controller
@@ -79,15 +80,22 @@ class PurchaseController extends Controller
 
                 // 4. Prepare the document status list for this supplier
                 // In this design, documents are global to the purchase. We'll show the same list for each supplier.
+
                 $fileStatus = [];
-                foreach ($purchase->documents->where('is_required', true) as $document) {
-                    // Here you would add logic to check if the file has been uploaded.
-                    // For now, we'll use a placeholder logic.
-                    $isOk = in_array($document->document_name, ['BL', 'Certificat']); // Example
-                    $fileStatus[] = [
-                        'name' => $document->document_name,
-                        'status' => $isOk ? 'Ok' : 'Missing',
-                    ];
+                // Get all documents for this supplier
+                $supplierDocuments = $purchase->documents->where('supplier_id', $supplier->id);
+
+                foreach ($supplierDocuments as $document) {
+                    $hasFile = !is_null($document->file_path);
+
+                    // Condition to display the document in the summary list:
+                    // It's either required, OR it's optional but has a file uploaded.
+                    if ($document->is_required || $hasFile) {
+                        $fileStatus[] = [
+                            'name' => pathinfo($document->document_name, PATHINFO_FILENAME),
+                            'status' => $hasFile ? 'Ok' : 'Missing', // Status is 'Ok' if a file exists
+                        ];
+                    }
                 }
                 $supplier->file_status_list = $fileStatus;
             }
@@ -157,12 +165,18 @@ class PurchaseController extends Controller
                 ];
                 $requiredDocuments = $request->input('documents', []);
 
-                foreach ($possibleDocuments as $docName) {
-                    $purchase->documents()->create([
-                        'document_name' => $docName,
-                        'is_required' => in_array($docName, $requiredDocuments),
-                        'status' => 'pending',
-                    ]);
+                foreach ($request->suppliers as $supplierData) {
+                    $supplierId = $supplierData['supplier_id'];
+
+                    // For each supplier, loop through all possible documents
+                    foreach ($possibleDocuments as $docName) {
+                        $purchase->documents()->create([
+                            'supplier_id' => $supplierId, // <-- THE CRITICAL CHANGE
+                            'document_name' => $docName,
+                            'is_required' => in_array($docName, $requiredDocuments),
+                            'status' => 'pending',
+                        ]);
+                    }
                 }
 
                 // 2d. Loop through suppliers from the request to attach them and their items.
@@ -320,6 +334,66 @@ class PurchaseController extends Controller
         $purchase->due_amount = $purchase->total_amount - $purchase->paid_amount;
 
         return compact('purchase', 'itemsBySupplier');
+    }
+
+    /**
+     * Display a dedicated view for a specific supplier's items within a purchase order.
+     *
+     * @param \App\Models\Purchase $purchase
+     * @param \App\Models\Supplier $supplier
+     * @return \Illuminate\View\View
+     */
+    public function showSupplierDetails(Purchase $purchase, Supplier $supplier)
+    {
+        // Security: Double-check that this supplier is actually part of this purchase
+        if (!$purchase->suppliers->contains($supplier)) {
+            abort(404, 'Supplier not found for this purchase order.');
+        }
+
+        // Eager-load the necessary data
+        $purchase->load(['sale']);
+        $supplier->load(['user']);
+
+        // Get only the items for this specific supplier
+        $items = $purchase->items()
+            ->where('supplier_id', $supplier->id)
+            ->with(['product.category', 'variation'])
+            ->get();
+
+        // Calculate this supplier's sub-total
+        $supplierSubTotal = $items->sum('total_price');
+
+        // Get the specific pivot data for this supplier
+        $pivotData = $purchase->suppliers->find($supplier->id)->pivot;
+
+        return view('purchases.supplier-product-details', compact(
+            'purchase',
+            'supplier',
+            'items',
+            'supplierSubTotal',
+            'pivotData'
+        ));
+    }
+
+    public function validateModification(Request $request, Purchase $purchase, Supplier $supplier)
+    {
+
+        try {
+            // 1. Update the pivot table status for this specific supplier
+            $purchase->suppliers()->updateExistingPivot($supplier->id, [
+                'status_review' => 'validated', // Or 'validated'
+                'status_production' => 'in process',
+            ]);
+
+            // 2. Send notification to the supplier
+            $adminUser = auth()->user();
+            $supplier->user->notify(new ModificationRequestApproved($purchase, $adminUser));
+        } catch (\Exception $e) {
+            \Log::error('Failed to validate modification: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while validating the modification.');
+        }
+
+        return back()->with('success', 'Modification for ' . $supplier->user->name . ' has been validated and they have been notified.');
     }
 
     /**

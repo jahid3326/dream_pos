@@ -30,8 +30,15 @@ class QuoteController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        $query = Quote::query();
+
+        // If the user is NOT a Super Admin, only show quotes they created.
+        if ($user->role && $user->role->name !== 'Super Admin') {
+            $query->where('created_by', $user->id);
+        }
         // Eager-load all necessary nested data for the complex view
-        $quotes = Quote::with([
+        $quotes = $query->with([
             'customer.user',
             'payments',
             'categoryItems.product.category', // For standard items
@@ -242,6 +249,7 @@ class QuoteController extends Controller
      */
     public function show(Quote $quote)
     {
+        $this->authorize('view', $quote);
         // Eager load all necessary data for the invoice
         $quote->load([
             'customer.user',
@@ -296,6 +304,7 @@ class QuoteController extends Controller
      */
     public function edit(Quote $quote)
     {
+        $this->authorize('update', $quote);
         // Eager load all relationships needed to populate the form
         $quote->load('customer.user', 'categoryItems.product', 'categoryItems.variation', 'packItems', 'orderTax');
 
@@ -312,6 +321,7 @@ class QuoteController extends Controller
      */
     public function update(Request $request, Quote $quote)
     {
+        $this->authorize('update', $quote);
         $request->validate([
             'quote_number' => 'required|string|unique:quotes,quote_number,' . $quote->id,
             'customer_id' => 'required|exists:customers,id',
@@ -524,6 +534,7 @@ class QuoteController extends Controller
      */
     public function destroy(Quote $quote)
     {
+        $this->authorize('delete', $quote);
         // The onDelete('cascade') in the migration will delete all related quote_items
         $quote->delete();
         return redirect()->route('quotes.index')->with('success', 'Quote deleted successfully.');

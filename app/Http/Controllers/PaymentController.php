@@ -9,6 +9,7 @@ use App\Models\SalePayment;
 use App\Rules\MaxDueAmount;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -26,7 +27,22 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        $payments = SalePayment::with('sale.customer.user')->latest()->get();
+        // 1. Get the currently authenticated user
+        $user = Auth::user();
+
+        // 2. Start the query on the SalePayment model
+        $query = SalePayment::query();
+
+        if ($user->role && $user->role->name !== 'Super Admin') {
+            // Use whereHas to filter payments based on a condition on the related Sale model.
+            // This will only return payments WHERE the related 'sale' has an 'order_taken_by'
+            // that matches the current user's ID.
+            $query->whereHas('sale', function ($q) use ($user) {
+                $q->where('order_taken_by', $user->id);
+            });
+        }
+
+        $payments = $query->with('sale.customer.user')->latest()->get();
         return view('payments.index', compact('payments'));
     }
 
@@ -35,7 +51,16 @@ class PaymentController extends Controller
      */
     public function create()
     {
-        $customers = Customer::with('user')->get();
+        $user = Auth::user();
+
+        $query = Customer::with('user', 'createdBy');
+
+        if ($user->role && $user->role->name !== 'Super Admin') {
+            // If the user is NOT a Super Admin, only show customers they created.
+            $query->where('created_by', $user->id);
+        }
+
+        $customers = $query->with('user')->get();
         // We will fetch invoices via AJAX, so we don't need them here.
         return view('payments.create', compact('customers'));
     }
@@ -152,6 +177,7 @@ class PaymentController extends Controller
      */
     public function edit(SalePayment $payment)
     {
+        $this->authorize('update', $payment);
         // Eager load the sale this payment belongs to
         $payment->load('sale.customer.user');
         $sale = $payment->sale;
@@ -169,6 +195,7 @@ class PaymentController extends Controller
      */
     public function update(Request $request, SalePayment $payment)
     {
+        $this->authorize('update', $payment);
         $sale = $payment->sale;
         $otherPaymentsAmount = $sale->payments()->where('id', '!=', $payment->id)->sum('amount');
         $maxAllowed = $sale->grand_total - $otherPaymentsAmount;
@@ -202,6 +229,7 @@ class PaymentController extends Controller
      */
     public function destroy(SalePayment $payment)
     {
+        $this->authorize('delete', $payment);
         $sale = $payment->sale;
         $payment->delete();
 
