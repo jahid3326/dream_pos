@@ -211,7 +211,8 @@
                                                             data-bs-toggle="modal" data-bs-target="#addPaymentModal"
                                                             data-purchase-id="{{ $purchase->id }}"
                                                             data-po-number="{{ $purchase->purchase_number }}"
-                                                            data-due-amount="{{ $purchase->due_amount }}"><i
+                                                            data-due-amount="{{ $purchase->due_amount }}"
+                                                            data-suppliers='{{ $purchase->suppliers_json }}'><i
                                                                 class="fas fa-dollar-sign fa-fw me-2"></i> Add Payment</a>
                                                     </li>
                                                     <li>
@@ -458,38 +459,78 @@ $supplierItems = $purchase->items->where(
     </div>
 
     <!-- Add Payment Modal -->
-    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Payment for PO #<span id="payment-po-number"></span></h5><button
-                        type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="addPaymentModalLabel">Add Payment for PO #<span
+                            id="payment-po-number"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="add-payment-form" method="POST">
+
+                {{-- The form now includes enctype for file uploads --}}
+                <form id="add-payment-form" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
+                        {{-- Container for validation errors from AJAX --}}
                         <div id="payment-errors" class="alert alert-danger" style="display: none;"></div>
+
                         <div class="row">
-                            <div class="col-md-6 mb-3"><label class="form-label">Date</label><input type="date"
-                                    name="payment_date" class="form-control" required></div>
-                            <div class="col-md-6 mb-3"><label class="form-label">Mode</label><select name="payment_mode"
-                                    class="form-select" required>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Card">Card</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                </select></div>
-                            <div class="col-md-12 mb-3"><label class="form-label">Amount</label><input type="number"
-                                    step="0.01" name="amount" id="payment-amount" class="form-control"
-                                    required><small class="form-text text-muted">Due: <span
-                                        id="due-amount-text"></span></small></div>
-                            <div class="col-md-12 mb-3"><label class="form-label">Note</label>
-                                <textarea name="note" class="form-control" rows="2"></textarea>
+
+                            {{-- NEW: Supplier Selection Dropdown --}}
+                            <div class="col-md-12 mb-3">
+                                <label for="payment-supplier-select" class="form-label">Payment For Supplier <span
+                                        class="text-danger">*</span></label>
+                                <select name="supplier_id" id="payment-supplier-select" class="form-select" required>
+                                    {{-- Options for this dropdown will be populated dynamically by JavaScript --}}
+                                    <option value="" disabled selected>Select a supplier...</option>
+                                </select>
                             </div>
+
+                            {{-- Payment Date --}}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Date <span class="text-danger">*</span></label>
+                                <input type="date" name="payment_date" class="form-control" required>
+                            </div>
+
+                            {{-- Payment Mode --}}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                                <select name="payment_mode" class="form-select" required>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="Card">Card</option>
+                                    <option value="Cash">Cash</option>
+                                </select>
+                            </div>
+
+                            {{-- Amount Paid --}}
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Amount Paid <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" name="amount" id="payment-amount"
+                                    class="form-control" required autocomplete="off">
+                                <small class="form-text text-muted">Total Amount Due on PO: <span id="due-amount-text"
+                                        class="fw-bold"></span></small>
+                            </div>
+
+                            {{-- Proof of Payment File Upload --}}
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Proof of Payment (Optional)</label>
+                                <input type="file" name="proof" class="form-control">
+                            </div>
+
+                            {{-- Payment Note --}}
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Payment Note</label>
+                                <textarea name="note" class="form-control" rows="3"></textarea>
+                            </div>
+
                         </div>
                     </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button><button type="submit"
-                            class="btn btn-primary">Submit</button></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary me-1" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Payment</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -616,48 +657,171 @@ $supplierItems = $purchase->items->where(
                 });
             });
 
-            // --- ADD PAYMENT MODAL ---
+            // --- ADD PAYMENT MODAL LOGIC ---
             const addPaymentModal = new bootstrap.Modal(document.getElementById('addPaymentModal'));
+            const addPaymentForm = $('#add-payment-form');
+            let totalDueOnPO = 0;
+
+            // 1. When any "Add Payment" button is clicked, prepare and show the modal.
             $('.add-payment-btn').on('click', function() {
+
+                const button = $(this);
                 const purchaseId = $(this).data('purchase-id');
                 const poNumber = $(this).data('po-number');
-                const dueAmount = parseFloat($(this).data('due-amount')).toFixed(2);
-                const url =
-                    `{{ url('purchases') }}/${purchaseId}/payments`; // Assumes a route like this will be created
+                const dueAmount = parseFloat($(this).data('due-amount'));
 
-                $('#add-payment-form').attr('action', url);
+                // Store the initial total due amount for this PO
+                totalDueOnPO = parseFloat(button.data('due-amount'));
+                // Set the form's unique 'action' URL for submission.
+                const url = `{{ url('purchases') }}/${purchaseId}/payments`;
+                addPaymentForm.attr('action', url);
+
+                // --- Dynamically Populate Supplier Dropdown ---
+
+                // --- THIS IS THE NEW, RELIABLE LOGIC ---
+                const suppliers = button.data('suppliers'); // This directly reads the JSON string
+                const supplierSelect = $('#payment-supplier-select');
+
+                // Clear previous options
+                supplierSelect.empty();
+                supplierSelect.append('<option value="" disabled selected>Select a supplier...</option>');
+
+                // Check if suppliers data exists and is an array
+                if (suppliers && Array.isArray(suppliers)) {
+                    // Loop through the supplier data from the data attribute and create options
+                    suppliers.forEach(function(supplier) {
+                        supplierSelect.append(
+                            `<option value="${supplier.id}">${supplier.name}</option>`);
+                    });
+                }
+                // --- END OF NEW LOGIC ---
+
+                const purchaseCollapseRow = $(`#purchaseItems${purchaseId}`);
+
+
+                // Find each supplier row within this purchase's detail view to get names and IDs.
+                purchaseCollapseRow.find('.supplier-row').each(function() {
+                    const supplierId = $(this).data('supplier-id');
+                    const supplierName = $(this).data('supplier-name');
+                    supplierSelect.append(`<option value="${supplierId}">${supplierName}</option>`);
+                });
+
+                // --- Populate other modal fields ---
                 $('#payment-po-number').text(poNumber);
-                $('#due-amount-text').text(`$${dueAmount}`);
-                $('#payment-amount').attr('max', dueAmount).val(dueAmount);
-                $('#add-payment-form').find('input[name="payment_date"]').val(new Date().toISOString()
-                    .split('T')[0]);
-                $('#payment-errors').hide();
+
+                $('#due-amount-text').text(`$${totalDueOnPO.toFixed(2)}`);
+
+                // Reset the form to its default state before populating it.
+                addPaymentForm.trigger('reset');
+
+                // Pre-fill amount with the total due amount and set max attribute.
+                $('#payment-amount').attr('max', dueAmount);
+
+                // Set the payment date to today.
+                addPaymentForm.find('input[name="payment_date"]').val(new Date().toISOString().split('T')[
+                    0]);
+
+                // Hide any old validation errors.
+                $('#payment-errors').hide().html('');
             });
 
-            $('#add-payment-form').on('submit', function(e) {
-                e.preventDefault();
+            // --- 2. DYNAMIC DUE AMOUNT CALCULATION ---
+            // When the user types in the "Amount Paid" input field...
+            $('#payment-amount').on('input', function() {
+                const amountBeingPaid = parseFloat($(this).val()) || 0;
+
+                // Calculate the new remaining due amount based on the initial total due
+                const remainingDue = totalDueOnPO - amountBeingPaid;
+
+                // Update the "Amount Due" text display.
+                // Use Math.max(0, ...) to prevent showing a negative number.
+                $('#due-amount-text').text(`$${Math.max(0, remainingDue).toFixed(2)}`);
+            });
+
+            // 3. Handle the form submission via AJAX.
+            addPaymentForm.on('submit', function(e) {
+                e.preventDefault(); // Prevent the default browser form submission.
+
                 const form = $(this);
+                const url = form.attr('action');
+                const submitButton = form.find('button[type="submit"]');
+
+                // Use FormData to correctly handle file uploads with AJAX.
+                const formData = new FormData(this);
+
+                // Disable button and show loading text.
+                submitButton.prop('disabled', true).text('Processing...');
+                $('#payment-errors').hide(); // Hide old errors on new submission.
+
                 $.ajax({
-                    url: form.attr('action'),
+                    url: url,
                     type: 'POST',
-                    data: form.serialize(),
+                    data: formData,
+                    processData: false, // Required for FormData
+                    contentType: false, // Required for FormData
                     success: function(response) {
-                        addPaymentModal.hide();
-                        Swal.fire('Success!', 'Payment added successfully.', 'success').then(
-                            () => location.reload());
+                        if (response.success) {
+                            addPaymentModal.hide();
+
+                            // --- Dynamic UI Update ---
+                            const purchaseRow = $(
+                                `tr[data-purchase-id="${response.purchase_id}"]`);
+                            if (purchaseRow.length) {
+                                // Update the main row's overall paid and due amounts.
+                                purchaseRow.find('.paid-amount-cell').text('$' + response
+                                    .new_paid_amount);
+                                purchaseRow.find('.due-amount-cell').text('$' + response
+                                    .new_due_amount);
+
+                                // Update the payment status badge.
+                                const statusCell = purchaseRow.find('.payment-status-cell');
+                                const statusSlug = response.new_payment_status.toLowerCase()
+                                    .replace(/[\s_]+/g, '-');
+                                statusCell.html(
+                                    `<span class="status-badge status-${statusSlug}">${response.new_payment_status}</span>`
+                                );
+
+                                // Update the 'data-due-amount' on the button for the next time it's clicked.
+                                const addPaymentBtn = purchaseRow.find('.add-payment-btn');
+                                if (addPaymentBtn.length) {
+                                    addPaymentBtn.data('due-amount', parseFloat(response
+                                        .new_due_amount.replace(/,/g, '')));
+                                }
+                            }
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Payment Added!',
+                                text: response.message,
+                                timer: 1500, // Show the message for 1.5 seconds
+                                showConfirmButton: false
+                            }).then((result) => {
+                                // After the alert closes (or the timer runs out), reload the page.
+                                location.reload();
+                            });
+
+                            // OPTIONAL: If you want to refresh per-supplier financials, you'd need a more complex solution,
+                            // but updating the main row is the primary goal and is now complete.
+                            // You could trigger a page reload here if needed: location.reload();
+                        }
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422) {
+                        if (xhr.status === 422) { // Validation error
                             const errors = xhr.responseJSON.errors;
+                            const errorContainer = $('#payment-errors');
                             let errorHtml = '<ul>';
                             $.each(errors, (key, value) => {
                                 errorHtml += `<li>${value[0]}</li>`;
                             });
                             errorHtml += '</ul>';
-                            $('#payment-errors').html(errorHtml).show();
+                            errorContainer.html(errorHtml).show();
                         } else {
-                            alert('An error occurred.');
+                            alert('An unexpected server error occurred. Please try again.');
                         }
+                    },
+                    complete: function() {
+                        // Re-enable the button after the request is complete.
+                        submitButton.prop('disabled', false).text('Submit Payment');
                     }
                 });
             });

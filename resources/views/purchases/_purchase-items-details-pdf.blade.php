@@ -33,11 +33,12 @@
             @endphp
             <tr>
                 <td>
-                    <img src="{{ $imageUrl }}" class="rounded me-2" width="40" height="40"
-                        style="object-fit: cover;">
+                    <img src="{{ $imageUrl }}" class="me-2" width="40" height="40"
+                        style="object-fit:contain;">
                     <br />
                     <strong>{{ $item->product_name }}</strong><br>
-                    <small style="color: #6c757d;">{{ $categoryName }} ({{ $measurement }})</small>
+                    <small style="color: #6c757d; white-space: normal;">{{ $categoryName }}
+                        ({{ $measurement }})</small>
                 </td>
                 <td class="text-end">{{ $item->quantity }}</td>
                 <td class="text-end">${{ number_format($item->unit_price, 2) }}</td>

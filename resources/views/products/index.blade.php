@@ -97,11 +97,12 @@
                                             {{-- Product Image --}}
                                             <img src="{{ $item->image_url }}" alt="{{ $item->name }}"
                                                 class="rounded me-2" width="40" height="40"
-                                                style="object-fit: cover;">
+                                                style="object-fit: contain;">
                                             {{-- Product Name and Measurement --}}
                                             <div>
                                                 <span class="fw-bold">{{ $item->name }}</span><br>
-                                                <small class="text-muted">{{ $item->measurement }}</small>
+                                                <small class="text-muted"
+                                                    style="white-space: normal;">{{ $item->measurement }}</small>
                                             </div>
                                             </a>
                                         </td>

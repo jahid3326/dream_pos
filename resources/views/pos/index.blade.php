@@ -447,7 +447,7 @@
                             </div>
                             <div class="card-body p-2 d-flex align-items-center justify-content-center">
                                 <a href="javascript:void(0);" class="product-image">
-                                    <img src="${product.image}" alt="Product">
+                                    <img src="${product.image}" alt="Product" style="object-fit: contain;">
                                 </a>
                             </div>
                             <div class="card-footer text-center">
@@ -840,7 +840,7 @@
                                         data-name="${variation.product.name} - ${variation.measurement}" data-price="${variation.sale_price}">
                                         <div class="card-body p-2 d-flex align-items-center justify-content-center">
                                             <a href="javascript:void(0);" class="product-image">
-                                                <img src="${imageUrl}" alt="Variation">
+                                                <img src="${imageUrl}" alt="Variation" style="object-fit: contain;">
                                             </a>
                                         </div>
                                         <div class="card-footer text-center">
@@ -862,7 +862,7 @@
                                         data-name="${product.name} - ${product.measurement}" data-price="${product.sale_price}">
                                         <div class="card-body p-2 d-flex align-items-center justify-content-center">
                                             <a href="javascript:void(0);" class="product-image">
-                                                <img src="${productImageUrl}" alt="Product">
+                                                <img src="${productImageUrl}" alt="Product" style="object-fit: contain;">
                                             </a>
                                         </div>
                                         <div class="card-footer text-center">
@@ -890,13 +890,13 @@
                                 data-product-id="${product.id}" data-variation-id=""
                                 data-name="${product.name}" data-price="${product.sale_price}">
                                 <div class="card-body p-2 d-flex align-items-center justify-content-center">
-                                    <a href="javascript:void(0);" class="product-image">
+                                    <a href="javascript:void(0);" class="product-image" style="object-fit: contain;">
                                         <img src="${imageUrl}" alt="Product">
                                     </a>
                                 </div>
                                 <div class="card-footer text-center">
                                     <h6 class="fs-14 fw-bold mb-1">${product.name}</h6>
-                                    <small class="text-muted">${product.measurement || ''}</small>
+                                    <small class="text-muted" style="">${product.measurement || ''}</small>
                                 </div>
                             </div>
                         </div>`;

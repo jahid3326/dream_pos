@@ -36,10 +36,12 @@
                     <td>
                         <div class="d-flex align-items-center">
                             <img src="{{ $imageUrl }}" class="rounded me-2" width="40" height="40"
-                                style="object-fit: cover;">
+                                style="object-fit: contain;">
                             <div>
                                 <strong>{{ $item->product_name }}</strong><br>
-                                <small class="text-muted">{{ $categoryName }} ({{ $measurement }})</small>
+                                <small class="text-muted" style="white-space: normal;">{{ $categoryName }}
+                                    ({{ $measurement }})
+                                </small>
                             </div>
                         </div>
                     </td>

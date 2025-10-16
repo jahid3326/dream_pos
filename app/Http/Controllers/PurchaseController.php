@@ -14,6 +14,7 @@ use App\Notifications\PurchaseOrderCreated;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\ModificationRequestApproved;
 use PDF;
+use Illuminate\Support\Facades\Storage;
 
 class PurchaseController extends Controller
 {
@@ -75,8 +76,11 @@ class PurchaseController extends Controller
                 // NOTE: Per-supplier payment tracking is complex. 
                 // The design shows it, but our DB doesn't support it yet (payments are linked to the Purchase, not the supplier).
                 // For now, we will display 0 for paid and the total as due.
-                $supplier->paid_amount = 0.00;
-                $supplier->due_amount = $supplier->total_price;
+                $supplierPayments = $purchase->payments->where('supplier_id', $supplier->id);
+
+                // Calculate the paid and due amounts for this supplier
+                $supplier->paid_amount = $supplierPayments->sum('amount');
+                $supplier->due_amount = $supplier->total_price - $supplier->paid_amount;
 
                 // 4. Prepare the document status list for this supplier
                 // In this design, documents are global to the purchase. We'll show the same list for each supplier.
@@ -99,6 +103,14 @@ class PurchaseController extends Controller
                 }
                 $supplier->file_status_list = $fileStatus;
             }
+
+            $suppliersForJs = $purchase->suppliers->map(function ($supplier) {
+                return [
+                    'id' => $supplier->id,
+                    'name' => $supplier->user->name,
+                ];
+            });
+            $purchase->suppliers_json = $suppliersForJs->toJson();
         });
 
 
@@ -418,6 +430,75 @@ class PurchaseController extends Controller
         $data['print'] = true;
 
         return view('purchases.pdf', $data);
+    }
+
+    /**
+     * Store a new payment for an existing purchase via AJAX.
+     * This includes handling the optional proof file upload.
+     */
+    // in app/Http-Controllers/PurchaseController.php
+
+    public function addPayment(Request $request, Purchase $purchase)
+    {
+        // 1. Calculate the current due amount for validation.
+        $paidAmount = $purchase->payments()->sum('amount');
+        $dueAmount = $purchase->total_amount - $paidAmount;
+
+        // 2. Validate the incoming request.
+        $validator = Validator::make($request->all(), [
+            'supplier_id' => 'required|exists:suppliers,id',
+            'payment_date' => 'required|date',
+            'payment_mode' => 'required|string',
+            'amount' => ['required', 'numeric', 'gte:0.01', 'max:' . max(0.01, $dueAmount)],
+            'note' => 'nullable|string',
+            'proof' => 'nullable|file|mimes:pdf,jpg,png,jpeg|max:5120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()->toArray()], 422);
+        }
+
+        // 3. Prepare the data for creating the payment record.
+        $paymentData = $validator->validated();
+
+        // 4. Handle the file upload if a proof file is present.
+        if ($request->hasFile('proof')) {
+            $filePath = $request->file('proof')->store('payment_proofs', 'public');
+            $paymentData['proof'] = $filePath;
+        }
+
+        // 5. Create the new payment record in the database.
+        // This now correctly includes the 'supplier_id'.
+        $purchase->payments()->create($paymentData);
+
+        // --- CORRECTION ---
+        // The main status of the purchase (e.g., 'ordered', 'shipped') should be
+        // managed separately and not be tied directly to payment creation here.
+        // We will remove the status update logic.
+
+        // 6. Recalculate the financial summary to return to the frontend for a dynamic update.
+        $purchase->refresh(); // Ensures we get the latest data, including the new payment.
+        $newPaidAmount = $purchase->payments->sum('amount');
+        $newDueAmount = $purchase->total_amount - $newPaidAmount;
+
+        // Determine the new payment status text dynamically.
+        if (abs($newPaidAmount - $purchase->total_amount) < 0.01) {
+            $newPaymentStatus = 'Paid';
+        } else if ($newPaidAmount > 0) {
+            $newPaymentStatus = 'Partial';
+        } else {
+            $newPaymentStatus = 'Unpaid';
+        }
+
+        // 7. Return all the data the frontend needs to update the UI without a page reload.
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment added successfully!',
+            'purchase_id' => $purchase->id,
+            'new_paid_amount' => number_format($newPaidAmount, 2),
+            'new_due_amount' => number_format($newDueAmount, 2),
+            'new_payment_status' => $newPaymentStatus,
+        ]);
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Notifications\SupplierConfirmedOrder;
 use App\Models\Purchase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,5 +108,40 @@ class OrderActionController extends Controller
 
         // If the check passes, return the supplier model for convenience
         return $supplier;
+    }
+
+    public function confirm(Request $request, Purchase $purchase)
+    {
+        // 1. Authorize the supplier and get their model
+        $supplier = $this->authorizeSupplier($purchase);
+
+        try {
+            // 2. Update the pivot table status for this specific supplier
+            $purchase->suppliers()->updateExistingPivot($supplier->id, [
+                'status_review' => 'complet',
+                'status_production' => 'in process',
+            ]);
+
+            // 3. Find and notify all users with the 'Super Admin' role.
+            // We use whereHas to query based on the 'role' relationship.
+            $superAdmins = User::whereHas('role', function ($query) {
+                $query->where('name', 'Super Admin');
+            })->get();
+
+            if ($superAdmins->isNotEmpty()) {
+                foreach ($superAdmins as $admin) {
+                    $admin->notify(new SupplierConfirmedOrder($purchase, $supplier));
+                }
+            } else {
+                // Log a warning if no Super Admin is found
+                \Log::warning("Could not send SupplierConfirmedOrder notification: No Super Admin user found.");
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to confirm order: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while confirming the order.');
+        }
+
+        // Redirect back to the details page with a success message
+        return redirect()->route('orders.details', $purchase)->with('success', 'Order has been confirmed and moved to production. The admin has been notified.');
     }
 }

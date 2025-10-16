@@ -1,5 +1,19 @@
 @extends('layouts.app')
 @section('title', 'Sales')
+@push('styles')
+    <style>
+        .custom-purchase-alert {
+            background-color: #FEF6E4;
+            color: #594F3C;
+            border: 1px solid #F3DFC1;
+            padding: 0.3rem 0.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+    </style>
+@endpush
 @section('content')
     <div class="page-wrapper">
         <div class="content">
@@ -94,7 +108,7 @@
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         {{-- Convert to Purchase --}}
-                                                        @if (Auth::user()->role && Auth::user()->role->name == 'Super Admin')
+                                                        @if (Auth::user()->role && Auth::user()->role->name == 'Super Admin' && $sale->purchases->isEmpty())
                                                             <li>
                                                                 <a class="dropdown-item d-flex align-items-center convert-to-purchase-btn"
                                                                     href="#" data-bs-toggle="modal"
@@ -296,9 +310,10 @@
         aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="convertToPurchaseModalLabel">Convert to Purchase</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header" style="flex-direction:column;justify-content: center">
+                    <h4 class="modal-title" id="convertToPurchaseModalLabel">Convert to Purchase</h4>
+                    <p>Please review PO</p>
+                    {{-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> --}}
                 </div>
                 <form id="convert-purchase-form" method="POST">
                     @csrf
@@ -311,7 +326,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Confirm</button>
                     </div>
                 </form>
@@ -432,7 +447,7 @@
                                 <div class="mb-4 border rounded p-3">
                                     <div class="d-flex align-items-center mb-2">
                                         <input type="hidden" name="suppliers[${s_idx}][supplier_id]" value="${supplier.supplier_id}">
-                                        <img src="public/storage/${supplier.supplier_image_url}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                        <img src="public/storage/${supplier.supplier_image_url}" class="rounded me-2" width="40" height="40" style="object-fit: contain;">
                                         <h6 class="mb-0">${supplier.supplier_name}</h6>
                                     </div>
                                     <table class="table table-sm">
@@ -453,7 +468,7 @@
                                     {{-- DETAILED PRODUCT NAME CELL --}}
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="public/${product.image_url}" class="rounded me-2" width="40" height="40" style="object-fit: cover;">
+                                            <img src="public/${product.image_url}" class="rounded me-2" width="40" height="40" style="object-fit: contain;">
                                             <div>
                                                 <strong>${product.product_name}</strong><br>
                                                 <small class="text-muted">${product.category_name} (${product.measurement || 'N/A'})</small>
@@ -473,13 +488,16 @@
                             content += `
                         <div class="mt-4">
                             <h6>Required Documents</h6>
-                            <div class="row">
+                            <div class="row mx-1 mt-2">
                                 <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Proforma Invoice (PI)" id="doc1"><label class="form-check-label" for="doc1">Proforma Invoice (PI)</label></div>
                                 <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Packing List" id="doc2"><label class="form-check-label" for="doc2">Packing List</label></div>
                                 <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Certificate of Origin (COO)" id="doc3"><label class="form-check-label" for="doc3">Certificate of Origin (COO)</label></div>
                                 <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="MSDS / Safety Data" id="doc4"><label class="form-check-label" for="doc4">MSDS / Safety Data</label></div>
                                 <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Insurance" id="doc5"><label class="form-check-label" for="doc5">Insurance</label></div>
                                 <div class="col-md-4 form-check form-switch"><input class="form-check-input" type="checkbox" name="documents[]" value="Fumigation Certificate" id="doc6"><label class="form-check-label" for="doc6">Fumigation Certificate</label></div>
+                            </div>
+                            <div class="custom-purchase-alert">
+                            By confirming, the Purchase Order will be generated and automatically sent to the supplier
                             </div>
                         </div>
                     `;

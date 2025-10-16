@@ -48,8 +48,8 @@
                                 {{-- Name and Category --}}
                                 <div>
                                     <strong>{{ $item->product_name }}</strong><br>
-                                    <small
-                                        class="text-muted">{{ $item->product->category->name ?? 'N/A' }}({{ $measurement }})</small>
+                                    <small class="text-muted"
+                                        style="white-space: normal;">{{ $item->product->category->name ?? 'N/A' }}({{ $measurement }})</small>
                                 </div>
                             </div>
                         </td>
