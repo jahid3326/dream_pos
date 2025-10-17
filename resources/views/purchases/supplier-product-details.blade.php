@@ -38,7 +38,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <span class="text-muted">Supplier</span>
-                            <p class="fw-bold">{{ $supplier->user->name }}</p>
+                            <p class="fw-bold">{{ $supplier->company_name }}</p>
                         </div>
                         <div class="col-md-4">
                             <span class="text-muted">Status Review</span>

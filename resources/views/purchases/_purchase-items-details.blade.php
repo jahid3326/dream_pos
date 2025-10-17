@@ -30,6 +30,7 @@
                             ? asset('public/storage/' . $item->product->product_image)
                             : $imageUrl;
                     }
+                    // echo $item->quantity . 'x' . $unit_cbm;
                     $total_cbm = $item->quantity * $unit_cbm;
                 @endphp
                 <tr>
@@ -48,8 +49,8 @@
                     <td class="text-end">{{ $item->quantity }}</td>
                     <td class="text-end">${{ number_format($item->unit_price, 2) }}</td>
                     <td class="text-end fw-bold">${{ number_format($item->total_price, 2) }}</td>
-                    <td class="text-end">{{ number_format($unit_cbm, 0) }}</td>
-                    <td class="text-end fw-bold">{{ number_format($total_cbm, 0) }}</td>
+                    <td class="text-end">{{ $unit_cbm }}</td>
+                    <td class="text-end fw-bold">{{ $total_cbm }}</td>
                 </tr>
             @endforeach
         </tbody>

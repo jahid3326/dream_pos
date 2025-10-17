@@ -422,11 +422,11 @@ $supplierItems = $purchase->items->where(
                                                                                                         ${{ number_format($item->total_price, 2) }}
                                                                                                     </td>
                                                                                                     <td class="text-end">
-                                                                                                        {{ number_format($cbm, 0) }}
+                                                                                                        {{ $cbm }}
                                                                                                     </td>
                                                                                                     <td
                                                                                                         class="text-end fw-bold">
-                                                                                                        {{ number_format($totalCbm, 0) }}
+                                                                                                        {{ $totalCbm }}
                                                                                                     </td>
                                                                                                 </tr>
                                                                                             @endforeach
@@ -660,85 +660,81 @@ $supplierItems = $purchase->items->where(
             // --- ADD PAYMENT MODAL LOGIC ---
             const addPaymentModal = new bootstrap.Modal(document.getElementById('addPaymentModal'));
             const addPaymentForm = $('#add-payment-form');
-            let totalDueOnPO = 0;
+
+            // This variable will hold the due amount for the currently selected context (either total PO or specific supplier)
+            let currentDueAmountContext = 0;
 
             // 1. When any "Add Payment" button is clicked, prepare and show the modal.
             $('.add-payment-btn').on('click', function() {
-
                 const button = $(this);
-                const purchaseId = $(this).data('purchase-id');
-                const poNumber = $(this).data('po-number');
-                const dueAmount = parseFloat($(this).data('due-amount'));
+                const purchaseId = button.data('purchase-id');
+                const poNumber = button.data('po-number');
+                const totalDueOnPO = parseFloat(button.data('due-amount'));
 
-                // Store the initial total due amount for this PO
-                totalDueOnPO = parseFloat(button.data('due-amount'));
-                // Set the form's unique 'action' URL for submission.
-                const url = `{{ url('purchases') }}/${purchaseId}/payments`;
-                addPaymentForm.attr('action', url);
+                // Set the initial calculation context to the total PO due amount.
+                currentDueAmountContext = totalDueOnPO;
 
-                // --- Dynamically Populate Supplier Dropdown ---
+                // Set the form's action URL.
+                addPaymentForm.attr('action', `{{ url('purchases') }}/${purchaseId}/payments`);
 
-                // --- THIS IS THE NEW, RELIABLE LOGIC ---
-                const suppliers = button.data('suppliers'); // This directly reads the JSON string
+                // --- Populate Supplier Dropdown ---
+                const suppliers = button.data('suppliers');
                 const supplierSelect = $('#payment-supplier-select');
-
-                // Clear previous options
-                supplierSelect.empty();
-                supplierSelect.append('<option value="" disabled selected>Select a supplier...</option>');
-
-                // Check if suppliers data exists and is an array
+                supplierSelect.empty().append(
+                    '<option value="" disabled selected>Select a supplier...</option>');
                 if (suppliers && Array.isArray(suppliers)) {
-                    // Loop through the supplier data from the data attribute and create options
                     suppliers.forEach(function(supplier) {
                         supplierSelect.append(
-                            `<option value="${supplier.id}">${supplier.name}</option>`);
+                            `<option value="${supplier.id}" data-due-amount="${supplier.due_amount}">${supplier.name}</option>`
+                        );
                     });
                 }
-                // --- END OF NEW LOGIC ---
 
-                const purchaseCollapseRow = $(`#purchaseItems${purchaseId}`);
-
-
-                // Find each supplier row within this purchase's detail view to get names and IDs.
-                purchaseCollapseRow.find('.supplier-row').each(function() {
-                    const supplierId = $(this).data('supplier-id');
-                    const supplierName = $(this).data('supplier-name');
-                    supplierSelect.append(`<option value="${supplierId}">${supplierName}</option>`);
-                });
-
-                // --- Populate other modal fields ---
+                // --- Reset and Populate other modal fields ---
                 $('#payment-po-number').text(poNumber);
+                addPaymentForm.trigger('reset'); // Clear all fields
 
-                $('#due-amount-text').text(`$${totalDueOnPO.toFixed(2)}`);
+                // Initially, set max to total due, show total due text, and leave amount input empty.
+                $('#payment-amount').attr('max', totalDueOnPO).val('');
+                $('#due-amount-text').text(`Total Due on PO: $${totalDueOnPO.toFixed(2)}`);
 
-                // Reset the form to its default state before populating it.
-                addPaymentForm.trigger('reset');
-
-                // Pre-fill amount with the total due amount and set max attribute.
-                $('#payment-amount').attr('max', dueAmount);
-
-                // Set the payment date to today.
                 addPaymentForm.find('input[name="payment_date"]').val(new Date().toISOString().split('T')[
                     0]);
-
-                // Hide any old validation errors.
                 $('#payment-errors').hide().html('');
             });
 
-            // --- 2. DYNAMIC DUE AMOUNT CALCULATION ---
-            // When the user types in the "Amount Paid" input field...
+            // --- 2. When a supplier is selected from the dropdown ---
+            $('#payment-supplier-select').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                const supplierDueAmount = parseFloat(selectedOption.data('due-amount'));
+
+                if (!isNaN(supplierDueAmount)) {
+                    // Update the calculation context to this supplier's specific due amount.
+                    currentDueAmountContext = supplierDueAmount;
+
+                    // Update the "Amount Due" text to show THIS supplier's due amount.
+                    $('#due-amount-text').text(`Due for this supplier: $${supplierDueAmount.toFixed(2)}`);
+
+                    // Update the 'max' attribute of the amount input.
+                    $('#payment-amount').attr('max', supplierDueAmount);
+
+                    // Clear the amount input field, ready for the user to type.
+                    $('#payment-amount').val('');
+                }
+            });
+
+            // --- 3. DYNAMIC DUE AMOUNT CALCULATION (NOW WORKS WITH THE CONTEXT) ---
             $('#payment-amount').on('input', function() {
                 const amountBeingPaid = parseFloat($(this).val()) || 0;
 
-                // Calculate the new remaining due amount based on the initial total due
-                const remainingDue = totalDueOnPO - amountBeingPaid;
+                // Calculate the remaining due based on the CURRENT context (either total PO or supplier-specific).
+                const remainingDue = currentDueAmountContext - amountBeingPaid;
 
-                // Update the "Amount Due" text display.
-                // Use Math.max(0, ...) to prevent showing a negative number.
-                $('#due-amount-text').text(`$${Math.max(0, remainingDue).toFixed(2)}`);
+                // Update the helper text to show the remaining balance.
+                $('#due-amount-text').text(`Remaining Due: $${Math.max(0, remainingDue).toFixed(2)}`);
             });
 
-            // 3. Handle the form submission via AJAX.
+            // 4. Handle the form submission via AJAX (no changes needed here).
             addPaymentForm.on('submit', function(e) {
                 e.preventDefault(); // Prevent the default browser form submission.
 

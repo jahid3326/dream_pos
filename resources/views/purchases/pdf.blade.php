@@ -143,6 +143,7 @@
                                 <thead>
                                     <tr>
                                         <th>Date</th>
+                                        <th>Supplier</th>
                                         <th>Mode</th>
                                         <th class="text-end">Amount</th>
                                     </tr>
@@ -151,6 +152,10 @@
                                     @foreach ($purchase->payments as $payment)
                                         <tr>
                                             <td>{{ $payment->payment_date->format('d M, Y') }}</td>
+                                            <td>
+                                                {{-- Safely access the supplier's name. Show 'N/A' if not linked. --}}
+                                                {{ $payment->supplier->company_name ?? 'N/A' }}
+                                            </td>
                                             <td>{{ $payment->payment_mode }}</td>
                                             <td class="text-end">${{ number_format($payment->amount, 2) }}</td>
                                         </tr>

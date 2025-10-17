@@ -122,7 +122,7 @@
                                             <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
                                                 class="rounded me-2" style="object-fit: contain" width="30"
                                                 height="30">
-                                            {{ $supplier->user->name }}
+                                            {{ $supplier->company_name }}
                                         </h5>
                                         <div>
                                             <span class="me-3">Review: <span
@@ -143,28 +143,81 @@
 
                         {{-- Documents Panel --}}
                         <div class="tab-pane fade" id="documents-panel" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Document Name</th>
-                                            <th>Requirement</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($purchase->documents as $doc)
-                                            <tr>
-                                                <td>{{ $doc->document_name }}</td>
-                                                <td>{!! $doc->is_required
-                                                    ? '<span class="badge bg-primary">Required</span>'
-                                                    : '<span class="badge bg-secondary">Optional</span>' !!}</td>
-                                                <td><span class="badge bg-info">{{ ucfirst($doc->status) }}</span></td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                            @if (session('success'))
+                                <div class="alert alert-success">{{ session('success') }}</div>
+                            @endif
+                            @if (session('error'))
+                                <div class="alert alert-danger">{{ session('error') }}</div>
+                            @endif
+
+                            {{-- Loop through each supplier involved in this purchase --}}
+                            @foreach ($purchase->suppliers as $supplier)
+                                @php
+                                    // For each supplier, get their specific set of documents
+                                    $supplierDocuments = $purchase->documents->where('supplier_id', $supplier->id);
+                                    // Check if there are any required documents that are missing a file
+                                    $hasMissingRequired = $supplierDocuments
+                                        ->where('is_required', true)
+                                        ->whereNull('file_path')
+                                        ->isNotEmpty();
+                                @endphp
+
+                                <div class="mb-4 border-bottom pb-4">
+                                    {{-- Supplier Header --}}
+                                    <h5 class="d-flex align-items-center mb-3">
+                                        <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                            class="rounded me-2" style="object-fit: contain" width="30" height="30">
+                                        {{ $supplier->company_name }}
+                                    </h5>
+
+                                    {{-- Document Grid --}}
+                                    <div class="row">
+                                        @forelse ($supplierDocuments as $doc)
+                                            {{-- Only display required docs or optional ones that have been uploaded --}}
+                                            @if ($doc->is_required || $doc->file_path)
+                                                <div class="col-lg-2 col-md-3 col-sm-4 text-center mb-3">
+                                                    @if ($doc->file_path)
+                                                        <a href="{{ asset('public/storage/' . $doc->file_path) }}"
+                                                            target="_blank" class="text-decoration-none">
+                                                            <i class="far fa-file-pdf text-success"
+                                                                style="font-size: 3rem;"></i>
+                                                            <p class="mb-0 mt-1 text-dark">
+                                                                {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
+                                                        </a>
+                                                    @else
+                                                        {{-- Visually indicate a missing required document --}}
+                                                        <i class="far fa-file-pdf text-danger position-relative"
+                                                            style="font-size: 3rem;">
+                                                            <span
+                                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                                                style="font-size: 0.6rem;">!</span>
+                                                        </i>
+                                                        <p class="mb-0 mt-1 text-danger">
+                                                            {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        @empty
+                                            <p class="text-muted">No documents are tracked for this supplier.</p>
+                                        @endforelse
+                                    </div>
+
+                                    {{-- Reminder Button (only shows if required files are missing) --}}
+                                    @if ($hasMissingRequired)
+                                        <div class="mt-3">
+                                            <p class="text-danger mb-2"><i class="fas fa-exclamation-triangle fa-fw"></i>
+                                                Document and information Missing</p>
+                                            <form
+                                                action="{{ route('purchases.sendDocumentReminder', ['purchase' => $purchase, 'supplier' => $supplier]) }}"
+                                                method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary">Send Reminder to
+                                                    supplier</button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
 
                         {{-- Payments Panel --}}
@@ -188,8 +241,10 @@
                                     <thead class="thead-light">
                                         <tr>
                                             <th>Date</th>
+                                            <th>Supplier</th>
                                             <th>Mode</th>
                                             <th>Note</th>
+                                            <th>Proof</th>
                                             <th class="text-end">Amount</th>
                                         </tr>
                                     </thead>
@@ -197,8 +252,22 @@
                                         @forelse($purchase->payments as $payment)
                                             <tr>
                                                 <td>{{ $payment->payment_date->format('d M, Y') }}</td>
+                                                <td>
+                                                    {{-- Safely access the supplier's name. Show 'N/A' if not linked. --}}
+                                                    {{ $payment->supplier->company_name ?? 'N/A' }}
+                                                </td>
                                                 <td>{{ $payment->payment_mode }}</td>
                                                 <td>{{ $payment->note }}</td>
+                                                <td>
+                                                    @if ($payment->proof)
+                                                        <a href="{{ asset('public/storage/' . $payment->proof) }}"
+                                                            target="_blank" class="text-primary" title="View Proof">
+                                                            <i class="far fa-file-pdf fa-lg"></i>
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">None</span>
+                                                    @endif
+                                                </td>
                                                 <td class="text-end">${{ number_format($payment->amount, 2) }}</td>
                                             </tr>
                                         @empty

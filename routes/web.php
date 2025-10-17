@@ -280,6 +280,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/documents/{document}/upload', [DocumentController::class, 'upload'])->name('documents.upload');
 
+        Route::post('/purchases/{purchase}/supplier/{supplier}/send-document-reminder', [PurchaseController::class, 'sendDocumentReminder'])
+            ->name('purchases.sendDocumentReminder');
+
         Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
 
         // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---

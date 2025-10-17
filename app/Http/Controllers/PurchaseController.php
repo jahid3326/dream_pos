@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Notifications\ModificationRequestApproved;
 use PDF;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\DocumentReminder;
 
 class PurchaseController extends Controller
 {
@@ -108,6 +109,7 @@ class PurchaseController extends Controller
                 return [
                     'id' => $supplier->id,
                     'name' => $supplier->user->name,
+                    'due_amount' => $supplier->due_amount, // We already calculated this in the loop above
                 ];
             });
             $purchase->suppliers_json = $suppliersForJs->toJson();
@@ -289,7 +291,7 @@ class PurchaseController extends Controller
             'items.product.category', // All items and their product/category details
             'items.variation', // The specific variation, if applicable
             'documents', // All tracked documents for this purchase
-            'payments' // All payments made for this purchase
+            'payments.supplier.user' // All payments made for this purchase
         ]);
 
         // 2. Calculate the payment summary.
@@ -337,7 +339,7 @@ class PurchaseController extends Controller
             'items.product.category',
             'items.variation',
             'documents',
-            'payments'
+            'payments.supplier.user'
         ]);
         $itemsBySupplier = $purchase->items->groupBy('supplier_id');
 
@@ -499,6 +501,19 @@ class PurchaseController extends Controller
             'new_due_amount' => number_format($newDueAmount, 2),
             'new_payment_status' => $newPaymentStatus,
         ]);
+    }
+
+    public function sendDocumentReminder(Request $request, Purchase $purchase, Supplier $supplier)
+    {
+        try {
+            $adminUser = auth()->user();
+            $supplier->user->notify(new DocumentReminder($purchase, $adminUser));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send document reminder: ' . $e->getMessage());
+            return back()->with('error', 'Could not send the reminder. Please check mail configuration.');
+        }
+
+        return back()->with('success', 'A reminder has been sent to ' . $supplier->company_name . '.');
     }
 
     /**

@@ -38,13 +38,14 @@
                     <br />
                     <strong>{{ $item->product_name }}</strong><br>
                     <small style="color: #6c757d; white-space: normal;">{{ $categoryName }}
-                        ({{ $measurement }})</small>
+                        ({{ $measurement }})
+                    </small>
                 </td>
                 <td class="text-end">{{ $item->quantity }}</td>
                 <td class="text-end">${{ number_format($item->unit_price, 2) }}</td>
                 <td class="text-end fw-bold">${{ number_format($item->total_price, 2) }}</td>
-                <td class="text-end">{{ number_format($unit_cbm, 0) }}</td>
-                <td class="text-end fw-bold">{{ number_format($total_cbm, 0) }}</td>
+                <td class="text-end">{{ $unit_cbm }}</td>
+                <td class="text-end fw-bold">{{ $total_cbm }}</td>
             </tr>
         @endforeach
     </tbody>
