@@ -158,8 +158,8 @@
                                                         title="{{ $supplier->company_name }}"><img
                                                             src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
                                                             alt="{{ $supplier->company_name }}"
-                                                            class="rounded-circle avatar-image" width="30"
-                                                            height="30"
+                                                            class="rounded avatar-image" style="object-fit: contain"
+                                                            width="30" height="30"
                                                             style="margin-left: -10px; border: 2px solid white;"></a>
                                                 @endforeach
                                             </div>
@@ -172,7 +172,8 @@
                                             @foreach ($purchase->suppliers as $supplier)
                                                 <div class="d-flex justify-content-end align-items-center mb-1"><img
                                                         src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                                        class="rounded-circle me-1 avatar-image" width="18"
+                                                        class="rounded me-1 avatar-image" style="object-fit: contain"
+                                                        width="18"
                                                         height="18"><span>${{ number_format($supplier->paid_amount, 2) }}</span>
                                                 </div>
                                             @endforeach
@@ -181,7 +182,8 @@
                                             @foreach ($purchase->suppliers as $supplier)
                                                 <div class="d-flex justify-content-end align-items-center mb-1"><img
                                                         src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                                        class="rounded-circle me-1 avatar-image" width="18"
+                                                        class="rounded me-1 avatar-image" style="object-fit: contain"
+                                                        width="18"
                                                         height="18"><span>${{ number_format($supplier->due_amount, 2) }}</span>
                                                 </div>
                                             @endforeach
@@ -206,7 +208,8 @@
                                                     <li><a class="dropdown-item view-payments-btn" href="#"
                                                             data-bs-toggle="modal" data-bs-target="#viewPaymentsModal"
                                                             data-url="{{ route('purchases.payments.get', $purchase->id) }}"><i
-                                                                class="fas fa-wallet fa-fw me-2"></i> View Payments</a></li>
+                                                                class="fas fa-wallet fa-fw me-2"></i> View Payments</a>
+                                                    </li>
                                                     <li><a class="dropdown-item add-payment-btn" href="#"
                                                             data-bs-toggle="modal" data-bs-target="#addPaymentModal"
                                                             data-purchase-id="{{ $purchase->id }}"
@@ -259,7 +262,8 @@
                                                                                 href="#supplierProducts-{{ $purchase->id }}-{{ $supplier->id }}"><i
                                                                                     class="fas fa-angle-right"></i></a><img
                                                                                 src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                                                                class="rounded-circle me-2" width="30"
+                                                                                class="rounded me-2"
+                                                                                style="object-fit: contain" width="30"
                                                                                 height="30"><span>{{ $supplier->company_name }}</span>
                                                                         </div>
                                                                     </td>
