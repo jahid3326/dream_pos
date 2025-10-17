@@ -5,11 +5,13 @@ namespace App\Notifications;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupplierConfirmedOrder extends Notification implements ShouldQueue
+class SupplierConfirmedOrder extends Notification implements ShouldQueue, ShouldBroadcast
 {
     use Queueable;
 
@@ -32,7 +34,7 @@ class SupplierConfirmedOrder extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database', 'mail', 'broadcast'];
     }
 
     /**
@@ -73,5 +75,14 @@ class SupplierConfirmedOrder extends Notification implements ShouldQueue
             'sender_avatar' => $this->supplier->user->profile_image_url,
             'message' => "has confirmed their part of PO #{$this->purchase->purchase_number}",
         ];
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     */
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        // Reuse the same data structure as the database notification.
+        return new BroadcastMessage($this->toDatabase($notifiable));
     }
 }
