@@ -43,7 +43,7 @@ class SalePaymentPolicy
         }
 
         // Rule 2: A user can update a payment if they own the parent sale.
-        return $user->id === $salePayment->sale->order_taken_by;
+        return $user->id == $salePayment->sale->order_taken_by;
     }
 
     /**
@@ -57,7 +57,7 @@ class SalePaymentPolicy
         }
 
         // Rule 2: A user can update a payment if they own the parent sale.
-        return $user->id === $salePayment->sale->order_taken_by;
+        return $user->id == $salePayment->sale->order_taken_by;
     }
 
     /**

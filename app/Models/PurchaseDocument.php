@@ -28,4 +28,9 @@ class PurchaseDocument extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    public function files()
+    {
+        return $this->hasMany(DocumentFile::class);
+    }
 }

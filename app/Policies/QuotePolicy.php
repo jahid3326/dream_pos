@@ -27,7 +27,7 @@ class QuotePolicy
         }
 
         // Rule 2: A user can view a quote if they created it.
-        return $user->id === $quote->created_by;
+        return $user->id == $quote->created_by;
     }
 
     /**
@@ -46,7 +46,7 @@ class QuotePolicy
         }
 
         // Rule 2: A user can view a quote if they created it.
-        return $user->id === $quote->created_by;
+        return $user->id == $quote->created_by;
     }
 
     /**
@@ -60,7 +60,7 @@ class QuotePolicy
         }
 
         // Rule 2: A user can view a quote if they created it.
-        return $user->id === $quote->created_by;
+        return $user->id == $quote->created_by;
     }
 
     /**

@@ -36,8 +36,8 @@
 
         .document-item {
             border-bottom: 1px solid #e9ecef;
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .document-item:last-child {
@@ -48,9 +48,28 @@
             border-color: #adb5bd;
         }
 
-        .file-name-display {
-            font-size: 0.8rem;
-            color: #6c757d;
+        .uploaded-file-list,
+        .pending-file-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 1rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-remove-file {
+            font-size: 1.25rem;
+            line-height: 1;
+            text-decoration: none;
         }
     </style>
 @endpush
@@ -58,7 +77,7 @@
 @section('content')
     <div class="page-wrapper">
         <div class="content">
-            {{-- Header --}}
+            {{-- Header, Breadcrumb, and Status --}}
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="fw-bold mb-0">Order Detail Document</h2>
@@ -78,14 +97,11 @@
                 </div>
             </div>
 
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
+            {{-- Session Messages & Validation Errors --}}
+            @include('layouts._messages')
             @if ($errors->any())
                 <div class="alert alert-danger">
+                    <h6 class="alert-heading">Please fix the following errors:</h6>
                     <ul>
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -94,46 +110,33 @@
                 </div>
             @endif
 
+            {{-- Main Form for Saving Date and Uploading New Files --}}
             <form action="{{ route('documents.save', $purchase) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card">
                     <div class="card-body p-4">
+                        {{-- PO Info and Ready Date --}}
                         <div class="row mb-5">
-                            <div class="col-md-6"><span class="text-muted">Order Number</span>
+                            <div class="col-md-4"><span class="text-muted">PO Number</span>
                                 <p class="fw-bold">#{{ $purchase->purchase_number }}</p>
                             </div>
-                            <div class="col-md-6 text-md-end"><span class="text-muted">Date creation</span>
-                                <p class="fw-bold">{{ $purchase->purchase_date->format('d-m-Y H:i a') }}</p>
+                            <div class="col-md-4"><span class="text-muted">Date creation</span>
+                                <p class="fw-bold">{{ $purchase->purchase_date->format('d-m-Y') }}</p>
                             </div>
-                        </div>
-
-                        <div class="mb-5">
-                            <h5 class="fw-bold">Ready Date <small class="fw-normal text-muted">(for pickup good)</small>
-                            </h5>
-                            <input type="text" name="ready_date" class="form-control" placeholder="DD/MM/YYYY"
-                                style="max-width: 200px;"
-                                value="{{ $supplierPivotData->ready_date ? \Carbon\Carbon::parse($supplierPivotData->ready_date)->format('d/m/Y') : '' }}">
+                            <div class="col-md-4">
+                                <label class="fw-bold">Ready Date <small class="fw-normal text-muted">(for pickup
+                                        good)</small></label>
+                                <input type="text" name="ready_date" class="form-control" placeholder="DD/MM/YYYY"
+                                    value="{{ $supplierPivotData->ready_date ? \Carbon\Carbon::parse($supplierPivotData->ready_date)->format('d/m/Y') : '' }}">
+                            </div>
                         </div>
 
                         <h5 class="fw-bold mb-4">Upload Required Document</h5>
 
                         @php
-                            // Pre-define descriptions for clarity and re-use
                             $descriptions = [
-                                'Proforma Invoice (PI)' =>
-                                    'Proforma with supplier details, PO reference, and incoterms.',
-                                'Packing List' =>
-                                    'Per carton: dimensions, weight, units per carton; totals by SKU and shipment.',
-                                'Certificat of Origin (COO)' => 'Chamber-issued or Form A / EUR.1 where applicable.',
-                                'Fumigation Certificat' =>
-                                    'Only required if wooden packaging is used (pallets, wood frames, crates).',
-                                'MSDS / Safety Data' => 'Required for chemicals, batteries, or hazardous goods.',
-                                'Insurance' =>
-                                    'If covered under supplier\'s policy or requested by buyer / per incoterm.',
-                                'Other Documents' =>
-                                    'Test reports, Product certificates (CE, UL, etc.), Export licenses, Photos, etc.',
+                                /* Your descriptions array */
                             ];
-                            // Filter documents for only the logged-in supplier
                             $supplierDocuments = $purchase->documents->where(
                                 'supplier_id',
                                 Auth::user()->supplierProfile->id,
@@ -143,41 +146,91 @@
                         <div class="row">
                             @foreach ($supplierDocuments as $document)
                                 <div class="col-md-6">
-                                    <div class="document-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1 fw-bold">
-                                                {{ $document->document_name }}
-                                                @if ($document->is_required)
-                                                    <span class="text-danger small">(require)</span>
-                                                @else
-                                                    <span class="text-muted small">(Optional)</span>
-                                                @endif
-                                            </h6>
-                                            <p class="text-muted small mb-0">
-                                                {{ $descriptions[$document->document_name] ?? 'Please upload the relevant file.' }}
-                                            </p>
-
-                                            {{-- Display for existing files --}}
-                                            @if ($document->file_path)
-                                                <div class="mt-2" id="existing-file-{{ $document->id }}">
-                                                    <a href="{{ asset('storage/' . $document->file_path) }}"
-                                                        target="_blank" class="text-primary small">
-                                                        <i class="fas fa-file-pdf fa-fw"></i>
-                                                        {{ basename($document->file_path) }}
-                                                    </a>
-                                                </div>
-                                            @endif
-
-                                            {{-- Display for newly selected file (via JS) --}}
-                                            <div class="mt-2 file-name-display" id="file-name-display-{{ $document->id }}"
-                                                style="display: none;"></div>
+                                    <div class="document-item">
+                                        {{-- Document Title, Description, and Upload Button --}}
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">{{ $document->document_name }} @if ($document->is_required)
+                                                        <span class="text-danger small">(require)</span>
+                                                    @else
+                                                        <span class="text-muted small">(Optional)</span>
+                                                    @endif
+                                                </h6>
+                                                <p class="text-muted small mb-0">
+                                                    {{ $descriptions[$document->document_name] ?? 'Please upload the relevant file(s).' }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <label for="doc-{{ $document->id }}"
+                                                    class="btn btn-sm btn-outline-primary btn-upload">Add File(s)</label>
+                                                <input type="file" id="doc-{{ $document->id }}"
+                                                    name="documents[{{ $document->id }}][]" class="d-none file-input"
+                                                    multiple data-preview-target="#file-preview-{{ $document->id }}">
+                                            </div>
                                         </div>
-                                        <div class="text-end">
-                                            <label for="doc-{{ $document->id }}"
-                                                class="btn btn-outline-primary btn-upload">Upload File</label>
-                                            <input type="file" id="doc-{{ $document->id }}"
-                                                name="documents[{{ $document->id }}]" class="d-none file-input"
-                                                data-display-target="#file-name-display-{{ $document->id }}">
+
+                                        {{-- Container for all file lists (existing and pending) --}}
+                                        <div id="file-preview-{{ $document->id }}">
+                                            {{-- List of Already Uploaded Files --}}
+                                            @if ($document->files->isNotEmpty())
+                                                <ul class="uploaded-file-list">
+                                                    @foreach ($document->files as $file)
+                                                        @php
+                                                            // --- GET EXTENSION DIRECTLY FROM THE FILE NAME ---
+                                                            // pathinfo() is a native PHP function perfect for this.
+                                                            // We use the original_name to get the true extension.
+                                                            $extension = strtolower(
+                                                                pathinfo($file->original_name, PATHINFO_EXTENSION),
+                                                            );
+
+                                                            $iconClass = 'fa-file'; // Default icon
+                                                            $iconColor = 'text-secondary';
+
+                                                            if (in_array($extension, ['pdf'])) {
+                                                                $iconClass = 'fa-file-pdf';
+                                                                $iconColor = 'text-danger';
+                                                            } elseif (
+                                                                in_array($extension, [
+                                                                    'jpg',
+                                                                    'jpeg',
+                                                                    'png',
+                                                                    'gif',
+                                                                    'svg',
+                                                                ])
+                                                            ) {
+                                                                $iconClass = 'fa-file-image';
+                                                                $iconColor = 'text-info';
+                                                            } elseif (in_array($extension, ['doc', 'docx'])) {
+                                                                $iconClass = 'fa-file-word';
+                                                                $iconColor = 'text-primary';
+                                                            } elseif (in_array($extension, ['xls', 'xlsx', 'csv'])) {
+                                                                $iconClass = 'fa-file-excel';
+                                                                $iconColor = 'text-success';
+                                                            } elseif (in_array($extension, ['zip', 'rar'])) {
+                                                                $iconClass = 'fa-file-archive';
+                                                                $iconColor = 'text-warning';
+                                                            }
+                                                        @endphp
+
+                                                        <li class="file-item" id="file-item-{{ $file->id }}">
+                                                            <a href="{{ asset('public/storage/' . $file->file_path) }}"
+                                                                target="_blank" class="text-primary text-truncate"
+                                                                title="{{ $file->original_name }}">
+                                                                <i
+                                                                    class="fas {{ $iconClass }} {{ $iconColor }} fa-fw"></i>
+                                                                {{ $file->original_name }}
+                                                            </a>
+                                                            {{-- This is now a simple button for AJAX --}}
+                                                            <button type="button"
+                                                                class="btn btn-link text-danger btn-remove-file p-0 ms-2"
+                                                                data-url="{{ route('document-files.destroy', $file) }}"
+                                                                data-file-id="{{ $file->id }}">
+                                                                &times;
+                                                            </button>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -186,8 +239,8 @@
                     </div>
                 </div>
 
-                <div class="d-flex gap-2 mt-4 my-4">
-                    <button type="submit" class="btn btn-primary px-4">Save</button>
+                <div class="d-flex gap-2 mt-4 me-2 mb-5">
+                    <button type="submit" class="btn btn-primary px-4">Save Changes</button>
                     <a href="{{ route('orders.details', $purchase) }}" class="btn btn-outline-secondary px-4">Cancel</a>
                 </div>
             </form>
@@ -198,27 +251,71 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            // This script provides instant feedback to the user when they select a file.
-            $('.file-input').on('change', function() {
-                const file = this.files[0];
-                const displayTarget = $(this).data('display-target');
-                const existingFile = $(displayTarget).siblings('[id^="existing-file-"]');
+            // JS for instant file preview of newly selected files
+            $('.file-input').on('change', function(event) {
+                const files = event.target.files;
+                const previewTargetId = $(this).data('preview-target');
+                const previewContainer = $(previewTargetId);
 
-                if (file) {
-                    // A new file was selected
-                    $(displayTarget).html('<i class="fas fa-file-alt fa-fw"></i> ' + file.name).show();
-                    // Hide the old file link if it exists
-                    if (existingFile.length) {
-                        existingFile.hide();
+                // Remove any previous "pending" file lists for this input
+                previewContainer.find('.pending-file-list').remove();
+
+                if (files.length > 0) {
+                    let pendingListHtml = '<ul class="pending-file-list">';
+                    for (let i = 0; i < files.length; i++) {
+                        pendingListHtml += `
+                    <li class="file-item" style="background-color: #e9ecef;">
+                        <span class="text-dark text-truncate">
+                            <i class="fas fa-file-alt fa-fw"></i> ${files[i].name} (pending save)
+                        </span>
+                    </li>`;
                     }
-                } else {
-                    // No file selected (e.g., user clicked cancel)
-                    $(displayTarget).hide();
-                    // Show the old file link again if it exists
-                    if (existingFile.length) {
-                        existingFile.show();
-                    }
+                    pendingListHtml += '</ul>';
+                    previewContainer.append(pendingListHtml);
                 }
+            });
+
+            // Confirmation dialog and AJAX for the remove file button
+            // Using event delegation to handle dynamically added elements if needed in the future
+            $(document).on('click', '.btn-remove-file', function(event) {
+                event.preventDefault();
+                const button = $(this);
+                const url = button.data('url');
+                const fileId = button.data('file-id');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Do you want to permanently remove this file?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, remove it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: url,
+                            type: 'POST', // Use POST to spoof DELETE
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                _method: 'DELETE'
+                            },
+                            success: function(response) {
+                                $(`#file-item-${fileId}`).fadeOut(300, function() {
+                                    $(this).remove();
+                                });
+                                // Optionally show a small success toast instead of a big alert
+                                // toastr.success('File removed.');
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error!',
+                                    'Could not remove the file. Please try again.',
+                                    'error');
+                            }
+                        });
+                    }
+                });
             });
         });
     </script>

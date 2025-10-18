@@ -28,7 +28,7 @@ class SalePolicy
         }
 
         // Rule 2: A user can view a sale if they are the one who took the order.
-        return $user->id === $sale->order_taken_by;
+        return $user->id == $sale->order_taken_by;
     }
 
     /**
@@ -51,7 +51,7 @@ class SalePolicy
         }
 
         // Rule 2: A user can view a sale if they are the one who took the order.
-        return $user->id === $sale->order_taken_by;
+        return $user->id == $sale->order_taken_by;
     }
 
     /**
@@ -66,7 +66,7 @@ class SalePolicy
         }
 
         // Rule 2: A user can view a sale if they are the one who took the order.
-        return $user->id === $sale->order_taken_by;
+        return $user->id == $sale->order_taken_by;
     }
 
     /**

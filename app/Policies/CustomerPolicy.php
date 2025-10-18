@@ -27,7 +27,7 @@ class CustomerPolicy
         }
 
         // Rule 2: A user can view a customer if they created it.
-        return $user->id === $customer->created_by;
+        return $user->id == $customer->created_by;
     }
 
     /**
@@ -49,7 +49,7 @@ class CustomerPolicy
         }
 
         // Rule 2: A user can delete a customer if they created it.
-        return $user->id === $customer->created_by;
+        return $user->id == $customer->created_by;
     }
 
     /**
@@ -63,7 +63,7 @@ class CustomerPolicy
         }
 
         // Rule 2: A user can delete a customer if they created it.
-        return $user->id === $customer->created_by;
+        return $user->id == $customer->created_by;
     }
 
     /**

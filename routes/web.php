@@ -18,6 +18,7 @@ use App\Http\Controllers\PackController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SaleController;
@@ -260,6 +261,9 @@ Route::middleware(['auth'])->group(function () {
 
             // Full resource routes for managing purchases
             Route::resource('purchases', PurchaseController::class);
+
+            Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+            Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         });
 
         Route::get('/orders/{purchase}/details', [OrderController::class, 'details'])->name('orders.details');
@@ -273,7 +277,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/orders/{purchase}/propose-modification', [OrderActionController::class, 'proposeModification'])->name('orders.proposeModification');
 
         Route::get('/orders/{purchase}/documents', [DocumentController::class, 'showUploadForm'])->name('documents.showUploadForm');
+
         Route::post('/orders/{purchase}/documents/save', [DocumentController::class, 'saveDocuments'])->name('documents.save');
+
+        // --- CHANGE THIS ROUTE ---
+        // Instead of deleting a document, we delete a specific file from a document.
+        Route::delete('/document-files/{file}', [DocumentController::class, 'destroyFile'])->name('document-files.destroy');
 
         // You can keep the 'index' route from the resource if you want.
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

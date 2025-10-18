@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Models\DocumentFile;
+use Illuminate\Support\Facades\Log;
 
 class DocumentController extends Controller
 {
@@ -31,7 +33,7 @@ class DocumentController extends Controller
         $supplier = $this->authorizeSupplier($purchase);
 
         // Eager load documents and find the specific pivot record for this supplier
-        $purchase->load('documents');
+        $purchase->load('documents.files');
         $supplierPivotData = $purchase->suppliers->find($supplier->id)->pivot;
 
         return view('supplier.orders.document-upload', compact('purchase', 'supplierPivotData'));
@@ -42,82 +44,97 @@ class DocumentController extends Controller
      */
     public function saveDocuments(Request $request, Purchase $purchase)
     {
-        // 1. Authorize that the logged-in user is a valid supplier for this purchase.
-        // This helper method also conveniently returns the supplier model.
+
+        // dd($request->all());
+
         $supplier = $this->authorizeSupplier($purchase);
 
-        // 2. Validate the incoming request data.
         $request->validate([
             'ready_date' => 'nullable|date_format:d/m/Y',
             'documents' => 'nullable|array',
-            'documents.*' => 'required|file|mimes:pdf,jpg,png,jpeg|max:10240', // Max 10MB
+            'documents.*.*' => 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx,xls,xlsx',
         ]);
-
-        // --- TEMPORARY DEBUGGING ---
-        // \Log::info('--- Document Upload Process Started ---');
-        // \Log::info('Purchase ID: ' . $purchase->id);
-        // \Log::info('Supplier ID: ' . $supplier->id);
-        // \Log::info('Request has files for documents: ' . ($request->hasFile('documents') ? 'Yes' : 'No'));
-        // \Log::info('Submitted Document Data:', $request->file('documents', []));
-        // --- END DEBUGGING ---
 
         try {
             DB::transaction(function () use ($request, $purchase, $supplier) {
-                // 3. Update the "Ready Date" if it was submitted.
-
-
-
+                // Update Ready Date
                 if ($request->filled('ready_date')) {
-                    $purchase->suppliers()->updateExistingPivot($supplier->id, [
-                        'ready_date' => Carbon::createFromFormat('d/m/Y', $request->ready_date)->format('Y-m-d')
-                    ]);
+                    $purchase->suppliers()->updateExistingPivot($supplier->id, ['ready_date' => Carbon::createFromFormat('d/m/Y', $request->ready_date)->format('Y-m-d')]);
+                } else {
+                    $purchase->suppliers()->updateExistingPivot($supplier->id, ['ready_date' => null]);
                 }
 
-                // 4. Process the uploaded files.
-                if ($request->hasFile('documents')) {
-                    foreach ($request->file('documents') as $documentId => $uploadedFile) {
-
-                        // --- MORE DEBUGGING ---
-                        // \Log::info("Processing Document ID: {$documentId}");
-
-                        // --- THIS IS THE UPDATED, MORE SECURE QUERY ---
-                        // Find the document record that matches the ID, the purchase ID,
-                        // AND the ID of the currently authenticated supplier.
+                // Handle file uploads
+                if ($request->has('documents') && is_array($request->file('documents'))) {
+                    // echo 'ok';
+                    // exit;
+                    foreach ($request->file('documents') as $documentId => $uploadedFiles) {
                         $document = PurchaseDocument::where('id', $documentId)
                             ->where('purchase_id', $purchase->id)
-                            ->where('supplier_id', $supplier->id) // <-- CRITICAL SECURITY CHECK
+                            ->where('supplier_id', $supplier->id)
                             ->first();
 
                         if ($document) {
+                            foreach ($uploadedFiles as $file) {
+                                // Ensure the item is actually an uploaded file before processing
+                                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                                    $filePath = $file->store('purchase_documents', 'public');
+                                    $originalName = $file->getClientOriginalName();
 
-                            // \Log::info("SUCCESS: Document #{$documentId} found. Proceeding with upload.");
-                            // a. Delete the old file if it exists.
-                            if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
-                                Storage::disk('public')->delete($document->file_path);
+                                    $document->files()->create([
+                                        'file_path' => $filePath,
+                                        'original_name' => $originalName,
+                                    ]);
+                                }
                             }
-
-                            // b. Store the new file.
-                            $filePath = $uploadedFile->store('purchase_documents', 'public');
-
-                            // c. Update the document record.
-                            $document->update([
-                                'file_path' => $filePath,
-                                'status' => 'uploaded',
-                            ]);
-                        } else {
-                            // THIS IS THE MOST LIKELY FAILURE POINT
-                            // \Log::error("FAILURE: Document #{$documentId} NOT FOUND for Purchase #{$purchase->id} and Supplier #{$supplier->id}. Skipping file upload.");
+                            // Update the parent document status if it has files now
+                            if ($document->files()->count() > 0 && $document->status !== 'approved') {
+                                $document->update(['status' => 'uploaded']);
+                            }
                         }
                     }
                 }
             });
         } catch (\Exception $e) {
-            \Log::error('Supplier document form save failed: ' . $e->getMessage());
+            Log::error('Supplier document save failed: ' . $e->getMessage());
             return back()->with('error', 'An error occurred while saving. Please try again.');
         }
 
-        // 5. Redirect back to the order details page with a success message.
-        return redirect()->route('orders.details', $purchase)->with('success', 'Documents and information have been saved successfully!');
+        return redirect()->route('documents.showUploadForm', $purchase)->with('success', 'Changes saved successfully!');
+    }
+
+    /**
+     * Remove a specific uploaded file from a document.
+     */
+    public function destroyFile(DocumentFile $file)
+    {
+        // Authorize that the file's parent document belongs to the logged-in supplier
+        $this->authorizeSupplier($file->purchaseDocument->purchase);
+
+        try {
+            DB::transaction(function () use ($file) {
+                $purchaseDocument = $file->purchaseDocument;
+
+                // 1. Delete the physical file from storage
+                if (Storage::disk('public')->exists($file->file_path)) {
+                    Storage::disk('public')->delete($file->file_path);
+                }
+
+                // 2. Delete the database record for the file
+                $file->delete();
+
+                // 3. Check if the parent document has any other files left.
+                // If not, reset its status back to 'pending'.
+                if ($purchaseDocument->files()->count() === 0) {
+                    $purchaseDocument->update(['status' => 'pending']);
+                }
+            });
+        } catch (\Exception $e) {
+            Log::error('Supplier document file deletion failed: ' . $e->getMessage());
+            return back()->with('error', 'Could not remove the file. Please try again.');
+        }
+
+        return back()->with('success', 'File removed successfully.');
     }
 
     public function upload(Request $request, PurchaseDocument $document)
@@ -133,7 +150,7 @@ class DocumentController extends Controller
 
         // 2. Validate the uploaded file.
         $request->validate([
-            'document_file' => 'required|file|mimes:pdf,jpg,png,jpeg|max:5120', // Max 5MB
+            'document_file' => 'required|file|mimes:pdf,jpg,png,jpeg', // Max 5MB
         ]);
 
         // 3. Store the file.

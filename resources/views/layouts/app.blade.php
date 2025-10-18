@@ -566,12 +566,8 @@
                                     <p>{{ Auth::user()->role->name }}</p>
                                 </div>
                             </div>
-                            <a class="dropdown-item" href="profile.html"><i
-                                    class="ti ti-user-circle me-2"></i>MyProfile</a>
-                            <a class="dropdown-item" href="sales-report.html"><i
-                                    class="ti ti-file-text me-2"></i>Reports</a>
-                            <a class="dropdown-item" href="general-settings.html"><i
-                                    class="ti ti-settings-2 me-2"></i>Settings</a>
+                            <a class="dropdown-item" href="{{ route('profile.edit') }}"><i
+                                    class="ti ti-user-circle me-2"></i>My Profile</a>
                             <hr class="my-2">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
