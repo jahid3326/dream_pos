@@ -221,30 +221,56 @@
                                 <a href="{{ route('documents.showUploadForm', $purchase) }}"
                                     class="btn btn-sm btn-primary">Go to Full Document Page</a>
                             </div>
-                            <p class="text-muted">Below is a summary of your documents. For uploading and removing files,
-                                please use the full document management page.</p>
+
+                            @if ($hasMissingInfo)
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle fa-fw"></i>
+                                    <strong>Action Required:</strong> You have missing required documents. Please use the
+                                    full document management page to upload them.
+                                </div>
+                            @endif
+
                             <div class="row">
-                                @foreach ($file_list as $document)
-                                    <div class="col-lg-3 col-md-4 col-sm-6 text-center mb-4">
-                                        <h6 class="fw-bold">{{ $document->document_name }}</h6>
-                                        @if ($document->files->isNotEmpty())
-                                            {{-- We'll just link to the first file for simplicity in this summary view --}}
-                                            {{-- <a href="{{ asset('public/storage/' . $document->files->first()->file_path) }}"
-                                                target="_blank" class="text-decoration-none d-block"> --}}
-                                            <i class="far fa-file-pdf text-success document-icon"></i>
-                                            <span class="d-block text-success small mt-1">Uploaded
-                                                ({{ $document->files->count() }} file/s)</span>
-                                            {{-- </a> --}}
+                                @forelse ($file_list as $doc)
+                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 text-center mb-3">
+
+                                        @if ($doc->files->isNotEmpty())
+                                            {{-- File(s) exist: Create a modal trigger with data attributes --}}
+                                            <a href="#" class="text-decoration-none document-modal-trigger"
+                                                data-bs-toggle="modal" data-bs-target="#documentFilesModal"
+                                                data-document-name="{{ $doc->document_name }}"
+                                                data-files-json="{{ json_encode($doc->files->map(fn($file) => ['url' => asset('public/storage/' . $file->file_path), 'name' => $file->original_name])) }}">
+
+                                                <i class="fas fa-file-alt text-success position-relative"
+                                                    style="font-size: 3rem;">
+                                                    <span
+                                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success"
+                                                        style="font-size: 1rem;">
+                                                        {{ $doc->files->count() }}
+                                                    </span>
+                                                </i>
+                                                <p class="mb-0 mt-1 text-dark">
+                                                    {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
+                                            </a>
                                         @else
-                                            <i class="fas fa-times-circle text-danger document-icon"></i>
-                                            @if ($document->is_required)
-                                                <span class="d-block text-danger small mt-1">Required - Missing</span>
-                                            @else
-                                                <span class="d-block text-muted small mt-1">Optional - Not Provided</span>
-                                            @endif
+                                            {{-- No files exist --}}
+                                            <i class="fas fa-file-alt {{ $doc->is_required ? 'text-danger' : 'text-muted' }} position-relative"
+                                                style="font-size: 3rem;">
+                                                @if ($doc->is_required)
+                                                    <span
+                                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                                        style="font-size: 0.6rem;">!</span>
+                                                @endif
+                                            </i>
+                                            <p class="mb-0 mt-1 {{ $doc->is_required ? 'text-danger' : 'text-muted' }}">
+                                                {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
                                         @endif
                                     </div>
-                                @endforeach
+                                @empty
+                                    <div class="col-12">
+                                        <p class="text-muted">No documents are tracked for this order.</p>
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
 
@@ -367,4 +393,99 @@ $totalPaidToSupplier = $supplierPayments->sum('amount');
                 </div>
             </div>
         </div>
-    @endsection
+    </div>
+    <!-- Document Files Modal -->
+    <div class="modal fade" id="documentFilesModal" tabindex="-1" aria-labelledby="documentFilesModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentFilesModalLabel">Uploaded Files</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group" id="document-file-list">
+                        {{-- JavaScript will populate this list --}}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // --- SCRIPT FOR DOCUMENT FILES MODAL (WITH DYNAMIC ICONS) ---
+
+            function getFileIcon(filename) {
+                const extension = filename.split('.').pop().toLowerCase();
+                let iconClass = 'fa-file',
+                    iconColor = 'text-secondary';
+                const types = {
+                    'text-danger': ['pdf'],
+                    'text-info': ['jpg', 'jpeg', 'png', 'gif', 'svg'],
+                    'text-primary': ['doc', 'docx'],
+                    'text-success': ['xls', 'xlsx', 'csv'],
+                    'text-warning': ['zip', 'rar']
+                };
+                const icons = {
+                    'pdf': 'fa-file-pdf',
+                    'jpg': 'fa-file-image',
+                    'jpeg': 'fa-file-image',
+                    'png': 'fa-file-image',
+                    'gif': 'fa-file-image',
+                    'svg': 'fa-file-image',
+                    'doc': 'fa-file-word',
+                    'docx': 'fa-file-word',
+                    'xls': 'fa-file-excel',
+                    'xlsx': 'fa-file-excel',
+                    'csv': 'fa-file-excel',
+                    'zip': 'fa-file-archive',
+                    'rar': 'fa-file-archive'
+                };
+                if (icons[extension]) {
+                    iconClass = icons[extension];
+                    for (const color in types) {
+                        if (types[color].includes(extension)) {
+                            iconColor = color;
+                            break;
+                        }
+                    }
+                }
+                return `fas ${iconClass} ${iconColor} fa-fw me-2`;
+            }
+
+            $('.document-modal-trigger').on('click', function(event) {
+                event.preventDefault();
+                const button = $(this);
+                const documentName = button.data('document-name');
+                const files = button.data('files-json');
+
+                const modal = $('#documentFilesModal');
+                const fileListContainer = modal.find('#document-file-list');
+
+                modal.find('#documentFilesModalLabel').text('Files for ' + documentName);
+                fileListContainer.empty();
+
+                if (files && files.length > 0) {
+                    files.forEach(function(file) {
+                        const iconClasses = getFileIcon(file.name);
+                        const listItemHtml = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-truncate" title="${file.name}">
+                            <i class="${iconClasses}"></i>${file.name}
+                        </span>
+                        <a href="${file.url}" target="_blank" class="btn btn-sm btn-outline-primary">Preview</a>
+                    </li>`;
+                        fileListContainer.append(listItemHtml);
+                    });
+                } else {
+                    fileListContainer.html('<li class="list-group-item text-muted">No files found.</li>');
+                }
+            });
+        });
+    </script>
+@endpush

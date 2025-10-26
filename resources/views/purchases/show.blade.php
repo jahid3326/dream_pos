@@ -155,7 +155,7 @@
                                     {{-- Supplier Header --}}
                                     <h5 class="d-flex align-items-center mb-3">
                                         <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                            class="rounded-circle me-2" width="30" height="30">
+                                            class="rounded me-2" style="object-fit: contain" width="30" height="30">
                                         {{ $supplier->company_name }}
                                     </h5>
 
