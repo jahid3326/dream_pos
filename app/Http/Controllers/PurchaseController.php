@@ -289,7 +289,7 @@ class PurchaseController extends Controller
             'suppliers.user', // All suppliers and their user profiles
             'items.product.category', // All items and their product/category details
             'items.variation', // The specific variation, if applicable
-            'documents', // All tracked documents for this purchase
+            'documents.files', // All tracked documents for this purchase
             'payments.supplier.user' // All payments made for this purchase
         ]);
 
@@ -305,6 +305,24 @@ class PurchaseController extends Controller
         }
 
         // 3. Group the purchase items by their supplier for easy display in the view.
+
+        // --- NEW LOGIC: PREPARE DATA FOR EACH SUPPLIER ---
+        // We will calculate this here and attach it to the supplier model for clean access in the view.
+        foreach ($purchase->suppliers as $supplier) {
+            // a. Get all documents for this specific supplier
+            $supplierDocuments = $purchase->documents->where('supplier_id', $supplier->id);
+
+            // b. Check if this supplier has any missing REQUIRED documents
+            $supplier->has_missing_files = $supplierDocuments
+                ->where('is_required', true)
+                ->first(fn($doc) => $doc->files->isEmpty()) !== null;
+
+            // c. Attach the filtered document list to the supplier model
+            $supplier->document_list = $supplierDocuments;
+        }
+        // --- END OF NEW LOGIC ---
+
+        // 4. Group all purchase items by their supplier_id for the "Items & Suppliers" tab.
         $itemsBySupplier = $purchase->items->groupBy('supplier_id');
 
         // 4. Pass the fully-loaded purchase object and the grouped items to the view.

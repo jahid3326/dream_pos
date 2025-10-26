@@ -52,7 +52,7 @@ class DocumentController extends Controller
         $request->validate([
             'ready_date' => 'nullable|date_format:d/m/Y',
             'documents' => 'nullable|array',
-            'documents.*.*' => 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx,xls,xlsx',
+            'documents.*.*' => 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx,xls,xlsx,gif,svg,csv,zip,rar',
         ]);
 
         try {
@@ -150,7 +150,7 @@ class DocumentController extends Controller
 
         // 2. Validate the uploaded file.
         $request->validate([
-            'document_file' => 'required|file|mimes:pdf,jpg,png,jpeg', // Max 5MB
+            'document_file' => 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx,xls,xlsx,gif,svg,csv,zip,rar', // Max 5MB
         ]);
 
         // 3. Store the file.

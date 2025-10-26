@@ -144,76 +144,85 @@
                         {{-- Documents Panel --}}
                         <div class="tab-pane fade" id="documents-panel" role="tabpanel">
                             @if (session('success'))
-                                <div class="alert alert-success">{{ session('success') }}</div>
+                                <div class="alert alert-success" role="alert">{{ session('success') }}</div>
                             @endif
                             @if (session('error'))
-                                <div class="alert alert-danger">{{ session('error') }}</div>
+                                <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
                             @endif
 
-                            {{-- Loop through each supplier involved in this purchase --}}
                             @foreach ($purchase->suppliers as $supplier)
-                                @php
-                                    // For each supplier, get their specific set of documents
-                                    $supplierDocuments = $purchase->documents->where('supplier_id', $supplier->id);
-                                    // Check if there are any required documents that are missing a file
-                                    $hasMissingRequired = $supplierDocuments
-                                        ->where('is_required', true)
-                                        ->whereNull('file_path')
-                                        ->isNotEmpty();
-                                @endphp
-
-                                <div class="mb-4 border-bottom pb-4">
+                                <div class="mb-5 border-bottom pb-4">
                                     {{-- Supplier Header --}}
                                     <h5 class="d-flex align-items-center mb-3">
                                         <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                            class="rounded me-2" style="object-fit: contain" width="30" height="30">
+                                            class="rounded-circle me-2" width="30" height="30">
                                         {{ $supplier->company_name }}
                                     </h5>
 
-                                    {{-- Document Grid --}}
+                                    {{-- Document Grid for this supplier --}}
                                     <div class="row">
-                                        @forelse ($supplierDocuments as $doc)
-                                            {{-- Only display required docs or optional ones that have been uploaded --}}
-                                            @if ($doc->is_required || $doc->file_path)
-                                                <div class="col-lg-2 col-md-3 col-sm-4 text-center mb-3">
-                                                    @if ($doc->file_path)
-                                                        <a href="{{ asset('public/storage/' . $doc->file_path) }}"
-                                                            target="_blank" class="text-decoration-none">
-                                                            <i class="far fa-file-pdf text-success"
-                                                                style="font-size: 3rem;"></i>
-                                                            <p class="mb-0 mt-1 text-dark">
-                                                                {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
-                                                        </a>
-                                                    @else
-                                                        {{-- Visually indicate a missing required document --}}
-                                                        <i class="far fa-file-pdf text-danger position-relative"
+                                        @forelse ($supplier->document_list as $doc)
+                                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 text-center mb-3">
+
+                                                @if ($doc->files->isNotEmpty())
+                                                    {{-- --- THIS IS THE NEW BUTTON/BADGE --- --}}
+                                                    <a href="#" class="text-decoration-none document-modal-trigger"
+                                                        data-bs-toggle="modal" data-bs-target="#documentFilesModal"
+                                                        data-document-name="{{ $doc->document_name }}"
+                                                        data-files-json="{{ json_encode($doc->files->map(fn($file) => ['url' => asset('public/storage/' . $file->file_path), 'name' => $file->original_name])) }}">
+
+                                                        <i class="fas fa-file-alt text-success position-relative"
                                                             style="font-size: 3rem;">
+                                                            {{-- Show file count if more than 1 --}}
+                                                            @if ($doc->files->count() > 0)
+                                                                <span
+                                                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success"
+                                                                    style="font-size: 1rem;">
+                                                                    {{ $doc->files->count() }}
+                                                                </span>
+                                                            @endif
+                                                        </i>
+                                                        <p class="mb-0 mt-1 text-dark">
+                                                            {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
+                                                    </a>
+                                                @else
+                                                    {{-- Missing Document Icon --}}
+                                                    <i class="fas fa-file-alt {{ $doc->is_required ? 'text-danger' : 'text-muted' }} position-relative"
+                                                        style="font-size: 3rem;">
+                                                        @if ($doc->is_required)
                                                             <span
                                                                 class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                                                 style="font-size: 0.6rem;">!</span>
-                                                        </i>
-                                                        <p class="mb-0 mt-1 text-danger">
-                                                            {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
-                                                    @endif
-                                                </div>
-                                            @endif
+                                                        @endif
+                                                    </i>
+                                                    <p
+                                                        class="mb-0 mt-1 {{ $doc->is_required ? 'text-danger' : 'text-muted' }}">
+                                                        {{ pathinfo($doc->document_name, PATHINFO_FILENAME) }}</p>
+                                                @endif
+                                            </div>
                                         @empty
-                                            <p class="text-muted">No documents are tracked for this supplier.</p>
+                                            <div class="col-12">
+                                                <p class="text-muted">No documents are tracked for this supplier.</p>
+                                            </div>
                                         @endforelse
                                     </div>
 
-                                    {{-- Reminder Button (only shows if required files are missing) --}}
-                                    @if ($hasMissingRequired)
+                                    {{-- Reminder Button (only shows if this supplier has missing required files) --}}
+                                    @if ($supplier->has_missing_files)
                                         <div class="mt-3">
-                                            <p class="text-danger mb-2"><i class="fas fa-exclamation-triangle fa-fw"></i>
-                                                Document and information Missing</p>
-                                            <form
-                                                action="{{ route('purchases.sendDocumentReminder', ['purchase' => $purchase, 'supplier' => $supplier]) }}"
-                                                method="POST">
-                                                @csrf
-                                                <button type="submit" class="btn btn-primary">Send Reminder to
-                                                    supplier</button>
-                                            </form>
+                                            <div
+                                                class="alert alert-warning d-flex justify-content-between align-items-center p-2">
+                                                <span class="small"><i
+                                                        class="fas fa-exclamation-triangle fa-fw me-1"></i> Document and
+                                                    information Missing</span>
+                                                <form
+                                                    action="{{ route('purchases.sendDocumentReminder', ['purchase' => $purchase, 'supplier' => $supplier]) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-primary btn-sm">Send Reminder to
+                                                        supplier</button>
+                                                </form>
+                                            </div>
                                         </div>
                                     @endif
                                 </div>
@@ -286,6 +295,27 @@
             </div>
         </div>
     </div>
+    <!-- Document Files Modal -->
+    <div class="modal fade" id="documentFilesModal" tabindex="-1" aria-labelledby="documentFilesModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentFilesModalLabel">Uploaded Files for [Document Name]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- The list of files will be injected here by JavaScript --}}
+                    <ul class="list-group" id="document-file-list">
+                        {{-- JS will populate this --}}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('scripts')
     <script>
@@ -299,6 +329,92 @@
                     printWindow.focus();
                 } else {
                     alert('Please allow pop-ups for this site to print the purchase order.');
+                }
+            });
+
+            // Helper function to get the correct icon class based on a filename
+            function getFileIcon(filename) {
+                // Get the extension and convert to lower case
+                const extension = filename.split('.').pop().toLowerCase();
+
+                let iconClass = 'fa-file'; // Default icon
+                let iconColor = 'text-secondary';
+
+                const fileTypes = {
+                    'text-danger': ['pdf'],
+                    'text-info': ['jpg', 'jpeg', 'png', 'gif', 'svg'],
+                    'text-primary': ['doc', 'docx'],
+                    'text-success': ['xls', 'xlsx', 'csv'],
+                    'text-warning': ['zip', 'rar']
+                };
+
+                const iconMap = {
+                    'pdf': 'fa-file-pdf',
+                    'jpg': 'fa-file-image',
+                    'jpeg': 'fa-file-image',
+                    'png': 'fa-file-image',
+                    'gif': 'fa-file-image',
+                    'svg': 'fa-file-image',
+                    'doc': 'fa-file-word',
+                    'docx': 'fa-file-word',
+                    'xls': 'fa-file-excel',
+                    'xlsx': 'fa-file-excel',
+                    'csv': 'fa-file-excel',
+                    'zip': 'fa-file-archive',
+                    'rar': 'fa-file-archive',
+                };
+
+                if (iconMap[extension]) {
+                    iconClass = iconMap[extension];
+                    for (const color in fileTypes) {
+                        if (fileTypes[color].includes(extension)) {
+                            iconColor = color;
+                            break;
+                        }
+                    }
+                }
+
+                return `fas ${iconClass} ${iconColor} fa-fw me-2`;
+            }
+
+            // Listen for clicks on any element with the 'document-modal-trigger' class
+            $('.document-modal-trigger').on('click', function(event) {
+                event.preventDefault();
+
+                const button = $(this);
+                const documentName = button.data('document-name');
+                const files = button.data('files-json');
+
+                const modal = $('#documentFilesModal');
+                const fileListContainer = modal.find('#document-file-list');
+
+                // 1. Update the modal's title
+                modal.find('#documentFilesModalLabel').text('Uploaded Files for ' + documentName);
+
+                // 2. Clear any old file list items
+                fileListContainer.empty();
+
+                // 3. Build and append the new file list
+                if (files && files.length > 0) {
+                    files.forEach(function(file) {
+                        // --- THIS IS THE KEY CHANGE ---
+                        // Call our helper function to get the dynamic icon class string
+                        const iconClasses = getFileIcon(file.name);
+
+                        const listItemHtml = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-truncate" title="${file.name}">
+                            <i class="${iconClasses}"></i>
+                            ${file.name}
+                        </span>
+                        <a href="${file.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            Preview
+                        </a>
+                    </li>`;
+                        fileListContainer.append(listItemHtml);
+                    });
+                } else {
+                    fileListContainer.html('<li class="list-group-item text-muted">No files found.</li>');
                 }
             });
         });
