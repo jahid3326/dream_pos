@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PurchaseItem;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\SupplierProposedModification;
 
 class OrderActionController extends Controller
 {
@@ -76,8 +77,20 @@ class OrderActionController extends Controller
                 ]);
             });
 
-            // Here, you would fire a notification to the admin to review the proposal.
-            // e.g., $admin->notify(new SupplierProposedModification($purchase, $supplier));
+            // --- THIS IS THE NEW NOTIFICATION LOGIC ---
+            // 5. Find and notify all Super Admin users.
+            $superAdmins = User::whereHas('role', function ($query) {
+                $query->where('name', 'Super Admin');
+            })->get();
+
+            if ($superAdmins->isNotEmpty()) {
+                foreach ($superAdmins as $admin) {
+                    $admin->notify(new SupplierProposedModification($purchase, $supplier));
+                }
+            } else {
+                \Log::warning("Could not send SupplierProposedModification notification: No Super Admin user found.");
+            }
+            // --- END OF NOTIFICATION LOGIC ---
 
         } catch (\Exception $e) {
             \Log::error('Modification proposal failed: ' . $e->getMessage());

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Order Summary - ' . $order->purchase_number)
+@section('title', 'Order Summary - ' . $purchase->purchase_number)
 
 @push('styles')
     <style>
@@ -46,7 +46,6 @@
         }
 
         .status-complet,
-        .status-full-payed,
         .status-paid {
             background-color: #e8f5e9;
             color: #2e7d32;
@@ -54,11 +53,16 @@
         }
 
         .status-waiting,
-        .status-need-review-supplier,
-        .status-modification-requested {
+        .status-pending {
             background-color: #f8f9fa;
             color: #6c757d;
             border-color: #dee2e6;
+        }
+
+        .status-unpaid {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
         }
 
         .alert-warning-custom {
@@ -91,17 +95,16 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     @php
-                        // Get the pivot data for the logged-in supplier
-                        $supplierPivot = $order->suppliers->firstWhere('id', Auth::user()->supplierProfile->id)->pivot;
+                        $supplierPivot = $purchase->suppliers->firstWhere('id', Auth::user()->supplierProfile->id)
+                            ->pivot;
                     @endphp
-                    <h4 class="fw-bold mb-0">#{{ $order->purchase_number }}</h4>
+                    <h4 class="fw-bold mb-0">#{{ $purchase->purchase_number }}</h4>
                     <div class="d-flex align-items-center">
                         <span
                             class="status-badge status-{{ Str::slug($supplierPivot->status_production) }} me-3">{{ ucfirst($supplierPivot->status_production) }}</span>
                         <div class="progress" style="width: 200px; height: 8px;">
                             <div class="progress-bar {{ $progress === 100 ? 'bg-success' : '' }}" role="progressbar"
-                                style="width: {{ $progress }}%;" aria-valuenow="{{ $progress }}" aria-valuemin="0"
-                                aria-valuemax="100"></div>
+                                style="width: {{ $progress }}%;" aria-valuenow="{{ $progress }}"></div>
                         </div>
                     </div>
                 </div>
@@ -109,6 +112,8 @@
                     <a href="{{ route('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
                 </div>
             </div>
+
+            @include('layouts._messages')
 
             {{-- Main Summary Box --}}
             <div class="card">
@@ -119,28 +124,46 @@
                             <div class="row">
                                 <div class="col-md-4 col-6 mb-4">
                                     <div class="summary-label">Order Date:</div>
-                                    <div class="summary-value">{{ $order->purchase_date->format('d-m-Y H:i a') }}</div>
+                                    <div class="summary-value">{{ $purchase->purchase_date->format('d-m-Y') }}</div>
                                 </div>
                                 <div class="col-md-4 col-6 mb-4">
-                                    <div class="summary-label">Order Number:</div>
-                                    <div class="summary-value">#{{ $order->purchase_number }}</div>
+                                    <div class="summary-label">PO Number:</div>
+                                    <div class="summary-value">#{{ $purchase->purchase_number }}</div>
                                 </div>
                                 <div class="col-md-4 col-6 mb-4">
-                                    <div class="summary-label">Payment Status:</div>
-                                    <div class="summary-value"><span
+                                    <div class="summary-label">Your Payment Status:</div>
+                                    <div class="summary-value">
+                                        <span
                                             class="status-badge status-{{ Str::slug($paymentStatus) }}">{{ $paymentStatus }}</span>
                                     </div>
+                                </div>
+                                <div class="col-md-4 col-6 mb-4">
+                                    <div class="summary-label">Status Review:</div>
+                                    <div class="summary-value">
+                                        <span
+                                            class="status-badge status-{{ Str::slug($supplierPivot->status_review) }}">{{ ucfirst(str_replace('-', ' ', $supplierPivot->status_review)) }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-6 mb-4">
+                                    <div class="summary-label">Status Production:</div>
+                                    <div class="summary-value">
+                                        <span
+                                            class="status-badge status-{{ Str::slug($supplierPivot->status_production) }}">{{ ucfirst($supplierPivot->status_production) }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-6 mb-4">
+                                    {{-- This is an empty spacer to align the grid nicely --}}
                                 </div>
                                 <div class="col-md-4 col-6 mb-4">
                                     <div class="summary-label">Your Total Amount:</div>
                                     <div class="summary-value">${{ number_format($supplierTotal, 2) }}</div>
                                 </div>
                                 <div class="col-md-4 col-6 mb-4">
-                                    <div class="summary-label">Total Paid (Overall):</div>
+                                    <div class="summary-label">Amount Paid to You:</div>
                                     <div class="summary-value text-success">${{ number_format($paidAmount, 2) }}</div>
                                 </div>
                                 <div class="col-md-4 col-6 mb-4">
-                                    <div class="summary-label">Total Due (Overall):</div>
+                                    <div class="summary-label">Amount Due to You:</div>
                                     <div class="summary-value text-danger">${{ number_format($dueAmount, 2) }}</div>
                                 </div>
                             </div>
@@ -151,15 +174,15 @@
                                 <div class="alert alert-warning-custom d-flex align-items-start" role="alert">
                                     <i class="fas fa-exclamation-triangle fa-fw me-3 mt-1" style="color: #fbc02d;"></i>
                                     <div>
-                                        <h6 class="alert-heading">Warning Alert</h6>
-                                        <p class="mb-1">Please complete the information missing.</p>
+                                        <h6 class="alert-heading">Action Required</h6>
+                                        <p class="mb-1">You have missing required documents.</p>
                                         <a href="#" class="btn-link text-decoration-none"
-                                            data-bs-dismiss="alert">cancel</a>
+                                            data-bs-dismiss="alert">dismiss</a>
                                         <a href="#documents-panel" class="btn-link text-decoration-none"
-                                            onclick="document.getElementById('documents-tab').click()">open</a>
+                                            onclick="document.getElementById('documents-tab').click()">view</a>
                                     </div>
                                     <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
-                                        aria-label="Close"></button>
+                                        aria-label="Close">x</button>
                                 </div>
                             </div>
                         @endif
@@ -171,119 +194,177 @@
             <div class="card">
                 <div class="card-body">
                     <ul class="nav nav-tabs" id="orderTab" role="tablist">
-                        <li class="nav-item" role="presentation"><button class="nav-link" id="payments-tab"
-                                data-bs-toggle="tab" data-bs-target="#payments-panel" type="button">Payments</button></li>
                         <li class="nav-item" role="presentation"><button class="nav-link active" id="order-items-tab"
                                 data-bs-toggle="tab" data-bs-target="#order-items-panel" type="button">Your Order
                                 Items</button></li>
                         <li class="nav-item" role="presentation"><button class="nav-link" id="documents-tab"
-                                data-bs-toggle="tab" data-bs-target="#documents-panel" type="button">Document and
+                                data-bs-toggle="tab" data-bs-target="#documents-panel" type="button">Documents &
                                 Information @if ($hasMissingInfo)
                                     <i class="fas fa-exclamation-triangle text-danger ms-1"></i>
                                 @endif
                             </button></li>
+                        <li class="nav-item" role="presentation"><button class="nav-link" id="payments-tab"
+                                data-bs-toggle="tab" data-bs-target="#payments-panel" type="button">Payment
+                                History</button></li>
                     </ul>
 
                     <div class="tab-content pt-4">
-                        {{-- Payments Panel (Shows payments for the whole PO) --}}
-                        <div class="tab-pane fade" id="payments-panel" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Payment Date</th>
-                                            <th class="text-end">Amount</th>
-                                            <th>Payment Method</th>
-                                            <th>Proof</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($order->payments as $payment)
-                                            <tr>
-                                                <td>{{ $payment->payment_date->format('d-m-Y') }}</td>
-                                                <td class="text-end">${{ number_format($payment->amount, 2) }}</td>
-                                                <td>{{ $payment->payment_mode }}</td>
-                                                <td>
-                                                    @if ($payment->proof)
-                                                        <a href="{{ asset('storage/' . $payment->proof) }}"
-                                                            target="_blank"><i
-                                                                class="far fa-file-pdf text-danger document-icon"></i></a>
-                                                    @else
-                                                        <span class="text-muted">N/A</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="text-center text-muted">No payments have been
-                                                    recorded for this purchase order yet.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {{-- Order Items Panel (Shows only this supplier's items) --}}
+                        {{-- Order Items Panel --}}
                         <div class="tab-pane fade show active" id="order-items-panel" role="tabpanel">
                             @include('purchases._purchase-items-details', ['items' => $items])
                         </div>
 
-                        {{-- Documents Panel (Interactive Upload) --}}
+                        {{-- Documents Panel --}}
                         <div class="tab-pane fade" id="documents-panel" role="tabpanel">
-                            @if (session('success'))
-                                <div class="alert alert-success">{{ session('success') }}</div>
-                            @endif
-                            @if (session('error'))
-                                <div class="alert alert-danger">{{ session('error') }}</div>
-                            @endif
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Manage Your Documents</h5>
+                                <a href="{{ route('documents.showUploadForm', $purchase) }}"
+                                    class="btn btn-sm btn-primary">Go to Full Document Page</a>
+                            </div>
+                            <p class="text-muted">Below is a summary of your documents. For uploading and removing files,
+                                please use the full document management page.</p>
                             <div class="row">
-                                @foreach ($file_list as $file)
+                                @foreach ($file_list as $document)
                                     <div class="col-lg-3 col-md-4 col-sm-6 text-center mb-4">
-                                        <form action="{{ route('documents.upload', $file['id']) }}" method="POST"
-                                            enctype="multipart/form-data">
-                                            @csrf
-                                            <div class="mb-2">
-                                                @if ($file['file_path'])
-                                                    <a href="{{ asset('public/storage/' . $file['file_path']) }}"
-                                                        target="_blank" class="text-decoration-none">
-                                                        <i class="far fa-file-pdf text-success document-icon"></i>
-                                                        <p class="mb-0 mt-1 fw-bold text-success">View {{ $file['name'] }}
-                                                        </p>
-                                                    </a>
-                                                @else
-                                                    <i class="fas fa-cloud-upload-alt text-muted document-icon"></i>
-                                                    <p class="mb-0 mt-1 text-muted">{{ $file['name'] }}</p>
-                                                @endif
-                                            </div>
-                                            @if ($file['is_required'])
-                                                <span class="badge bg-primary mb-2">Required</span>
+                                        <h6 class="fw-bold">{{ $document->document_name }}</h6>
+                                        @if ($document->files->isNotEmpty())
+                                            {{-- We'll just link to the first file for simplicity in this summary view --}}
+                                            {{-- <a href="{{ asset('public/storage/' . $document->files->first()->file_path) }}"
+                                                target="_blank" class="text-decoration-none d-block"> --}}
+                                            <i class="far fa-file-pdf text-success document-icon"></i>
+                                            <span class="d-block text-success small mt-1">Uploaded
+                                                ({{ $document->files->count() }} file/s)</span>
+                                            {{-- </a> --}}
+                                        @else
+                                            <i class="fas fa-times-circle text-danger document-icon"></i>
+                                            @if ($document->is_required)
+                                                <span class="d-block text-danger small mt-1">Required - Missing</span>
                                             @else
-                                                <span class="badge bg-secondary mb-2">Optional</span>
+                                                <span class="d-block text-muted small mt-1">Optional - Not Provided</span>
                                             @endif
-                                            <div class="input-group"><input type="file"
-                                                    class="form-control form-control-sm" name="document_file"
-                                                    required><button class="btn btn-outline-primary btn-sm"
-                                                    type="submit">Upload</button></div>
-                                            @error('document_file')
-                                                <small class="text-danger d-block">{{ $message }}</small>
-                                            @enderror
-                                        </form>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
-                            @if ($hasMissingInfo)
-                                <hr>
-                                <div class="text-center">
-                                    <div class="alert alert-danger"><i
-                                            class="fas fa-exclamation-triangle fa-fw"></i><strong>Action Required:</strong>
-                                        You have missing required documents.</div>
+                        </div>
+
+                        {{-- Payments Panel --}}
+                        <div class="tab-pane fade" id="payments-panel" role="tabpanel">
+                            @php
+                                // Filter the entire purchase's payments to get only those for the logged-in supplier.
+$supplierPayments = $purchase->payments->where(
+    'supplier_id',
+    Auth::user()->supplierProfile->id,
+);
+
+// Calculate the total paid to THIS supplier.
+$totalPaidToSupplier = $supplierPayments->sum('amount');
+
+                                // Calculate the amount due for THIS supplier.
+                                $dueForSupplier = $supplierTotal - $totalPaidToSupplier;
+                            @endphp
+
+                            {{-- 1. NEW: Supplier-Specific Financial Summary --}}
+                            <div class="card bg-light border mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title">Your Payment Summary</h5>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <span class="summary-label">Your Total Order Amount</span>
+                                            <p class="summary-value">${{ number_format($supplierTotal, 2) }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span class="summary-label">Total Paid to You</span>
+                                            <p class="summary-value text-success">
+                                                ${{ number_format($totalPaidToSupplier, 2) }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span class="summary-label">Amount Due to You</span>
+                                            <p class="summary-value text-danger">${{ number_format($dueForSupplier, 2) }}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                            @endif
+
+                                {{-- 2. UPDATED: Payment History Table --}}
+                                <h5 class="mx-3 mb-3">Your Payment History</h5>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Payment Date</th>
+                                                <th class="text-end">Amount</th>
+                                                <th>Payment Method</th>
+                                                <th>Note</th>
+                                                <th>Proof</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {{-- Loop through only the supplier-specific payments --}}
+                                            @forelse($supplierPayments as $payment)
+                                                <tr>
+                                                    <td>{{ $payment->payment_date->format('d-m-Y') }}</td>
+                                                    <td class="text-end">${{ number_format($payment->amount, 2) }}</td>
+                                                    <td>{{ $payment->payment_mode }}</td>
+                                                    <td>{{ $payment->note }}</td>
+                                                    <td>
+                                                        @if ($payment->proof)
+                                                            @php
+                                                                // --- LOGIC TO DETERMINE THE ICON ---
+                                                                $extension = strtolower(
+                                                                    pathinfo($payment->proof, PATHINFO_EXTENSION),
+                                                                );
+                                                                $iconClass = 'fa-file'; // Default icon
+                                                                $iconColor = 'text-secondary';
+
+                                                                if (in_array($extension, ['pdf'])) {
+                                                                    $iconClass = 'fa-file-pdf';
+                                                                    $iconColor = 'text-danger';
+                                                                } elseif (
+                                                                    in_array($extension, [
+                                                                        'jpg',
+                                                                        'jpeg',
+                                                                        'png',
+                                                                        'gif',
+                                                                        'svg',
+                                                                    ])
+                                                                ) {
+                                                                    $iconClass = 'fa-file-image';
+                                                                    $iconColor = 'text-info';
+                                                                } elseif (in_array($extension, ['doc', 'docx'])) {
+                                                                    $iconClass = 'fa-file-word';
+                                                                    $iconColor = 'text-primary';
+                                                                } elseif (
+                                                                    in_array($extension, ['xls', 'xlsx', 'csv'])
+                                                                ) {
+                                                                    $iconClass = 'fa-file-excel';
+                                                                    $iconColor = 'text-success';
+                                                                }
+                                                            @endphp
+                                                            <a href="{{ asset('public/storage/' . $payment->proof) }}"
+                                                                target="_blank" title="{{ basename($payment->proof) }}">
+                                                                <i
+                                                                    class="fas {{ $iconClass }} {{ $iconColor }} fa-lg"></i>
+                                                            </a>
+                                                        @else
+                                                            <span class="text-muted">N/A</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted py-4">
+                                                        You have not received any payments for this order yet.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-@endsection
+    @endsection

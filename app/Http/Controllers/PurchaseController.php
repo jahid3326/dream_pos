@@ -47,7 +47,7 @@ class PurchaseController extends Controller
         $purchases = $query->with([
             'suppliers.user',
             'payments',
-            'documents',
+            'documents.files',
             // Now we get all the nested details for each item
             'items.product.category', // For single products
             'items.variation'
@@ -58,7 +58,7 @@ class PurchaseController extends Controller
             // 1. Calculate overall purchase financials (already done)
             $purchase->paid_amount = $purchase->payments->sum('amount');
             $purchase->due_amount = $purchase->total_amount - $purchase->paid_amount;
-            $purchase->payment_status = $purchase->due_amount <= 0 ? 'Paid' : ($purchase->paid_amount > 0 ? 'Partial' : 'Unpaid');
+            $purchase->payment_status = $purchase->due_amount <= 0 ? 'Paid' : ($purchase->paid_amount > 0 ? 'Deposit' : 'Unpaid');
 
             // 2. Calculate overall purchase progress status
             $totalSuppliers = $purchase->suppliers->count();
@@ -83,18 +83,17 @@ class PurchaseController extends Controller
                 $supplier->paid_amount = $supplierPayments->sum('amount');
                 $supplier->due_amount = $supplier->total_price - $supplier->paid_amount;
 
-                // 4. Prepare the document status list for this supplier
-                // In this design, documents are global to the purchase. We'll show the same list for each supplier.
-
+                // 4. Prepare the document status list for THIS SPECIFIC supplier
                 $fileStatus = [];
                 // Get all documents for this supplier
                 $supplierDocuments = $purchase->documents->where('supplier_id', $supplier->id);
 
                 foreach ($supplierDocuments as $document) {
-                    $hasFile = !is_null($document->file_path);
+                    $hasFile = $document->files->isNotEmpty();
 
+                    // --- THIS IS THE CORRECTED LOGIC ---
                     // Condition to display the document in the summary list:
-                    // It's either required, OR it's optional but has a file uploaded.
+                    // It is either required, OR it is optional but has a file uploaded.
                     if ($document->is_required || $hasFile) {
                         $fileStatus[] = [
                             'name' => pathinfo($document->document_name, PATHINFO_FILENAME),
@@ -121,7 +120,7 @@ class PurchaseController extends Controller
         $statuses = [ // Define all possible statuses for your system
             'pending' => 'Pending',
             'ordered' => 'Ordered',
-            'partial payment' => 'Partial Payment',
+            'partial payment' => 'Deposit Payment',
             'received' => 'Received',
         ];
 
@@ -487,7 +486,7 @@ class PurchaseController extends Controller
         if (abs($newPaidAmount - $purchase->total_amount) < 0.01) {
             $newPaymentStatus = 'Paid';
         } else if ($newPaidAmount > 0) {
-            $newPaymentStatus = 'Partial';
+            $newPaymentStatus = 'Deposit';
         } else {
             $newPaymentStatus = 'Unpaid';
         }
@@ -514,6 +513,38 @@ class PurchaseController extends Controller
         }
 
         return back()->with('success', 'A reminder has been sent to ' . $supplier->company_name . '.');
+    }
+
+    public function getPayments(Purchase $purchase)
+    {
+        // Eager-load the payments and their nested supplier->user relationships for efficiency
+        $purchase->load('payments.supplier.user');
+
+        // Calculate the summary
+        $totalAmount = $purchase->total_amount;
+        $paidAmount = $purchase->payments->sum('amount');
+        $dueAmount = $totalAmount - $paidAmount;
+
+        // Format the payment data for easy display in the frontend
+        $payments = $purchase->payments->map(function ($payment) {
+            return [
+                'date' => $payment->payment_date->format('d M, Y'),
+                'mode' => $payment->payment_mode,
+                'note' => $payment->note,
+                'amount' => number_format($payment->amount, 2),
+                // Safely get the supplier name
+                'supplier_name' => $payment->supplier->user->name ?? 'N/A',
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'po_number' => $purchase->purchase_number,
+            'total_amount' => number_format($totalAmount, 2),
+            'paid_amount' => number_format($paidAmount, 2),
+            'due_amount' => number_format($dueAmount, 2),
+            'payments' => $payments
+        ]);
     }
 
     /**

@@ -72,7 +72,7 @@ class ModificationRequestApproved extends Notification implements ShouldQueue, S
             'purchase_number' => $this->purchase->purchase_number,
             'sender_id' => $this->adminUser->id,
             'sender_name' => $this->adminUser->name,
-            'sender_avatar' => $this->adminUser->profile_image_url,
+            'sender_avatar' => $this->adminUser->profile_picture,
             'message' => "approved your modification for PO #{$this->purchase->purchase_number}",
         ];
     }

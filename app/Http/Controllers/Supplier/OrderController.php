@@ -25,83 +25,80 @@ class OrderController extends Controller
      * @param  \App\Models\Purchase  $purchase
      * @return \Illuminate\View\View
      */
-    public function show($orderId)
+    public function show(Purchase $purchase)
     {
-        $order = Purchase::find($orderId);
-        // print_r($order->toArray());
-
         $user = Auth::user();
         $supplier = $user->supplierProfile;
 
-        // Security Check: Ensure the purchase belongs to this supplier
-        if (!$order->suppliers->contains($supplier)) {
+        // --- SECURITY CHECK ---
+        if (!$supplier || !$purchase->suppliers->contains($supplier->id)) {
             abort(403, 'You do not have permission to view this order.');
         }
 
-        // Eager-load all necessary data
-        $order->load(['sale', 'documents', 'payments', 'items.product.category', 'items.variation']);
+        // --- DATA PREPARATION ---
 
-        // --- Data Preparation for the View ---
-
-        // 1. Get only the items for THIS supplier
-        $items = $order->items->where('supplier_id', $supplier->id);
-
-        // 2. Calculate this supplier's specific financials
-        $supplierTotal = $items->sum('total_price');
-        // For now, payments are global to the PO. We'll show the overall payment status.
-        $paidAmount = $order->payments->sum('amount');
-        $dueAmount = $order->total_amount - $paidAmount; // Based on the whole PO
-
-        // Determine payment status text
-        if ($paidAmount <= 0) {
-            $paymentStatus = 'Deposit'; // Or 'Unpaid'
-        } elseif ($dueAmount <= 0) {
-            $paymentStatus = 'Full Payed';
-        } else {
-            $paymentStatus = 'Deposit';
-        }
-
-        // 3. Prepare document status list and check if information is missing
-        // Prepare document status list
-        $file_list = [];
-        $hasMissingInfo = false;
-        // Filter documents for this purchase AND this supplier
-        $supplierDocuments = $order->documents->where('supplier_id', $supplier->id);
-
-        foreach ($supplierDocuments as $document) {
-            // A file is missing IF it is required AND has no file_path.
-            if ($document->is_required && !$document->file_path) {
-                $hasMissingInfo = true;
+        // 1. Eager-load all necessary relationships for the view.
+        $purchase->load([
+            'sale',
+            'documents.files',
+            'suppliers.user', // Load all suppliers to get the pivot data
+            'payments' => function ($query) use ($supplier) {
+                // Pre-filter payments to get only those for THIS supplier.
+                $query->where('supplier_id', $supplier->id);
+            },
+            'items' => function ($query) use ($supplier) {
+                // Pre-filter items for THIS supplier.
+                $query->where('supplier_id', $supplier->id)->with(['product.category', 'variation']);
             }
+        ]);
 
-            $file_list[] = [
-                'id' => $document->id,
-                'name' => pathinfo($document->document_name, PATHINFO_FILENAME),
-                'is_required' => $document->is_required,
-                'file_path' => $document->file_path,
-                'status' => $document->status,
-            ];
+        // 2. The filtered items and payments are now available on the purchase object.
+        $items = $purchase->items;
+        $supplierPayments = $purchase->payments;
+
+        // 3. Calculate this supplier's specific financials.
+        $supplierTotal = $items->sum('total_price');
+        $paidAmount = $supplierPayments->sum('amount'); // This is now supplier-specific
+        $dueAmount = $supplierTotal - $paidAmount;    // This is now supplier-specific
+
+        // 4. Determine THIS SUPPLIER's payment status text.
+        $paymentStatus = 'Unpaid';
+        if ($paidAmount > 0) {
+            $paymentStatus = ($dueAmount <= 0.01) ? 'Paid' : 'Partial';
         }
 
-        // 4. Calculate progress bar percentage (example logic)
-        // Let's say progress is based on production status.
-        $progress = 0;
-        if ($order->status_production === 'in process') {
-            $progress = 50;
-        } elseif ($order->status_production === 'complet') {
-            $progress = 100;
-        }
+        // 5. Get the pivot data for statuses and progress.
+        $supplierPivot = $purchase->suppliers->find($supplier->id)->pivot;
+        $progress = 0; // ... progress calculation ...
 
+        // 6. Get the list of documents for THIS supplier to display in the tab.
+        $file_list = $purchase->documents->where('supplier_id', $supplier->id);
+
+        // 7. Check if there are any required documents in that list that have no files.
+        $hasMissingInfo = $file_list
+            ->where('is_required', true)
+            ->first(function ($document) {
+                // This closure will run for each required document.
+                // It checks if the 'files' relationship collection is empty.
+                return $document->files->isEmpty();
+            }) !== null; // first() returns the first item that matches, or null if none match.
+
+        // For the "Other Suppliers" section (if you need it later)
+        $otherSuppliers = $purchase->suppliers->where('id', '!=', $supplier->id);
+        $itemsBySupplier = $purchase->items()->get()->groupBy('supplier_id');
+
+        // 9. Pass all the prepared data to the view.
         return view('supplier.orders.show', compact(
-            'order',
+            'purchase',
             'items',
             'supplierTotal',
-            'paidAmount',
-            'dueAmount',
+            'paidAmount', // This is now the supplier-specific paid amount
+            'dueAmount',  // This is now the supplier-specific due amount
             'paymentStatus',
             'file_list',
             'hasMissingInfo',
-            'progress'
+            'progress',
+            'supplierPivot'
         ));
     }
 

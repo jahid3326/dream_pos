@@ -62,7 +62,7 @@ class DocumentReminder extends Notification implements ShouldQueue, ShouldBroadc
             'purchase_number' => $this->purchase->purchase_number,
             'sender_id' => $this->adminUser->id,
             'sender_name' => $this->adminUser->name,
-            'sender_avatar' => $this->adminUser->profile_image_url,
+            'sender_avatar' => $this->adminUser->profile_picture,
             'message' => "sent you a reminder for missing documents on PO #{$this->purchase->purchase_number}",
         ];
     }

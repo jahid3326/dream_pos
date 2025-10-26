@@ -30,7 +30,7 @@
 
         .status-in.process,
         .status-ordered,
-        .status-partial.payment {
+        .status-deposit.payment {
             background-color: #ffe8d1;
             color: #ff8f00;
             border-color: #ff8f00;
@@ -57,7 +57,7 @@
             border-color: #155724;
         }
 
-        .status-partial,
+        .status-deposit,
         .status-unpaid {
             background-color: #fff0f0;
             color: #f44336;
@@ -269,8 +269,19 @@
                                                                     </td>
                                                                     <td class="text-end">{{ $supplier->total_quantity }}
                                                                     </td>
-                                                                    <td><span
+                                                                    <td style="display: flex; flex-direction:column"><span
                                                                             class="status-badge status-{{ Str::slug($supplier->pivot->status_review) }}">{{ ucfirst(str_replace('-', ' ', $supplier->pivot->status_review)) }}</span>
+                                                                        {{-- --- THIS IS THE NEW VALIDATION BUTTON --- --}}
+                                                                        @if ($supplier->pivot->status_review === 'modification requested')
+                                                                            <form
+                                                                                action="{{ route('purchases.validateModification', ['purchase' => $purchase, 'supplier' => $supplier]) }}"
+                                                                                method="POST" class="d-inline mt-1">
+                                                                                @csrf
+                                                                                <button type="submit"
+                                                                                    class="btn btn-success btn-sm w-100">Validate</button>
+                                                                            </form>
+                                                                        @endif
+                                                                        {{-- --- END OF NEW BUTTON --- --}}
                                                                     </td>
                                                                     <td><span
                                                                             class="status-badge status-{{ Str::slug($supplier->pivot->status_production) }}">{{ ucfirst($supplier->pivot->status_production) }}</span>
@@ -541,18 +552,31 @@ $supplierItems = $purchase->items->where(
     </div>
 
     <!-- View Payments Modal -->
-    <div class="modal fade" id="viewPaymentsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="viewPaymentsModal" tabindex="-1" aria-labelledby="viewPaymentsModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Payments for PO #<span id="payments-po-number"></span></h5><button
-                        type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="viewPaymentsModalLabel">Payment History for PO #<span
+                            id="payments-po-number"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="payments-list-container"></div>
+                    {{-- Financial Summary will be inserted here by JS --}}
+                    <div id="payments-summary-container" class="mb-4"></div>
+
+                    {{-- The table for payments will be dynamically inserted here --}}
+                    <div id="payments-list-container">
+                        <div class="text-center p-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary"
-                        data-bs-dismiss="modal">Close</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -827,31 +851,96 @@ $supplierItems = $purchase->items->where(
             });
 
             // --- VIEW PAYMENTS MODAL ---
-            $('.view-payments-btn').on('click', function() {
-                const url = $(this).data('url');
-                const container = $('#payments-list-container');
-                container.html('<p class="text-center">Loading...</p>');
+            $('.view-payments-btn').on('click', function(e) {
+                e.preventDefault();
 
+                const url = $(this).data('url');
+                const summaryContainer = $('#payments-summary-container');
+                const listContainer = $('#payments-list-container');
+
+                // 1. Reset the modal to its loading state
+                summaryContainer.empty();
+                listContainer.html(`
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`);
+
+                // 2. Make the AJAX call to the controller to fetch payment data
                 $.ajax({
                     url: url,
                     type: 'GET',
+                    dataType: 'json',
                     success: function(response) {
-                        $('#payments-po-number').text(response.po_number);
-                        let tableHtml = '<p class="text-center">No payments found.</p>';
-                        if (response.payments && response.payments.length > 0) {
-                            tableHtml =
-                                `<table class="table"><thead><tr><th>Date</th><th>Mode</th><th>Note</th><th class="text-end">Amount</th></tr></thead><tbody>`;
-                            response.payments.forEach(p => {
-                                tableHtml +=
-                                    `<tr><td>${p.date}</td><td>${p.mode}</td><td>${p.note || ''}</td><td class="text-end">$${p.amount}</td></tr>`;
-                            });
-                            tableHtml += `</tbody></table>`;
+                        if (response.success) {
+                            // a. Update the modal title
+                            $('#payments-po-number').text(response.po_number);
+
+                            // b. Build and inject the financial summary
+                            const summaryHtml = `
+                            <div class="card bg-light border">
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Total Amount</small>
+                                            <h5 class="mb-0 fw-bold">$${response.total_amount}</h5>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Amount Paid</small>
+                                            <h5 class="mb-0 text-success fw-bold">$${response.paid_amount}</h5>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Amount Due</small>
+                                            <h5 class="mb-0 text-danger fw-bold">$${response.due_amount}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                            summaryContainer.html(summaryHtml);
+
+                            // c. Build the payments table HTML
+                            let tableHtml = '';
+                            if (response.payments && response.payments.length > 0) {
+                                tableHtml = `
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Supplier Paid</th>
+                                            <th>Payment Mode</th>
+                                            <th>Note</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+
+                                response.payments.forEach(function(payment) {
+                                    tableHtml += `
+                                <tr>
+                                    <td>${payment.date}</td>
+                                    <td>${payment.supplier_name}</td>
+                                    <td>${payment.mode}</td>
+                                    <td>${payment.note || ''}</td>
+                                    <td class="text-end">$${payment.amount}</td>
+                                </tr>`;
+                                });
+
+                                tableHtml += `</tbody></table></div>`;
+                            } else {
+                                tableHtml =
+                                    '<p class="text-center text-muted p-4">No payments have been recorded for this purchase order.</p>';
+                            }
+
+                            // d. Inject the finished HTML into the modal
+                            listContainer.html(tableHtml);
                         }
-                        container.html(tableHtml);
                     },
                     error: function() {
-                        container.html(
-                            '<p class="text-center text-danger">Could not load payments.</p>'
+                        summaryContainer.empty();
+                        listContainer.html(
+                            '<p class="text-center text-danger p-4">Could not load payment information at this time.</p>'
                         );
                     }
                 });

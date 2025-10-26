@@ -11,7 +11,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupplierConfirmedOrder extends Notification implements ShouldQueue, ShouldBroadcast
+class SupplierProposedModification extends Notification implements ShouldQueue, ShouldBroadcast
 {
     use Queueable;
 
@@ -42,15 +42,15 @@ class SupplierConfirmedOrder extends Notification implements ShouldQueue, Should
      */
     public function toMail(object $notifiable): MailMessage
     {
-        // The $notifiable here will be the Super Admin's User model
-        $purchaseUrl = route('purchases.show', $this->purchase);
+        // The $notifiable here is the Admin's User model
+        $adminPurchaseUrl = route('purchases.show', $this->purchase);
 
         return (new MailMessage)
-            ->subject("Supplier Confirmation for PO #{$this->purchase->purchase_number}")
+            ->subject("Action Required: Modification Proposal for PO #{$this->purchase->purchase_number}")
             ->greeting("Hello {$notifiable->name},")
-            ->line("The supplier, **{$this->supplier->user->name}**, has confirmed their part of Purchase Order #{$this->purchase->purchase_number}.")
-            ->line("The order is now moving into the production phase for this supplier.")
-            ->action('View Purchase Order', $purchaseUrl);
+            ->line("The supplier, {$this->supplier->user->name}, has submitted a modification proposal for Purchase Order #{$this->purchase->purchase_number}.")
+            ->line("Please review the proposed changes and take action (validate or reject).")
+            ->action('Review Proposal', $adminPurchaseUrl);
     }
 
     /**
@@ -72,17 +72,13 @@ class SupplierConfirmedOrder extends Notification implements ShouldQueue, Should
             'purchase_number' => $this->purchase->purchase_number,
             'sender_id' => $this->supplier->user->id,
             'sender_name' => $this->supplier->company_name,
-            'sender_avatar' => $this->supplier->user->profile_picture,
-            'message' => "has confirmed their part of PO #{$this->purchase->purchase_number}",
+            'sender_avatar' => $this->supplier->user->profile_image_url,
+            'message' => "proposed a modification for PO #{$this->purchase->purchase_number}",
         ];
     }
 
-    /**
-     * Get the broadcastable representation of the notification.
-     */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        // Reuse the same data structure as the database notification.
         return new BroadcastMessage($this->toDatabase($notifiable));
     }
 }

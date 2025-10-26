@@ -64,7 +64,7 @@ class DashboardController extends Controller
         // 2. Fetch all purchases this supplier is a part of.
         // The relationship automatically loads pivot data because we configured it in the Purchase model.
         $activities = $supplier->purchases()
-            ->with(['sale', 'payments', 'documents', 'items'])
+            ->with(['sale', 'payments', 'documents.files', 'items'])
             ->latest('purchase_date')
             ->paginate(15);
 
@@ -94,18 +94,19 @@ class DashboardController extends Controller
             $files = [];
             $hasMissingFiles = false;
             // Get all documents for this purchase belonging to this supplier
-            $supplierDocuments = $activity->documents->where('supplier_id', $supplier->id);
+            $supplierDocuments = $activity->documents->where('supplier_id', '==', $supplier->id);
 
+            // First, check for the "missing" flag among required documents
+            $hasMissingFiles = $supplierDocuments
+                ->where('is_required', true)
+                ->first(fn($doc) => $doc->files->isEmpty()) !== null;
+
+            // Now, build the display list for the files column.
             foreach ($supplierDocuments as $document) {
-                $hasFile = !is_null($document->file_path);
+                $hasFile = $document->files->isNotEmpty();
 
-                // Check if a required file is missing
-                if ($document->is_required && !$hasFile) {
-                    $hasMissingFiles = true;
-                }
-
-                // Condition to display the document in the summary list:
-                // It's required, OR it's optional but has a file.
+                // --- THIS IS THE CORRECTED LOGIC ---
+                // Condition to display: It's required, OR it's optional but has a file.
                 if ($document->is_required || $hasFile) {
                     $files[] = [
                         'name' => pathinfo($document->document_name, PATHINFO_FILENAME),

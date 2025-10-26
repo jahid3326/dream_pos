@@ -22,7 +22,7 @@
                         <a href="#">
                             <div class="media d-flex">
                                 <span class="avatar flex-shrink-0">
-                                    <img alt="Img" src="public/storage/${sender_image}">
+                                    <img alt="Img" src="/public/storage/${sender_image}">
                                 </span>
                                 <div class="flex-grow-1">
                                     <p class="noti-details">
