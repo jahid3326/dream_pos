@@ -34,9 +34,14 @@ class DocumentController extends Controller
 
         // Eager load documents and find the specific pivot record for this supplier
         $purchase->load('documents.files');
-        $supplierPivotData = $purchase->suppliers->find($supplier->id)->pivot;
+        // $supplierPivotData = $purchase->suppliers->find($supplier->id)->pivot;
+        $supplierPivotData = \App\Models\PurchaseSupplier::where('purchase_id', $purchase->id)
+            ->where('supplier_id', $supplier->id)
+            ->first();
 
-        return view('supplier.orders.document-upload', compact('purchase', 'supplierPivotData'));
+        $cargo = $supplierPivotData ? $supplierPivotData->load('cargo.dimensions')->cargo : null;
+
+        return view('supplier.orders.document-upload', compact('purchase', 'supplierPivotData', 'cargo'));
     }
 
     /**
@@ -53,6 +58,13 @@ class DocumentController extends Controller
             'ready_date' => 'nullable|date_format:d/m/Y',
             'documents' => 'nullable|array',
             'documents.*.*' => 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx,xls,xlsx,gif,svg,csv,zip,rar',
+            'packing_type' => 'nullable|string|max:255',
+            'gross_weight' => 'nullable|numeric|min:0',
+            'total_cbm' => 'nullable|numeric|min:0',
+            'quantity' => 'nullable|integer|min:0',
+            'hazardous_materials' => 'nullable',
+            'dimensions' => 'nullable|array',
+            'dimensions.*' => ['required', 'string', 'regex:/^\d+\s*[xX]\s*\d+\s*[xX]\s*\d+$/i'],
         ]);
 
         try {
@@ -92,6 +104,66 @@ class DocumentController extends Controller
                                 $document->update(['status' => 'uploaded']);
                             }
                         }
+                    }
+                }
+
+                // 1. Find the pivot record ID
+                $purchaseSupplierPivot = \App\Models\PurchaseSupplier::where('purchase_id', $purchase->id)
+                    ->where('supplier_id', $supplier->id)
+                    ->firstOrFail();
+
+                $cargo = $purchaseSupplierPivot->cargo()->firstOrCreate(
+                    ['purchase_supplier_id' => $purchaseSupplierPivot->id]
+                );
+
+                // Update main cargo info
+                $cargo->fill($request->only([
+                    'packing_type',
+                    'gross_weight',
+                    'total_cbm',
+                    'quantity'
+                ]));
+                $cargo->hazardous_materials = $request->boolean('hazardous_materials');
+                $cargo->save();
+
+                // --- SYNCING LOGIC ---
+                $submittedDimensions = $request->input('dimensions', []);
+                $existingDimensionIds = $cargo->dimensions()->pluck('id')->toArray();
+
+                $submittedExistingIds = [];
+                $newDimensions = [];
+
+                // 1. Separate submitted dimensions into "existing" and "new"
+                foreach ($submittedDimensions as $key => $value) {
+                    if (strpos($key, 'existing_') === 0) {
+                        // This is an existing dimension. Extract its ID.
+                        $id = substr($key, strlen('existing_'));
+                        $submittedExistingIds[] = (int)$id;
+                    } else {
+                        // This is a new dimension to be created.
+                        $newDimensions[] = $value;
+                    }
+                }
+
+                // 2. Determine which dimensions to DELETE
+                // These are IDs that were in the DB but NOT in the submission.
+                $idsToDelete = array_diff($existingDimensionIds, $submittedExistingIds);
+                if (!empty($idsToDelete)) {
+                    \App\Models\CargoDimension::destroy($idsToDelete);
+                }
+
+                // 3. CREATE the new dimensions
+                foreach ($newDimensions as $dimString) {
+                    $dims = preg_split('/[xX]/', $dimString);
+                    $dims = array_map('trim', $dims);
+
+                    if (count($dims) === 3) {
+                        $cargo->dimensions()->create([
+                            // --- CAST TO INT ---
+                            'length' => (int)$dims[0],
+                            'width'  => (int)$dims[1],
+                            'height' => (int)$dims[2],
+                        ]);
                     }
                 }
             });

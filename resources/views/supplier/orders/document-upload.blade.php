@@ -239,6 +239,92 @@
                     </div>
                 </div>
 
+                <hr class="my-5">
+
+                <div class="row" id="cargo-section">
+                    {{-- Left Side: Packing Info --}}
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold mb-4">Packing & Cargo</h5>
+                        <div class="mb-4">
+                            <label class="form-label">Packing & Cargo</label>
+                            <div class="btn-group w-100">
+                                @php $packingTypes = ['Wood Frame', 'Pallet', 'Cardboard', 'Crate', 'Bag']; @endphp
+                                @foreach ($packingTypes as $type)
+                                    <input type="radio" class="btn-check" name="packing_type"
+                                        id="packing-{{ Str::slug($type) }}" value="{{ $type }}"
+                                        @checked($cargo?->packing_type == $type)>
+                                    <label class="btn btn-outline-secondary"
+                                        for="packing-{{ Str::slug($type) }}">{{ $type }}</label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label">Gross Weight (kg)</label><input
+                                    type="number" step="0.01" name="gross_weight" class="form-control"
+                                    placeholder="Total Kg" value="{{ $cargo?->gross_weight }}"></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">Total CBM</label><input type="number"
+                                    step="1" name="total_cbm" class="form-control" placeholder="Total CBM"
+                                    value="{{ number_format($cargo?->total_cbm, 2) }}"></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">Quantity <small>(package or
+                                        pallet)</small></label><input type="number" name="quantity" class="form-control"
+                                    placeholder="Total Pcs" value="{{ number_format($cargo?->quantity, 0) }}"></div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Hazardous Materials</label>
+                                <div class="form-check form-switch"><input class="form-check-input" type="checkbox"
+                                        name="hazardous_materials" value="1" @checked($cargo?->hazardous_materials)></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Right Side: Dimensions --}}
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold mb-4">Dimensions <small class="fw-normal text-muted">(Package or
+                                palette)</small></h5>
+                        <div class="input-group mb-3">
+                            <input type="text" id="dimension-input" class="form-control"
+                                placeholder="Length (cm) x Width (cm) x Height (cm)">
+                            <button class="btn btn-outline-primary" type="button" id="add-dimension-btn">Add</button>
+                        </div>
+                        <div id="dimensions-list" class="row">
+                            {{-- Existing dimensions will be loaded here --}}
+                            @if ($cargo && $cargo->dimensions)
+                                {{-- --- USE A LOOP WITH AN INDEX --- --}}
+                                @foreach ($cargo->dimensions as $index => $dimension)
+                                    @php
+                                        $dimensionKey = 'existing_' . $dimension->id;
+
+                                        $dimensionValue =
+                                            (int) $dimension->length .
+                                            'x' .
+                                            (int) $dimension->width .
+                                            'x' .
+                                            (int) $dimension->height;
+                                        $displayValue =
+                                            (int) $dimension->length .
+                                            ' x ' .
+                                            (int) $dimension->width .
+                                            ' x ' .
+                                            (int) $dimension->height .
+                                            ' cm';
+                                    @endphp
+                                    <div class="col-6 dimension-item mb-2">
+                                        <div class="d-flex align-items-center bg-light p-2 rounded border">
+                                            <input type="hidden" name="dimensions[{{ $dimensionKey }}]"
+                                                value="{{ $dimensionValue }}">
+
+                                            {{-- --- DISPLAY THE NUMBER --- --}}
+                                            <span class="fw-bold me-2">{{ $index + 1 }} /</span>
+                                            <span class="flex-grow-1">{{ $displayValue }}</span>
+                                            <button type="button" class="btn-close btn-sm remove-dimension-btn"></button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 <div class="d-flex gap-2 mt-4 me-2 mb-5">
                     <button type="submit" class="btn btn-primary px-4">Save Changes</button>
                     <a href="{{ route('orders.details', $purchase) }}" class="btn btn-outline-secondary px-4">Cancel</a>
@@ -316,6 +402,47 @@
                         });
                     }
                 });
+            });
+
+
+            let dimensionCounter = $('#dimensions-list .dimension-item').length;
+
+            // Add new dimension
+            $('#add-dimension-btn').on('click', function() {
+                const input = $('#dimension-input');
+                const value = input.val().trim();
+
+                // Basic validation for LxWxH format
+                if (value && /^\d+(\.\d+)?\s*x\s*\d+(\.\d+)?\s*x\s*\d+(\.\d+)?$/i.test(value)) {
+                    dimensionCounter++;
+                    const cleanValue = value.replace(/\s/g, ''); // Remove spaces
+                    const displayValue = cleanValue.replace(/x/g, ' x ') + ' cm';
+
+                    const newItem = `
+                        <div class="col-6 dimension-item mb-2">
+                            <div class="d-flex align-items-center bg-light p-2 rounded border">
+                                <input type="hidden" name="dimensions[]" value="${cleanValue}">
+                                
+                                <span class="fw-bold me-2">${dimensionCounter} /</span>
+                                <span class="flex-grow-1">${displayValue}</span>
+                                <button type="button" class="btn-close btn-sm remove-dimension-btn"></button>
+                            </div>
+                        </div>`;
+                    $('#dimensions-list').append(newItem);
+                    input.val(''); // Clear input
+                } else {
+                    alert('Please enter dimensions in a valid format (e.g., 30x40x100)');
+                }
+            });
+
+            // Remove dimension
+            $('#dimensions-list').on('click', '.remove-dimension-btn', function() {
+                $(this).closest('.dimension-item').remove();
+                // Renumber items
+                $('#dimensions-list .dimension-item').each(function(index) {
+                    $(this).find('.fw-bold').text((index + 1) + ' /');
+                });
+                dimensionCounter = $('#dimensions-list .dimension-item').length;
             });
         });
     </script>
