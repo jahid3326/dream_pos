@@ -9,6 +9,10 @@ class PurchaseSupplier extends Pivot
     // Define the table name explicitly
     protected $table = 'purchase_supplier';
 
+    protected $casts = [
+        'ready_date' => 'date',
+    ];
+
     // A cargo record belongs to this pivot record
     public function cargo()
     {

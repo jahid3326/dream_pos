@@ -21,7 +21,7 @@ class ActionPermissionController extends Controller
         'SalePayment',
         'Quote',
         'Purchase',
-
+        'Shipment',
     ];
 
     public function index()

@@ -22,6 +22,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ShipmentController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Supplier\OrderController;
 use App\Http\Controllers\SupplierController;
@@ -264,6 +265,26 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+            Route::post('/purchases/{purchase}/supplier/{supplier}/send-document-reminder', [PurchaseController::class, 'sendDocumentReminder'])
+                ->name('purchases.sendDocumentReminder');
+
+            Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
+
+            // Shipment-related routes
+            Route::post('/purchases/{purchase}/convert-to-shipping', [ShipmentController::class, 'storeFromPurchase'])->name('purchases.convertToShipping');
+
+            Route::get('/shipments/{shipment}/get-payments', [ShipmentController::class, 'getPayments'])
+                ->name('shipments.getPayments');
+
+            Route::post('/shipments/{shipment}/payments', [ShipmentController::class, 'addPayment'])->name('shipments.addPayment');
+
+            // --- ADD THESE ROUTES FOR TRACKING ---
+            Route::post('/shipments/{shipment}/tracking', [ShipmentController::class, 'addTracking'])->name('shipments.addTracking');
+            Route::delete('/shipments/{shipment}/tracking', [ShipmentController::class, 'removeTracking'])->name('shipments.removeTracking');
+
+            // Resource routes for managing shipments
+            Route::resource('shipments', ShipmentController::class);
         });
 
         Route::get('/orders/{purchase}/details', [OrderController::class, 'details'])->name('orders.details');
@@ -288,11 +309,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 
         Route::post('/documents/{document}/upload', [DocumentController::class, 'upload'])->name('documents.upload');
-
-        Route::post('/purchases/{purchase}/supplier/{supplier}/send-document-reminder', [PurchaseController::class, 'sendDocumentReminder'])
-            ->name('purchases.sendDocumentReminder');
-
-        Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
 
         // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---
         // Only users with the Super Admin role can access these routes.

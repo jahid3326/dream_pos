@@ -196,6 +196,20 @@
                                                     data-bs-toggle="dropdown" aria-expanded="false"><i
                                                         class="fas fa-ellipsis-v"></i></button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
+                                                    @if (!$purchase->shipment)
+                                                        <li>
+                                                            {{-- The form needs a class for the JS to target --}}
+                                                            <form
+                                                                action="{{ route('purchases.convertToShipping', $purchase) }}"
+                                                                method="POST" class="convert-to-shipping-form">
+                                                                @csrf
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="fas fa-truck fa-fw me-2"></i> Convert to
+                                                                    Shipping
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    @endif
                                                     <li><a class="dropdown-item"
                                                             href="{{ route('purchases.show', $purchase->id) }}"><i
                                                                 class="fas fa-eye fa-fw me-2"></i> View</a></li>
@@ -585,6 +599,32 @@ $supplierItems = $purchase->items->where(
 @push('scripts')
     <script>
         $(document).ready(function() {
+
+            $(document).on('submit', '.convert-to-shipping-form', function(event) {
+                // 1. Prevent the form from submitting immediately
+                event.preventDefault();
+
+                // 2. Get a reference to the form that was submitted
+                const form = this;
+
+                // 3. Show the SweetAlert confirmation dialog
+                Swal.fire({
+                    title: 'Convert this Purchase to a Shipment?',
+                    text: "A new shipment record will be created. This action cannot be undone.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6', // Blue confirm button
+                    cancelButtonColor: '#d33', // Red cancel button
+                    confirmButtonText: 'Yes, convert it!',
+                    cancelButtonText: 'No, cancel'
+                }).then((result) => {
+                    // 4. This block runs after the user clicks a button in the dialog
+                    if (result.isConfirmed) {
+                        // If the user clicked "Yes, convert it!", submit the form.
+                        form.submit();
+                    }
+                });
+            });
 
             // Accordion +/- icon toggle script
             $('.collapse').on('show.bs.collapse', function() {
