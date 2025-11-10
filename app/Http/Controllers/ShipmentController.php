@@ -124,6 +124,33 @@ class ShipmentController extends Controller
 
         $trackingUrls = $shipment->tracking_urls ?? [];
 
+        // --- Determine the Shipment Agent ---
+        $shipmentAgent = null;
+
+        // Option 1: Try to find a user with 'Shipment Agent' role
+        $shipmentAgentRole = \App\Models\Role::where('name', 'like', '%agent%')->orWhere('name', 'like', '%shipment%')->first();
+        if ($shipmentAgentRole) {
+            $shipmentAgent = $shipmentAgentRole->users()->first();
+        }
+
+        // Option 2: If no agent role found, use the person who created the related sale
+        if (!$shipmentAgent && $shipment->purchase && $shipment->purchase->sale && $shipment->purchase->sale->created_by) {
+            $shipmentAgent = \App\Models\User::find($shipment->purchase->sale->created_by);
+        }
+
+        // Option 3: Fallback to a Super Admin
+        if (!$shipmentAgent) {
+            $superAdminRole = \App\Models\Role::where('name', 'Super Admin')->first();
+            if ($superAdminRole) {
+                $shipmentAgent = $superAdminRole->users()->first();
+            }
+        }
+
+        // Option 4: Final fallback to any user if nothing else works
+        if (!$shipmentAgent) {
+            $shipmentAgent = \App\Models\User::first();
+        }
+
         return view('shipments.show', compact(
             'shipment',
             'paidAmount',
@@ -131,7 +158,8 @@ class ShipmentController extends Controller
             'paymentStatus',
             'totalCbm',
             'totalWeight',
-            'trackingUrls'
+            'trackingUrls',
+            'shipmentAgent'
         ));
     }
 

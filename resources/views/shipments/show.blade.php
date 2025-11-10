@@ -88,15 +88,23 @@
 
                             <h6 class="text-muted mt-4 mb-3">Order Status</h6>
                             @foreach ($shipment->purchase->suppliers as $supplier)
+                                @php
+                                    $readyDate = $supplier->purchase_details->ready_date
+                                        ? \Carbon\Carbon::parse($supplier->purchase_details->ready_date)
+                                        : null;
+                                    $currentDate = \Carbon\Carbon::now();
+                                    $status = $readyDate && $readyDate->lte($currentDate) ? 'READY' : 'In Process';
+                                    $statusClass = $readyDate && $readyDate->lte($currentDate) ? 'ready' : 'in-process';
+                                @endphp
                                 <div class="d-flex align-items-center mb-2">
                                     <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
                                         class="rounded-circle me-2" width="24" height="24"
                                         style="object-fit: cover;">
-                                    <span
-                                        class="status-badge status-{{ Str::slug($supplier->purchase_details->status_production) }}">{{ ucfirst($supplier->purchase_details->status_production) }}</span>
+                                    <span class="status-badge status-{{ $statusClass }}">{{ $status }}</span>
                                 </div>
                             @endforeach
                             <address class="mb-0">
+                                <p style="padding: 0; margin: 0">Need to ship to:</p>
                                 <strong class="d-block">{{ $shipment->customer->user->name }}</strong>
                                 {{ $shipment->customer->billing_address }}<br>
                             </address>
@@ -123,8 +131,9 @@
                                 </div>
                                 <div class="col-md-6 mb-4">
                                     <div class="text-muted">Agent:</div>
-                                    <div class="fw-bold summary-value">Wendy</div>
-                                </div> {{-- Placeholder --}}
+                                    <div class="fw-bold summary-value">{{ $shipmentAgent ? $shipmentAgent->name : 'N/A' }}
+                                    </div>
+                                </div> {{-- Shows assigned shipment agent --}}
                                 <div class="col-md-6 mb-4">
                                     <div class="text-muted">Methode shipping:</div>
                                     <div class="fw-bold summary-value">Sea</div>
