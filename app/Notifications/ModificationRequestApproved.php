@@ -5,13 +5,11 @@ namespace App\Notifications;
 use App\Models\Purchase;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ModificationRequestApproved extends Notification implements ShouldQueue, ShouldBroadcast
+class ModificationRequestApproved extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -34,7 +32,7 @@ class ModificationRequestApproved extends Notification implements ShouldQueue, S
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail', 'broadcast'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -60,29 +58,53 @@ class ModificationRequestApproved extends Notification implements ShouldQueue, S
      */
     public function toArray(object $notifiable): array
     {
-        return [
-            //
-        ];
-    }
+        // Determine sender information
+        $senderName = $this->adminUser ? $this->adminUser->name : 'Admin';
+        $senderAvatar = $this->adminUser && $this->adminUser->profile_picture
+            ? 'public/storage/' . $this->adminUser->profile_picture
+            : 'public/storage/images/default_avatar.png';
 
-    public function toDatabase(object $notifiable): array
-    {
+        // Create personalized message
+        $message = $senderName . ' approved your modification for PO #' . $this->purchase->purchase_number;
+
         return [
             'purchase_id' => $this->purchase->id,
             'purchase_number' => $this->purchase->purchase_number,
-            'sender_id' => $this->adminUser->id,
-            'sender_name' => $this->adminUser->name,
-            'sender_avatar' => $this->adminUser->profile_picture,
-            'message' => "approved your modification for PO #{$this->purchase->purchase_number}",
+            'admin_id' => $this->adminUser->id,
+            'admin_name' => $this->adminUser->name,
+            'message' => $message,
+            'action_url' => route('orders.details', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
         ];
     }
 
     /**
-     * Get the broadcastable representation of the notification.
+     * Get the broadcast representation of the notification.
      */
-    public function toBroadcast(object $notifiable): BroadcastMessage
+    public function toBroadcast(object $notifiable): array
     {
-        // This uses the same data as the database notification
-        return new BroadcastMessage($this->toDatabase($notifiable));
+        // Determine sender information
+        $senderName = $this->adminUser ? $this->adminUser->name : 'Admin';
+        $senderAvatar = $this->adminUser && $this->adminUser->profile_picture
+            ? $this->adminUser->profile_picture
+            : 'images/default_avatar.png';
+
+        // Create personalized message
+        $message = $senderName . ' approved your modification for PO #' . $this->purchase->purchase_number;
+
+        return [
+            'id' => $this->id,
+            'type' => 'App\Notifications\ModificationRequestApproved',
+            'purchase_id' => $this->purchase->id,
+            'purchase_number' => $this->purchase->purchase_number,
+            'admin_id' => $this->adminUser->id,
+            'admin_name' => $this->adminUser->name,
+            'message' => $message,
+            'action_url' => route('orders.details', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
+            'created_at' => now()->toISOString(),
+        ];
     }
 }

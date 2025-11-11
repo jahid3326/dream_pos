@@ -24,9 +24,28 @@
                 $supplierDocuments = $purchase->documents->where('supplier_id', $supplier->id);
                 $hasMissingRequired = $supplierDocuments
                     ->where('is_required', true)
-                    ->where('files', 'isEmpty')
+                    ->filter(function ($doc) {
+                        return $doc->files->isEmpty();
+                    })
                     ->isNotEmpty();
+
+                // Debug info (remove in production)
+                $requiredDocs = $supplierDocuments->where('is_required', true);
+                $missingDocs = $supplierDocuments->where('is_required', true)->filter(function ($doc) {
+                    return $doc->files->isEmpty();
+                });
             @endphp
+
+            {{-- Debug Information (remove in production) --}}
+            {{-- @if (config('app.debug'))
+                <div class="col-12 mb-2">
+                    <small class="text-muted">
+                        Debug: Required docs: {{ $requiredDocs->count() }},
+                        Missing docs: {{ $missingDocs->count() }},
+                        Show button: {{ $hasMissingRequired ? 'YES' : 'NO' }}
+                    </small>
+                </div>
+            @endif --}}
 
             @forelse ($supplierDocuments as $doc)
                 {{-- Only display required docs or optional ones that have been uploaded --}}
@@ -66,19 +85,22 @@
             @endforelse
         </div>
 
-        {{-- Reminder Button --}}
+        {{-- Send Remind Button - Show if required documents are missing OR if supplier has any required docs --}}
         @if ($hasMissingRequired)
             <div class="mt-3">
-                <div class="alert alert-warning d-flex justify-content-between align-items-center p-2">
-                    <span class="small"><i class="fas fa-exclamation-triangle fa-fw me-1"></i> Document and information
-                        Missing</span>
-                    <form
-                        action="{{ route('purchases.sendDocumentReminder', ['purchase' => $purchase, 'supplier' => $supplier]) }}"
-                        method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-primary btn-sm">Send Reminder to supplier</button>
-                    </form>
-                </div>
+                <form action="{{ route('purchases.sendDocumentReminder', [$purchase, $supplier]) }}" method="POST"
+                    class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-info" title="Send Document Reminder">
+                        <i class="fas fa-bell me-1"></i>
+                        Send Remind to supplier
+                        @if ($hasMissingRequired)
+                            ({{ $missingDocs->count() }} missing)
+                        @elseif ($supplierDocuments->isNotEmpty())
+                            ({{ $supplierDocuments->count() }} total docs)
+                        @endif
+                    </button>
+                </form>
             </div>
         @endif
     </div>

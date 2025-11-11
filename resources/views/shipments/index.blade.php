@@ -84,6 +84,13 @@
                                                         </a>
                                                     </li>
                                                     <li>
+                                                        <a class="dropdown-item"
+                                                            href="{{ route('shipments.orderDetailDocument', $shipment) }}">
+                                                            <i class="fas fa-file-alt fa-fw me-2"></i> View order detail
+                                                            document
+                                                        </a>
+                                                    </li>
+                                                    <li>
                                                         <hr class="dropdown-divider">
                                                     </li>
                                                     <li>
@@ -225,6 +232,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Include the payment modal (will be populated dynamically via JavaScript) --}}
+    @include('shipments._add-payment-modal')
 @endsection
 
 @push('scripts')
@@ -379,7 +389,150 @@
                     error: function() {
                         container.html(
                             '<p class="text-center text-danger">Could not load payments.</p>'
-                            );
+                        );
+                    }
+                });
+            });
+
+            // --- ADD SHIPMENT PAYMENT MODAL ---
+            let currentTotalDue = 0;
+
+            $('.add-payment-btn').on('click', function(e) {
+                e.preventDefault();
+                const shipmentId = $(this).data('shipment-id');
+                const shipmentNumber = $(this).data('shipment-number');
+                const dueAmount = parseFloat($(this).data('due-amount')) || 0;
+
+                currentTotalDue = dueAmount;
+
+                // Update modal title
+                $('#addShipmentPaymentModalLabel').text(`Add Payment for Shipment #${shipmentNumber}`);
+
+                // Update form action URL
+                $('#add-shipment-payment-form').attr('action', `/shipments/${shipmentId}/payments`);
+
+                // Update due amount displays
+                $('#total-due').text(dueAmount.toFixed(2));
+                $('#remaining-due').text(dueAmount.toFixed(2));
+
+                // Reset form
+                const form = $('#add-shipment-payment-form');
+                form[0].reset();
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+                $('#shipment-payment-errors').hide().empty();
+                $('#shipment-payment-date').val('{{ now()->format('Y-m-d') }}');
+            });
+
+            // Real-time Amount Due calculation
+            $('#shipment-payment-amount').on('input', function() {
+                const amountPaid = parseFloat($(this).val()) || 0;
+                const remainingDue = Math.max(0, currentTotalDue - amountPaid);
+
+                $('#remaining-due').text(remainingDue.toFixed(2));
+
+                // Visual feedback for amount validation
+                const input = $(this);
+                if (amountPaid > currentTotalDue) {
+                    input.addClass('is-invalid');
+                    if (!input.next('.invalid-feedback').length) {
+                        input.after(
+                            '<div class="invalid-feedback">Amount cannot exceed total due amount</div>');
+                    }
+                } else if (amountPaid < 0) {
+                    input.addClass('is-invalid');
+                    if (!input.next('.invalid-feedback').length) {
+                        input.after('<div class="invalid-feedback">Amount cannot be negative</div>');
+                    }
+                } else {
+                    input.removeClass('is-invalid');
+                    input.next('.invalid-feedback').remove();
+                }
+            });
+
+            // --- AJAX Submission for the Add Shipment Payment Modal ---
+            $('#add-shipment-payment-form').on('submit', function(event) {
+                event.preventDefault();
+                const form = $(this);
+                const url = form.attr('action');
+                const formData = new FormData(this);
+                const submitButton = form.find('button[type="submit"]');
+                const errorContainer = $('#shipment-payment-errors');
+                const amountInput = $('#shipment-payment-amount');
+                const amountPaid = parseFloat(amountInput.val()) || 0;
+
+                // Client-side validation
+                if (amountPaid <= 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Amount',
+                        text: 'Please enter a valid payment amount greater than 0'
+                    });
+                    return;
+                }
+
+                if (amountPaid > currentTotalDue) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Amount Too High',
+                        text: `Payment amount cannot exceed the due amount of $${currentTotalDue.toFixed(2)}`
+                    });
+                    return;
+                }
+
+                submitButton.prop('disabled', true).text('Saving...');
+                errorContainer.hide().empty();
+
+                // Clear previous validation styling
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').remove();
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        // Show success message and reload page to update the payment data
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Payment added successfully!',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) { // Validation errors
+                            const errors = xhr.responseJSON.errors;
+                            let errorHtml = '<ul>';
+                            $.each(errors, function(key, value) {
+                                errorHtml += `<li>${value[0]}</li>`;
+                                const input = form.find(`[name="${key}"]`);
+                                input.addClass('is-invalid');
+                                input.after(
+                                    `<div class="invalid-feedback d-block">${value[0]}</div>`
+                                );
+                            });
+                            errorHtml += '</ul>';
+                            errorContainer.html(errorHtml).show();
+                        } else if (xhr.status === 403) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Unauthorized',
+                                text: 'Only Super Admin can add payments'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred. Please try again.'
+                            });
+                        }
+                        submitButton.prop('disabled', false).text('Save Payment');
                     }
                 });
             });

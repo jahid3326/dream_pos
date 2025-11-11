@@ -213,6 +213,47 @@
             background-color: transparent !important;
             color: #000 !important;
         }
+
+        /* Header notification animations */
+        .notification-message {
+            transition: all 0.3s ease;
+        }
+
+        .notification-message.new-notification {
+            background-color: #f8f9fa;
+            border-left: 3px solid #28a745;
+            animation: slideInNotification 0.5s ease-out;
+        }
+
+        .notification-count-update {
+            animation: pulseNotification 0.6s ease-in-out;
+        }
+
+        @keyframes slideInNotification {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulseNotification {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -308,156 +349,159 @@
                         </div>
                     </li>
                     <!-- /Search -->
-
-                    <!-- Select Store -->
-                    <li class="nav-item dropdown has-arrow main-drop select-store-dropdown">
-                        <a href="javascript:void(0);" class="dropdown-toggle nav-link select-store"
-                            data-bs-toggle="dropdown">
-                            <span class="user-info">
-                                <span class="user-letter">
+                    @if (
+                        (Auth::user() && Auth::user()->role && Auth::user()->role->name === 'Super Admin') ||
+                            Auth::user()->role->name === 'Sales')
+                        <!-- Select Store -->
+                        <li class="nav-item dropdown has-arrow main-drop select-store-dropdown">
+                            <a href="javascript:void(0);" class="dropdown-toggle nav-link select-store"
+                                data-bs-toggle="dropdown">
+                                <span class="user-info">
+                                    <span class="user-letter">
+                                        <img src="{{ asset('public/assets/img/store/store-01.png') }}"
+                                            alt="Store Logo" class="img-fluid">
+                                    </span>
+                                    <span class="user-detail">
+                                        <span class="user-name">Freshmart</span>
+                                    </span>
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a href="javascript:void(0);" class="dropdown-item">
                                     <img src="{{ asset('public/assets/img/store/store-01.png') }}" alt="Store Logo"
-                                        class="img-fluid">
-                                </span>
-                                <span class="user-detail">
-                                    <span class="user-name">Freshmart</span>
-                                </span>
-                            </span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a href="javascript:void(0);" class="dropdown-item">
-                                <img src="{{ asset('public/assets/img/store/store-01.png') }}" alt="Store Logo"
-                                    class="img-fluid">Freshmart
-                            </a>
-                            <a href="javascript:void(0);" class="dropdown-item">
-                                <img src="{{ asset('public/assets/img/store/store-02.png') }}" alt="Store Logo"
-                                    class="img-fluid">Grocery Apex
-                            </a>
-                            <a href="javascript:void(0);" class="dropdown-item">
-                                <img src="{{ asset('public/assets/img/store/store-03.png') }}" alt="Store Logo"
-                                    class="img-fluid">Grocery Bevy
-                            </a>
-                            <a href="javascript:void(0);" class="dropdown-item">
-                                <img src="{{ asset('public/assets/img/store/store-04.png') }}" alt="Store Logo"
-                                    class="img-fluid">Grocery Eden
-                            </a>
-                        </div>
-                    </li>
-                    <!-- /Select Store -->
+                                        class="img-fluid">Freshmart
+                                </a>
+                                <a href="javascript:void(0);" class="dropdown-item">
+                                    <img src="{{ asset('public/assets/img/store/store-02.png') }}" alt="Store Logo"
+                                        class="img-fluid">Grocery Apex
+                                </a>
+                                <a href="javascript:void(0);" class="dropdown-item">
+                                    <img src="{{ asset('public/assets/img/store/store-03.png') }}" alt="Store Logo"
+                                        class="img-fluid">Grocery Bevy
+                                </a>
+                                <a href="javascript:void(0);" class="dropdown-item">
+                                    <img src="{{ asset('public/assets/img/store/store-04.png') }}" alt="Store Logo"
+                                        class="img-fluid">Grocery Eden
+                                </a>
+                            </div>
+                        </li>
+                        <!-- /Select Store -->
 
-                    <li class="nav-item dropdown link-nav">
-                        <a href="javascript:void(0);" class="btn btn-primary btn-md d-inline-flex align-items-center"
-                            data-bs-toggle="dropdown">
-                            <i class="ti ti-circle-plus me-1"></i>Add New
-                        </a>
-                        <div class="dropdown-menu dropdown-xl dropdown-menu-center">
-                            <div class="row g-2">
-                                <div class="col-md-2">
-                                    <a href="category-list.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-brand-codepen"></i>
-                                        </span>
-                                        <p>Category</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="add-product.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-square-plus"></i>
-                                        </span>
-                                        <p>Product</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="category-list.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-shopping-bag"></i>
-                                        </span>
-                                        <p>Purchase</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="online-orders.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-shopping-cart"></i>
-                                        </span>
-                                        <p>Sale</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="expense-list.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-file-text"></i>
-                                        </span>
-                                        <p>Expense</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="quotation-list.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-device-floppy"></i>
-                                        </span>
-                                        <p>Quotation</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="sales-returns.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-copy"></i>
-                                        </span>
-                                        <p>Return</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="users.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-user"></i>
-                                        </span>
-                                        <p>User</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="customers.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-users"></i>
-                                        </span>
-                                        <p>Customer</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="sales-report.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-shield"></i>
-                                        </span>
-                                        <p>Biller</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="suppliers.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-user-check"></i>
-                                        </span>
-                                        <p>Supplier</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="stock-transfer.html" class="link-item">
-                                        <span class="link-icon">
-                                            <i class="ti ti-truck"></i>
-                                        </span>
-                                        <p>Transfer</p>
-                                    </a>
+                        <li class="nav-item dropdown link-nav">
+                            <a href="javascript:void(0);"
+                                class="btn btn-primary btn-md d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
+                                <i class="ti ti-circle-plus me-1"></i>Add New
+                            </a>
+                            <div class="dropdown-menu dropdown-xl dropdown-menu-center">
+                                <div class="row g-2">
+                                    <div class="col-md-2">
+                                        <a href="category-list.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-brand-codepen"></i>
+                                            </span>
+                                            <p>Category</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="add-product.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-square-plus"></i>
+                                            </span>
+                                            <p>Product</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="category-list.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-shopping-bag"></i>
+                                            </span>
+                                            <p>Purchase</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="online-orders.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-shopping-cart"></i>
+                                            </span>
+                                            <p>Sale</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="expense-list.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-file-text"></i>
+                                            </span>
+                                            <p>Expense</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="quotation-list.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-device-floppy"></i>
+                                            </span>
+                                            <p>Quotation</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="sales-returns.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-copy"></i>
+                                            </span>
+                                            <p>Return</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="users.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-user"></i>
+                                            </span>
+                                            <p>User</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="customers.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-users"></i>
+                                            </span>
+                                            <p>Customer</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="sales-report.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-shield"></i>
+                                            </span>
+                                            <p>Biller</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="suppliers.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-user-check"></i>
+                                            </span>
+                                            <p>Supplier</p>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="stock-transfer.html" class="link-item">
+                                            <span class="link-icon">
+                                                <i class="ti ti-truck"></i>
+                                            </span>
+                                            <p>Transfer</p>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </li>
+                        </li>
 
-                    <li class="nav-item pos-nav">
-                        <a href="{{ route('pos.index') }}"
-                            class="btn btn-dark btn-md d-inline-flex align-items-center">
-                            <i class="ti ti-device-laptop me-1"></i>POS
-                        </a>
-                    </li>
-
+                        <li class="nav-item pos-nav">
+                            <a href="{{ route('pos.index') }}"
+                                class="btn btn-dark btn-md d-inline-flex align-items-center">
+                                <i class="ti ti-device-laptop me-1"></i>POS
+                            </a>
+                        </li>
+                    @endif
                     <!-- Flag -->
                     <li class="nav-item dropdown has-arrow flag-nav nav-item-box">
                         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);"
@@ -509,17 +553,19 @@
                                 <ul class="notification-list" id="notification-list-container">
                                     @forelse ($unreadNotifications as $notification)
                                         <li class="notification-message">
-                                            <a href="#"> {{-- Link to the purchase details page later --}}
+                                            <a href="{{ $notification->data['action_url'] ?? '#' }}">
+                                                {{-- Link to the notification action URL --}}
                                                 <div class="media d-flex">
                                                     <span class="avatar flex-shrink-0">
                                                         <img alt="Img"
-                                                            src="{{ $notification->data['sender_avatar'] ? asset('public/storage/' . $notification->data['sender_avatar']) : asset('public/storage/images/default_avatar.png') }}">
+                                                            src="{{ isset($notification->data['sender_avatar']) && $notification->data['sender_avatar'] ? asset($notification->data['sender_avatar']) : asset('public/storage/images/default_avatar.png') }}">
                                                     </span>
                                                     <div class="flex-grow-1">
                                                         <p class="noti-details">
                                                             <span
-                                                                class="noti-title">{{ $notification->data['sender_name'] }}</span>
-                                                            {{ $notification->data['message'] }}
+                                                                class="noti-title">{{ $notification->data['sender_name'] ?? 'System' }}</span>
+                                                            {{ $notification->data['message'] ?? 'New notification' }}
+                                                        </p>
                                                         </p>
                                                         <p class="noti-time">
                                                             {{ $notification->created_at->diffForHumans() }}</p>
@@ -844,32 +890,43 @@
             }
         });
 
-
         $(document).ready(function() {
+            // Mark all notifications as read functionality
             $('#mark-all-as-read').on('click', function(e) {
                 e.preventDefault();
 
-                // This AJAX call will now automatically include the X-CSRF-TOKEN header
-                // because of the $.ajaxSetup configuration.
-                $.ajax({
-                    url: '{{ route('notifications.markAsRead') }}',
-                    type: 'POST', // The method is POST
-                    // We don't need to manually add the token to the data if ajaxSetup is configured
-                    success: function(response) {
-                        if (response.success) {
-                            $('#notification-count').text('0').css('visibility', 'hidden');
-                            $('#notification-list-container').html(`
-                        <li class="notification-message" id="no-new-notifications">
-                            <div class="media d-flex justify-content-center">
-                               <p class="text-muted mt-3">No new notifications</p>
-                            </div>
-                        </li>`);
+                // Use global function to sync all notification displays
+                if (typeof window.markAllNotificationsAsReadGlobally === 'function') {
+                    window.markAllNotificationsAsReadGlobally().then(success => {
+                        if (!success) {
+                            alert('Could not mark notifications as read.');
                         }
-                    },
-                    error: function() {
-                        alert('Could not mark notifications as read.');
-                    }
-                });
+                    });
+                } else {
+                    // Fallback to old method
+                    $.ajax({
+                        url: '{{ route('notifications.markAsRead') }}',
+                        type: 'POST',
+                        success: function(response) {
+                            if (response.success) {
+                                // Reset notification count badge
+                                $('#notification-count').text('0').css('visibility', 'hidden');
+
+                                // Show no notifications message
+                                $('#notification-list-container').html(`
+                                    <li class="notification-message" id="no-new-notifications">
+                                        <div class="media d-flex justify-content-center">
+                                            <p class="text-muted mt-3">No new notifications</p>
+                                        </div>
+                                    </li>
+                                `);
+                            }
+                        },
+                        error: function() {
+                            alert('Could not mark notifications as read.');
+                        }
+                    });
+                }
             });
         });
     </script>

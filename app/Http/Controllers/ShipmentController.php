@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Purchase;
 use App\Models\Shipment;
+use App\Models\ShipmentDocument;
+use App\Models\User;
+use App\Notifications\NewShipmentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
 use App\Models\PurchaseSupplier;
 
 class ShipmentController extends Controller
@@ -19,14 +23,15 @@ class ShipmentController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($purchase) {
+            $shipment = null;
+            DB::transaction(function () use ($purchase, &$shipment) {
                 $customer = $purchase->sale->customer;
                 if (!$customer) throw new \Exception("Customer not found.");
 
                 $purchaseNumber = substr($purchase->purchase_number, strrpos($purchase->purchase_number, '-') + 1);
                 $shipmentNumber = 'SHIP-' . $purchaseNumber;
 
-                Shipment::create([
+                $shipment = Shipment::create([
                     'shipment_number' => $shipmentNumber,
                     'customer_id'     => $customer->id,
                     'purchase_id'     => $purchase->id,
@@ -34,10 +39,23 @@ class ShipmentController extends Controller
                     'total_amount'    => 0.00, // Shipping cost is initially 0, to be added later
                 ]);
             });
-        } catch (\Exception $e) { /* ... error handling ... */
+
+            // Send notifications to all users with 'Shipment' role
+            if ($shipment) {
+                $shipmentUsers = User::whereHas('role', function ($query) {
+                    $query->where('name', 'Shipment');
+                })->get();
+
+                if ($shipmentUsers->count() > 0) {
+                    // Pass the current authenticated user as the sender
+                    Notification::send($shipmentUsers, new NewShipmentNotification($shipment, auth()->user()));
+                }
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error creating shipment: ' . $e->getMessage());
         }
 
-        return redirect()->route('shipments.index')->with('success', 'Purchase converted to shipment. Please add shipping cost.');
+        return redirect()->route('shipments.index')->with('success', 'Purchase converted to shipment. Notifications sent to shipment team.');
     }
 
     public function index()
@@ -177,6 +195,39 @@ class ShipmentController extends Controller
      */
     public function update(Request $request, Shipment $shipment)
     {
+        // Check if it's an AJAX request (from order-detail-document page)
+        if ($request->ajax()) {
+            // Authorization: Only shipment role users can update shipment details
+            if (!auth()->user() || !auth()->user()->role || auth()->user()->role->name !== 'Shipment') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Only shipment role users can update shipment details.'
+                ], 403);
+            }
+
+            $request->validate([
+                'delivery_estimation_date' => 'nullable|date',
+                'total_amount' => 'required|numeric|min:0',
+                'type_shipping1' => 'nullable|in:By Sea,By Air,By Train',
+                'type_shipping2' => 'nullable|in:DDP,DDU,CIF',
+                'container' => 'nullable|array',
+            ]);
+
+            $shipment->update([
+                'delivery_estimation_date' => $request->delivery_estimation_date,
+                'total_amount' => $request->total_amount,
+                'type_shipping1' => $request->type_shipping1,
+                'type_shipping2' => $request->type_shipping2,
+                'container' => $request->container,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Shipment updated successfully.',
+            ]);
+        }
+
+        // Regular form submission (from edit page)
         $request->validate([
             'total_amount' => 'required|numeric|min:0',
             // Add other updatable fields here
@@ -312,6 +363,109 @@ class ShipmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Payment for shipment has been added successfully!',
+        ]);
+    }
+
+    /**
+     * Show the order detail document page
+     */
+    public function orderDetailDocument(Shipment $shipment)
+    {
+        $shipment->load('documents');
+
+        // Group documents by type
+        $documentTypes = [
+            'Invoice' => $shipment->documents->where('document_type', 'Invoice'),
+            'BL' => $shipment->documents->where('document_type', 'BL'),
+            'Packing List' => $shipment->documents->where('document_type', 'Packing List'),
+            'Telex' => $shipment->documents->where('document_type', 'Telex'),
+            'Fumigation Certificate' => $shipment->documents->where('document_type', 'Fumigation Certificate'),
+            'MSDS / Safety Data' => $shipment->documents->where('document_type', 'MSDS / Safety Data'),
+            'Insurance' => $shipment->documents->where('document_type', 'Insurance'),
+            'Other Documents' => $shipment->documents->where('document_type', 'Other Documents'),
+        ];
+
+        return view('shipments.order-detail-document', compact('shipment', 'documentTypes'));
+    }
+
+    /**
+     * Upload a document for a shipment
+     */
+    public function uploadDocument(Request $request, Shipment $shipment)
+    {
+        // Authorization: Only shipment role users can upload documents
+        if (!auth()->user() || !auth()->user()->role || auth()->user()->role->name !== 'Shipment') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only shipment role users can upload documents.'
+            ], 403);
+        }
+
+        $request->validate([
+            'document_type' => 'required|string',
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max
+        ]);
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $originalName = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $storedName = time() . '_' . uniqid() . '.' . $extension;
+            $filePath = $file->storeAs('shipment_documents', $storedName, 'public');
+
+            $shipment->documents()->create([
+                'document_type' => $request->document_type,
+                'original_name' => $originalName,
+                'stored_name' => $storedName,
+                'file_path' => $filePath,
+                'mime_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Document uploaded successfully!',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No file uploaded.',
+        ], 400);
+    }
+
+    /**
+     * Delete a shipment document
+     */
+    public function deleteDocument(Shipment $shipment, ShipmentDocument $document)
+    {
+        // Authorization: Only shipment role users can delete documents
+        if (!auth()->user() || !auth()->user()->role || auth()->user()->role->name !== 'Shipment') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only shipment role users can delete documents.'
+            ], 403);
+        }
+
+        // Ensure the document belongs to this shipment
+        if ($document->shipment_id !== $shipment->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Document does not belong to this shipment.',
+            ], 403);
+        }
+
+        // Delete the file from storage
+        if (Storage::disk('public')->exists($document->file_path)) {
+            Storage::disk('public')->delete($document->file_path);
+        }
+
+        // Delete the database record
+        $document->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Document deleted successfully!',
         ]);
     }
 }

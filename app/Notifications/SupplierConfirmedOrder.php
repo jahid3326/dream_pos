@@ -5,13 +5,11 @@ namespace App\Notifications;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupplierConfirmedOrder extends Notification implements ShouldQueue, ShouldBroadcast
+class SupplierConfirmedOrder extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -34,7 +32,7 @@ class SupplierConfirmedOrder extends Notification implements ShouldQueue, Should
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail', 'broadcast'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -60,29 +58,53 @@ class SupplierConfirmedOrder extends Notification implements ShouldQueue, Should
      */
     public function toArray(object $notifiable): array
     {
-        return [
-            //
-        ];
-    }
+        // Determine sender information
+        $senderName = $this->supplier->company_name ?? $this->supplier->user->name ?? 'Supplier';
+        $senderAvatar = $this->supplier->user && $this->supplier->user->profile_picture
+            ? 'public/storage/' . $this->supplier->user->profile_picture
+            : 'public/storage/images/default_avatar.png';
 
-    public function toDatabase(object $notifiable): array
-    {
+        // Create personalized message
+        $message = $senderName . ' has confirmed their part of PO #' . $this->purchase->purchase_number;
+
         return [
             'purchase_id' => $this->purchase->id,
             'purchase_number' => $this->purchase->purchase_number,
-            'sender_id' => $this->supplier->user->id,
-            'sender_name' => $this->supplier->company_name,
-            'sender_avatar' => $this->supplier->user->profile_picture,
-            'message' => "has confirmed their part of PO #{$this->purchase->purchase_number}",
+            'supplier_id' => $this->supplier->id,
+            'supplier_name' => $this->supplier->company_name,
+            'message' => $message,
+            'action_url' => route('purchases.show', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
         ];
     }
 
     /**
-     * Get the broadcastable representation of the notification.
+     * Get the broadcast representation of the notification.
      */
-    public function toBroadcast(object $notifiable): BroadcastMessage
+    public function toBroadcast(object $notifiable): array
     {
-        // Reuse the same data structure as the database notification.
-        return new BroadcastMessage($this->toDatabase($notifiable));
+        // Determine sender information
+        $senderName = $this->supplier->company_name ?? $this->supplier->user->name ?? 'Supplier';
+        $senderAvatar = $this->supplier->user && $this->supplier->user->profile_picture
+            ? $this->supplier->user->profile_picture
+            : 'images/default_avatar.png';
+
+        // Create personalized message
+        $message = $senderName . ' has confirmed their part of PO #' . $this->purchase->purchase_number;
+
+        return [
+            'id' => $this->id,
+            'type' => 'App\Notifications\SupplierConfirmedOrder',
+            'purchase_id' => $this->purchase->id,
+            'purchase_number' => $this->purchase->purchase_number,
+            'supplier_id' => $this->supplier->id,
+            'supplier_name' => $this->supplier->company_name,
+            'message' => $message,
+            'action_url' => route('purchases.show', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
+            'created_at' => now()->toISOString(),
+        ];
     }
 }

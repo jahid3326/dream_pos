@@ -20,6 +20,9 @@ class SuperAdminSeeder extends Seeder
         // === Part 1: Create Super Admin Role and User ===
         $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
 
+        // Create Shipment Role
+        $shipmentRole = Role::firstOrCreate(['name' => 'Shipment']);
+
         User::firstOrCreate(
             ['email' => 'admin@pos.com'],
             [
@@ -29,7 +32,18 @@ class SuperAdminSeeder extends Seeder
                 'profile_picture' => 'images/default_avatar.png'
             ]
         );
-        
+
+        // Create Shipment User
+        User::firstOrCreate(
+            ['email' => 'shipment@pos.com'],
+            [
+                'name' => 'Shipment Manager',
+                'password' => Hash::make('12345678'),
+                'role_id' => $shipmentRole->id,
+                'profile_picture' => 'images/default_avatar.png'
+            ]
+        );
+
         // === Part 2: Create the Default Navigation Items for the Admin ===
 
         // 1. Create the "Main Menu" Header
@@ -73,7 +87,7 @@ class SuperAdminSeeder extends Seeder
                 'order' => 100,
             ]
         );
-        
+
         // Make the original "Settings" dropdown a child of the new header
         $settingsDropdown = NavItem::updateOrCreate(
             ['name' => 'Settings'],
@@ -85,7 +99,7 @@ class SuperAdminSeeder extends Seeder
                 'order' => 110
             ]
         );
-        
+
         // Make all settings links children of the "Settings" DROPDOWN
         NavItem::updateOrCreate(['route' => 'admin.permissions.index'], ['name' => 'Navigation Permissions', 'type' => 'link', 'parent_id' => $settingsDropdown->id, 'order' => 1]);
         NavItem::updateOrCreate(['route' => 'admin.action-permissions.index'], ['name' => 'Action Permissions', 'type' => 'link', 'parent_id' => $settingsDropdown->id, 'order' => 2]);
@@ -134,7 +148,7 @@ class SuperAdminSeeder extends Seeder
         //     ]
         // );
 
-        
+
         // $settingsNav = NavItem::firstOrCreate(
         //     ['name' => 'Settings'],
         //     [

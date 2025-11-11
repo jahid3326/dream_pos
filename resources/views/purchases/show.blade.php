@@ -124,10 +124,10 @@
                                                 height="30">
                                             {{ $supplier->company_name }}
                                         </h5>
-                                        <div>
+                                        <div class="d-flex align-items-center">
                                             <span class="me-3">Review: <span
                                                     class="badge bg-secondary">{{ ucfirst(str_replace('-', ' ', $supplier->pivot->status_review)) }}</span></span>
-                                            <span>Production: <span
+                                            <span class="me-3">Production: <span
                                                     class="badge bg-info">{{ ucfirst($supplier->pivot->status_production) }}</span></span>
                                         </div>
                                     </div>

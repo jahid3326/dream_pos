@@ -17,11 +17,11 @@ class DashboardController extends Controller
         // 1. Get the currently authenticated user
         $user = Auth::user();
 
-        // 2. Check the user's role. We'll check for 'Supplier' first,
-        //    and assume others are 'Admin' or similar for this example.
-        //    You can add more roles like 'Customer' here as needed.
+        // 2. Check the user's role and redirect to appropriate dashboard
         if ($user->role && $user->role->name === 'Supplier') {
             return $this->supplierDashboard();
+        } elseif ($user->role && $user->role->name === 'Shipment') {
+            return $this->shipmentDashboard();
         }
 
         // Default to the Admin dashboard for any other role (Super Admin, Admin, etc.)
@@ -40,10 +40,48 @@ class DashboardController extends Controller
         $totalSales = \App\Models\Sale::count();
         $totalCustomers = \App\Models\Customer::count();
 
+        // Get recent notifications for admin
+        $notifications = Auth::user()->unreadNotifications()->latest()->take(5)->get();
+
         // The admin uses the main 'dashboard.blade.php' view
         return view('dashboard', [
             'totalSales' => $totalSales,
             'totalCustomers' => $totalCustomers,
+            'notifications' => $notifications,
+        ]);
+    }
+
+    /**
+     * Prepare data and return the view for the Shipment dashboard.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function shipmentDashboard()
+    {
+        // Get pending shipments
+        $pendingShipments = \App\Models\Shipment::whereHas('purchase', function ($query) {
+            $query->where('status', '!=', 'completed');
+        })->with(['customer.user', 'purchase'])->latest()->take(10)->get();
+
+        // Get recent shipments
+        $recentShipments = \App\Models\Shipment::with(['customer.user', 'purchase'])
+            ->latest()->take(5)->get();
+
+        // Get notifications for shipment user
+        $notifications = Auth::user()->unreadNotifications()->latest()->take(10)->get();
+
+        // Statistics
+        $totalShipments = \App\Models\Shipment::count();
+        $pendingCount = \App\Models\Shipment::whereHas('purchase', function ($query) {
+            $query->where('status', '!=', 'completed');
+        })->count();
+
+        return view('dashboard.shipment', [
+            'pendingShipments' => $pendingShipments,
+            'recentShipments' => $recentShipments,
+            'notifications' => $notifications,
+            'totalShipments' => $totalShipments,
+            'pendingCount' => $pendingCount,
         ]);
     }
 

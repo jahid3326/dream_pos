@@ -29,6 +29,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaxController;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +70,43 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/shipment', [DashboardController::class, 'shipmentDashboard'])->name('dashboard.shipment');
+
+    // Test notification route
+    Route::get('/test-notification', function () {
+        return view('test-notification');
+    })->name('test.notification.form');
+
+    Route::post('/test-notification', function () {
+        try {
+            // Get all shipment users
+            $shipmentUsers = \App\Models\User::whereHas('role', function ($query) {
+                $query->where('name', 'Shipment');
+            })->get();
+
+            if ($shipmentUsers->isEmpty()) {
+                return back()->with('error', 'No Shipment users found in the system.');
+            }
+
+            // Create a test shipment for notification
+            $testShipment = new \App\Models\Shipment();
+            $testShipment->purchase_id = 1; // Use any existing purchase ID
+            $testShipment->agent_id = auth()->id();
+            $testShipment->total_price = 100.00;
+            $testShipment->payment_status = 'pending';
+            $testShipment->status = 'In Process';
+            $testShipment->save();
+
+            // Send notification to all shipment users with current user as sender
+            foreach ($shipmentUsers as $user) {
+                $user->notify(new \App\Notifications\NewShipmentNotification($testShipment, auth()->user()));
+            }
+
+            return back()->with('success', 'Test notification sent to ' . $shipmentUsers->count() . ' Shipment users.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error sending notification: ' . $e->getMessage());
+        }
+    })->name('test.notification');
     // Logout route for all authenticated users
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -269,8 +307,6 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/purchases/{purchase}/supplier/{supplier}/send-document-reminder', [PurchaseController::class, 'sendDocumentReminder'])
                 ->name('purchases.sendDocumentReminder');
 
-            Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
-
             // Shipment-related routes
             Route::post('/purchases/{purchase}/convert-to-shipping', [ShipmentController::class, 'storeFromPurchase'])->name('purchases.convertToShipping');
 
@@ -282,6 +318,11 @@ Route::middleware(['auth'])->group(function () {
             // --- ADD THESE ROUTES FOR TRACKING ---
             Route::post('/shipments/{shipment}/tracking', [ShipmentController::class, 'addTracking'])->name('shipments.addTracking');
             Route::delete('/shipments/{shipment}/tracking', [ShipmentController::class, 'removeTracking'])->name('shipments.removeTracking');
+
+            // --- ORDER DETAIL DOCUMENT ROUTES ---
+            Route::get('/shipments/{shipment}/order-detail-document', [ShipmentController::class, 'orderDetailDocument'])->name('shipments.orderDetailDocument');
+            Route::post('/shipments/{shipment}/documents', [ShipmentController::class, 'uploadDocument'])->name('shipments.uploadDocument');
+            Route::delete('/shipments/{shipment}/documents/{document}', [ShipmentController::class, 'deleteDocument'])->name('shipments.deleteDocument');
 
             // Resource routes for managing shipments
             Route::resource('shipments', ShipmentController::class);
@@ -310,6 +351,20 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/documents/{document}/upload', [DocumentController::class, 'upload'])->name('documents.upload');
 
+        // Notification routes (outside nav.permission middleware to avoid 403 errors)
+        Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
+        Route::get('/notifications/count', [App\Http\Controllers\NotificationController::class, 'getCount'])->name('notifications.getCount');
+        Route::get('/notifications/latest', [App\Http\Controllers\NotificationController::class, 'getLatest'])->name('notifications.getLatest');
+
+        // Test route to debug middleware issues
+        Route::get('/test-auth', function () {
+            return response()->json([
+                'authenticated' => Auth::check(),
+                'user' => Auth::user() ? Auth::user()->name : null,
+                'role' => Auth::user() && Auth::user()->role ? Auth::user()->role->name : null
+            ]);
+        })->name('test.auth');
+
         // --- 2. ADMIN ZONE (Protected by the 'admin' middleware) ---
         // Only users with the Super Admin role can access these routes.
         Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -331,3 +386,28 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 });
+
+// Test route for notifications (remove in production)
+Route::get('/test-notification/{userId}', function ($userId) {
+    $user = App\Models\User::find($userId);
+
+    if (!$user) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    // Get the latest shipment for testing
+    $shipment = App\Models\Shipment::latest()->first();
+
+    if (!$shipment) {
+        return response()->json(['error' => 'No shipment found for testing'], 404);
+    }
+
+    // Send test notification with current authenticated user as sender
+    $user->notify(new App\Notifications\NewShipmentNotification($shipment, auth()->user()));
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Test notification sent to user: ' . $user->name,
+        'shipment' => $shipment->shipment_number
+    ]);
+})->middleware('auth')->name('test.notification');

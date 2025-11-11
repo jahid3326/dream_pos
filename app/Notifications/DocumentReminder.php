@@ -5,13 +5,11 @@ namespace App\Notifications;
 use App\Models\Purchase;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class DocumentReminder extends Notification implements ShouldQueue, ShouldBroadcast
+class DocumentReminder extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -34,7 +32,7 @@ class DocumentReminder extends Notification implements ShouldQueue, ShouldBroadc
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail', 'broadcast'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -55,27 +53,6 @@ class DocumentReminder extends Notification implements ShouldQueue, ShouldBroadc
             ->line('Thank you for your prompt attention to this matter.');
     }
 
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'purchase_id' => $this->purchase->id,
-            'purchase_number' => $this->purchase->purchase_number,
-            'sender_id' => $this->adminUser->id,
-            'sender_name' => $this->adminUser->name,
-            'sender_avatar' => $this->adminUser->profile_picture,
-            'message' => "sent you a reminder for missing documents on PO #{$this->purchase->purchase_number}",
-        ];
-    }
-
-    /**
-     * Get the broadcastable representation of the notification.
-     */
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        // We can efficiently reuse the same data structure as the database notification.
-        return new BroadcastMessage($this->toDatabase($notifiable));
-    }
-
     /**
      * Get the array representation of the notification.
      *
@@ -83,8 +60,53 @@ class DocumentReminder extends Notification implements ShouldQueue, ShouldBroadc
      */
     public function toArray(object $notifiable): array
     {
+        // Determine sender information
+        $senderName = $this->adminUser ? $this->adminUser->name : 'Admin';
+        $senderAvatar = $this->adminUser && $this->adminUser->profile_picture
+            ? 'public/storage/' . $this->adminUser->profile_picture
+            : 'public/storage/images/default_avatar.png';
+
+        // Create personalized message
+        $message = $senderName . ' sent you a reminder for missing documents on PO #' . $this->purchase->purchase_number;
+
         return [
-            //
+            'purchase_id' => $this->purchase->id,
+            'purchase_number' => $this->purchase->purchase_number,
+            'admin_id' => $this->adminUser->id,
+            'admin_name' => $this->adminUser->name,
+            'message' => $message,
+            'action_url' => route('documents.showUploadForm', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
+        ];
+    }
+
+    /**
+     * Get the broadcast representation of the notification.
+     */
+    public function toBroadcast(object $notifiable): array
+    {
+        // Determine sender information
+        $senderName = $this->adminUser ? $this->adminUser->name : 'Admin';
+        $senderAvatar = $this->adminUser && $this->adminUser->profile_picture
+            ? $this->adminUser->profile_picture
+            : 'images/default_avatar.png';
+
+        // Create personalized message
+        $message = $senderName . ' sent you a reminder for missing documents on PO #' . $this->purchase->purchase_number;
+
+        return [
+            'id' => $this->id,
+            'type' => 'App\Notifications\DocumentReminder',
+            'purchase_id' => $this->purchase->id,
+            'purchase_number' => $this->purchase->purchase_number,
+            'admin_id' => $this->adminUser->id,
+            'admin_name' => $this->adminUser->name,
+            'message' => $message,
+            'action_url' => route('documents.showUploadForm', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
+            'created_at' => now()->toISOString(),
         ];
     }
 }

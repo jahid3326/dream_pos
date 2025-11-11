@@ -121,7 +121,8 @@
                                 <div class="col-md-6 mb-4">
                                     <div class="text-muted">Estimation delivery:</div>
                                     <div class="fw-bold summary-value">
-                                        {{ $shipment->created_at->addDays(14)->format('d-m-Y H:i a') }}</div>
+                                        {{ $shipment->delivery_estimation_date ? $shipment->delivery_estimation_date->format('d-m-Y') : 'Not set' }}
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-4">
                                     <div class="text-muted">Payment Status:</div>
@@ -350,6 +351,45 @@
             });
 
             @if (Auth::user() && Auth::user()->isSuperAdmin())
+                // Real-time Amount Due calculation
+                const totalDue = {{ $dueAmount }};
+                $('#shipment-payment-amount').on('input', function() {
+                    const amountPaid = parseFloat($(this).val()) || 0;
+                    const remainingDue = Math.max(0, totalDue - amountPaid);
+
+                    $('#remaining-due').text(remainingDue.toFixed(2));
+
+                    // Visual feedback for amount validation
+                    const input = $(this);
+                    if (amountPaid > totalDue) {
+                        input.addClass('is-invalid');
+                        if (!input.next('.invalid-feedback').length) {
+                            input.after(
+                                '<div class="invalid-feedback">Amount cannot exceed total due amount</div>'
+                                );
+                        }
+                    } else if (amountPaid < 0) {
+                        input.addClass('is-invalid');
+                        if (!input.next('.invalid-feedback').length) {
+                            input.after('<div class="invalid-feedback">Amount cannot be negative</div>');
+                        }
+                    } else {
+                        input.removeClass('is-invalid');
+                        input.next('.invalid-feedback').remove();
+                    }
+                });
+
+                // Reset form when modal is shown
+                $('#addShipmentPaymentModal').on('show.bs.modal', function() {
+                    const form = $('#add-shipment-payment-form');
+                    form[0].reset();
+                    form.find('.is-invalid').removeClass('is-invalid');
+                    form.find('.invalid-feedback').remove();
+                    $('#shipment-payment-errors').hide().empty();
+                    $('#remaining-due').text('{{ number_format($dueAmount, 2) }}');
+                    $('#shipment-payment-date').val('{{ now()->format('Y-m-d') }}');
+                });
+
                 // --- AJAX Submission for the Add Shipment Payment Modal ---
                 $('#add-shipment-payment-form').on('submit', function(event) {
                     event.preventDefault();
@@ -357,7 +397,28 @@
                     const url = form.attr('action');
                     const formData = new FormData(this);
                     const submitButton = form.find('button[type="submit"]');
-                    const errorContainer = $('#shipment-payment-errors'); // Target the correct error div
+                    const errorContainer = $('#shipment-payment-errors');
+                    const amountInput = $('#shipment-payment-amount');
+                    const amountPaid = parseFloat(amountInput.val()) || 0;
+
+                    // Client-side validation
+                    if (amountPaid <= 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Amount',
+                            text: 'Please enter a valid payment amount greater than 0'
+                        });
+                        return;
+                    }
+
+                    if (amountPaid > totalDue) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Amount Too High',
+                            text: `Payment amount cannot exceed the due amount of $${totalDue.toFixed(2)}`
+                        });
+                        return;
+                    }
 
                     submitButton.prop('disabled', true).text('Saving...');
                     errorContainer.hide().empty(); // Clear previous errors

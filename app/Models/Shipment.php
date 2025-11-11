@@ -10,7 +10,12 @@ class Shipment extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
-    protected $casts = ['shipment_date' => 'date', 'tracking_urls' => 'array',];
+    protected $casts = [
+        'shipment_date' => 'date',
+        'delivery_estimation_date' => 'date',
+        'tracking_urls' => 'array',
+        'container' => 'array',
+    ];
 
     public function customer()
     {
@@ -25,5 +30,11 @@ class Shipment extends Model
     public function payments()
     {
         return $this->hasMany(ShipmentPayment::class);
+    }
+
+    // A shipment can have many documents
+    public function documents()
+    {
+        return $this->hasMany(ShipmentDocument::class);
     }
 }

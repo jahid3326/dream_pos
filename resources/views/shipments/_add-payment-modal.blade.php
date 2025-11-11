@@ -5,12 +5,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addShipmentPaymentModalLabel">Add Payment for Shipment
-                    #{{ $shipment->shipment_number }}</h5>
+                    @isset($shipment)
+                        #{{ $shipment->shipment_number }}
+                    @endisset
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form action="{{ route('shipments.addPayment', $shipment) }}" method="POST" enctype="multipart/form-data"
-                id="add-shipment-payment-form">
+            <form @isset($shipment)action="{{ route('shipments.addPayment', $shipment) }}"@endisset
+                method="POST" enctype="multipart/form-data" id="add-shipment-payment-form">
                 @csrf
                 <div class="modal-body">
                     {{-- Container for validation errors from AJAX --}}
@@ -20,9 +23,14 @@
                         <label for="shipment-payment-amount" class="form-label">Amount Paid <span
                                 class="text-danger">*</span></label>
                         <input type="number" step="0.01" name="amount" id="shipment-payment-amount"
-                            class="form-control" value="{{ old('amount', number_format($dueAmount, 2, '.', '')) }}"
-                            max="{{ $dueAmount }}" required>
-                        <small class="form-text text-muted">Amount Due: ${{ number_format($dueAmount, 2) }}</small>
+                            class="form-control" placeholder="Enter payment amount" autocomplete="off" required>
+                        <small class="form-text">
+                            <span class="text-info">Remaining Due: $<span id="remaining-due" class="fw-bold">
+                                    @isset($dueAmount)
+                                        {{ number_format($dueAmount, 2) }}@else0.00
+                                    @endisset
+                                </span></span>
+                        </small>
                     </div>
 
                     <div class="mb-3">
@@ -52,7 +60,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Payment</button>
                 </div>
             </form>

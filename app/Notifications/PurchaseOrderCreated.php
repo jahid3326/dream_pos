@@ -7,13 +7,11 @@ use App\Models\User;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 
-class PurchaseOrderCreated extends Notification implements ShouldBroadcast
+class PurchaseOrderCreated extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -40,7 +38,7 @@ class PurchaseOrderCreated extends Notification implements ShouldBroadcast
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast', 'mail'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -68,41 +66,55 @@ class PurchaseOrderCreated extends Notification implements ShouldBroadcast
      */
     public function toArray(object $notifiable): array
     {
+        // Determine sender information
+        $senderName = $this->sender ? $this->sender->name : 'System';
+        $senderAvatar = $this->sender && $this->sender->profile_picture
+            ? 'public/storage/' . $this->sender->profile_picture
+            : 'public/storage/images/default_avatar.png';
+
+        // Create personalized message
+        $message = $this->sender
+            ? $senderName . ' created a new Purchase Order: #' . $this->purchase->purchase_number
+            : 'New purchase order #' . $this->purchase->purchase_number . ' has been created.';
+
         return [
-            //
+            'purchase_id' => $this->purchase->id,
+            'purchase_number' => $this->purchase->purchase_number,
+            'supplier_total_amount' => $this->supplierTotalAmount,
+            'message' => $message,
+            'action_url' => route('orders.show', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
         ];
     }
 
     /**
-     * Get the array representation of the notification for the database.
-     * This is the data that gets stored in the `data` column.
-     * @return array<string, mixed>
+     * Get the broadcast representation of the notification.
      */
-    public function toDatabase(object $notifiable): array
+    public function toBroadcast(object $notifiable): array
     {
-        return [
-            'purchase_id' => $this->purchase->id,
-            'purchase_number' => $this->purchase->purchase_number,
-            'sender_id' => $this->sender->id,
-            'sender_name' => $this->sender->name,
-            'sender_avatar' => $this->sender->profile_picture,
-            'message' => "created a new Purchase Order: #{$this->purchase->purchase_number}",
-        ];
-    }
+        // Determine sender information
+        $senderName = $this->sender ? $this->sender->name : 'System';
+        $senderAvatar = $this->sender && $this->sender->profile_picture
+            ? $this->sender->profile_picture
+            : 'images/default_avatar.png';
 
-    /**
-     * Get the broadcastable representation of the notification.
-     * This is the data packet sent to the frontend via Pusher.
-     */
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage([
+        // Create personalized message
+        $message = $this->sender
+            ? $senderName . ' created a new Purchase Order: #' . $this->purchase->purchase_number
+            : 'New purchase order #' . $this->purchase->purchase_number . ' has been created.';
+
+        return [
+            'id' => $this->id,
+            'type' => 'App\Notifications\PurchaseOrderCreated',
             'purchase_id' => $this->purchase->id,
             'purchase_number' => $this->purchase->purchase_number,
-            'sender_id' => $this->sender->id,
-            'sender_name' => $this->sender->name,
-            'sender_avatar' => $this->sender->profile_picture,
-            'message' => "created a new Purchase Order: #{$this->purchase->purchase_number}",
-        ]);
+            'supplier_total_amount' => $this->supplierTotalAmount,
+            'message' => $message,
+            'action_url' => route('orders.show', $this->purchase),
+            'sender_name' => $senderName,
+            'sender_avatar' => $senderAvatar,
+            'created_at' => now()->toISOString(),
+        ];
     }
 }
