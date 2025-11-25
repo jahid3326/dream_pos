@@ -17,3 +17,22 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Notification API routes for polling fallback
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications/unread-count', function (Request $request) {
+        $notifications = $request->user()->unreadNotifications()->latest()->take(10)->get();
+        return response()->json([
+            'count' => $notifications->count(),
+            'notifications' => $notifications
+        ]);
+    });
+
+    Route::get('/notifications/latest', function (Request $request) {
+        $notifications = $request->user()->unreadNotifications()->latest()->take(10)->get();
+        return response()->json([
+            'count' => $notifications->count(),
+            'notifications' => $notifications
+        ]);
+    });
+});

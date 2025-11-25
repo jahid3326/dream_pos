@@ -90,7 +90,11 @@
                         </ol>
                     </nav>
                 </div>
-                <div>
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="history.back()"
+                        title="Back">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </button>
                     @php $supplierStatusReview = $purchase->suppliers->firstWhere('id', Auth::user()->supplierProfile->id)->pivot->status_review; @endphp
                     <span
                         class="status-badge-header status-{{ Str::slug($supplierStatusReview) }}">{{ ucfirst(str_replace('-', ' ', $supplierStatusReview)) }}</span>
@@ -126,8 +130,8 @@
                             <div class="col-md-4">
                                 <label class="fw-bold">Ready Date <small class="fw-normal text-muted">(for pickup
                                         good)</small></label>
-                                <input type="text" name="ready_date" class="form-control" placeholder="DD/MM/YYYY"
-                                    value="{{ $supplierPivotData->ready_date ? \Carbon\Carbon::parse($supplierPivotData->ready_date)->format('d/m/Y') : '' }}">
+                                <input type="date" id="ready_date" name="ready_date" class="form-control"
+                                    value="{{ $supplierPivotData->ready_date ? \Carbon\Carbon::parse($supplierPivotData->ready_date)->format('Y-m-d') : '' }}">
                             </div>
                         </div>
 
@@ -326,6 +330,10 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4 me-2 mb-5">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="history.back()"
+                        title="Back">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </button>
                     <button type="submit" class="btn btn-primary px-4">Save Changes</button>
                     <a href="{{ route('orders.details', $purchase) }}" class="btn btn-outline-secondary px-4">Cancel</a>
                 </div>
@@ -444,6 +452,8 @@
                 });
                 dimensionCounter = $('#dimensions-list .dimension-item').length;
             });
+
+            // ready_date is a native date input now (ISO yyyy-mm-dd)
         });
     </script>
 @endpush

@@ -98,7 +98,11 @@
                         </ol>
                     </nav>
                 </div>
-                <div>
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="history.back()"
+                        title="Back">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </button>
                     @php
                         // Get the status for the logged-in supplier from the pivot table
                         $supplierStatusReview = $purchase->suppliers->firstWhere(

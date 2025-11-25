@@ -103,4 +103,42 @@ class NotificationController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Mark a single notification as read
+     */
+    public function markAsRead($id)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $notification = $user->notifications()->where('id', $id)->first();
+
+            if (!$notification) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Notification not found'
+                ], 404);
+            }
+
+            $notification->markAsRead();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification marked as read'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error marking notification as read: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

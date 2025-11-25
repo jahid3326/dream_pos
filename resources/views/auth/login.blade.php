@@ -16,10 +16,10 @@
     <title>{{ config('app.name') }} - Sign In</title>
 
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('public/assets/img/favicon.png') }}">
-
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('public/assets/img/apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('public/assets/favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('public/assets/favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('public/assets/favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('public/assets/favicon/site.webmanifest') }}">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap.min.css') }}">
@@ -75,7 +75,7 @@
                                 <div class="login-logo logo-normal">
                                     <img src="{{ asset('public/assets/img/logo.svg') }}" alt="img">
                                 </div>
-                                <a href="index.html" class="login-logo logo-white">
+                                <a href="{{ route('dashboard') }}" class="login-logo logo-white">
                                     <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
                                 </a>
                                 <div class="login-userheading">
@@ -136,11 +136,6 @@
                                 </div>
                                 <div class="form-login">
                                     <button type="submit" class="btn btn-login">Sign In</button>
-                                </div>
-                                <div class="form-sociallink">
-                                    <div class="my-4 d-flex justify-content-center align-items-center copyright-text">
-                                        <p>Copyright &copy; 2025 DreamsPOS</p>
-                                    </div>
                                 </div>
                             </div>
                         </form>

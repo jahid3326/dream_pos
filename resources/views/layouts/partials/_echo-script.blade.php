@@ -1,28 +1,113 @@
 @auth
     <script>
+        let echoConnected = false;
+        let pollingInterval = null;
+
         window.addEventListener('load', function() {
+            // Try to establish Echo connection first
             if (typeof window.Echo !== 'undefined') {
                 const userId = {{ Auth::id() }};
 
-                // Laravel's default private channel for a user's notifications
-                window.Echo.private(`App.Models.User.${userId}`)
-                    .notification((notification) => {
-                        console.log('New Notification Received via Echo:', notification);
+                try {
+                    // Laravel's default private channel for a user's notifications
+                    window.Echo.private(`App.Models.User.${userId}`)
+                        .notification((notification) => {
+                            console.log('New Notification Received via Echo:', notification);
+                            echoConnected = true;
 
-                        // Update Header Notifications
-                        updateHeaderFromEcho(notification);
+                            // Update Header Notifications
+                            updateHeaderFromEcho(notification);
 
-                        // Update Shipment Dashboard if we're on that page
-                        if (typeof updateShipmentDashboardFromEcho === 'function') {
-                            updateShipmentDashboardFromEcho(notification);
+                            // Update Shipment Dashboard if we're on that page
+                            if (typeof updateShipmentDashboardFromEcho === 'function') {
+                                updateShipmentDashboardFromEcho(notification);
+                            }
+                        })
+                        .error((error) => {
+                            console.warn('Echo connection failed:', error);
+                            // startFallbackPolling();
+                        });
+
+                    // Check if Echo is actually working after 3 seconds
+                    setTimeout(() => {
+                        if (!echoConnected) {
+                            console.warn('Echo not responding, falling back to polling');
+                            // startFallbackPolling();
                         }
-                    });
+                    }, 3000);
+
+                } catch (error) {
+                    console.warn('Echo initialization failed:', error);
+                    // startFallbackPolling();
+                }
+            } else {
+                console.warn('Echo not available, using polling fallback');
+                // startFallbackPolling();
             }
         });
 
+        // Fallback polling function for when Echo fails
+        function startFallbackPolling() {
+            if (pollingInterval) return; // Already polling
+
+            console.log('Starting fallback polling for notifications');
+
+            pollingInterval = setInterval(() => {
+                fetch('/api/notifications/unread-count', {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.notifications && data.notifications.length > 0) {
+                            // Check for new notifications and update UI
+                            updateHeaderFromPolling(data.notifications);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Polling failed:', error);
+                    });
+            }, 5000); // Poll every 5 seconds
+        }
+
+        // Update header from polling data
+        function updateHeaderFromPolling(notifications) {
+            const currentCount = parseInt(document.getElementById('notification-count')?.textContent || '0');
+            const newCount = notifications.length;
+
+            if (newCount > currentCount) {
+                // New notifications found, refresh header
+                updateHeaderFromEcho(null, true); // Trigger refresh
+            }
+        }
+
         // Header notification update function
-        function updateHeaderFromEcho(notification) {
+        function updateHeaderFromEcho(notification, forceRefresh = false) {
             console.log('Updating header from Echo notification:', notification);
+
+            // If this is a forced refresh from polling, reload all notifications
+            if (forceRefresh) {
+                fetch('/api/notifications/latest', {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        refreshNotificationDisplay(data.notifications);
+                        syncNotificationCount(data.count);
+                    })
+                    .catch(error => console.error('Failed to refresh notifications:', error));
+                return;
+            }
+
+            if (!notification) return;
 
             // Add the notification to header immediately (for instant UI feedback)
             const listContainer = document.getElementById('notification-list-container');
@@ -142,6 +227,58 @@
                 dashboardCountElement.textContent = count;
             }
         };
+
+        // Refresh entire notification display from server data
+        function refreshNotificationDisplay(notifications) {
+            const listContainer = document.getElementById('notification-list-container');
+            if (!listContainer) return;
+
+            // Clear existing notifications
+            listContainer.innerHTML = '';
+
+            if (notifications.length === 0) {
+                listContainer.innerHTML =
+                    '<li class="notification-message" id="no-new-notifications"><a href="#"><div class="media d-flex"><div class="flex-grow-1"><p class="noti-details"><span class="noti-title">No new notifications</span></p></div></div></a></li>';
+                return;
+            }
+
+            // Build notification HTML
+            notifications.forEach(notification => {
+                let sender_image = notification.data && notification.data.sender_avatar ?
+                    notification.data.sender_avatar : 'images/default_avatar.png';
+
+                const notificationHtml = `
+                    <li class="notification-message">
+                        <a href="${notification.data && notification.data.action_url ? notification.data.action_url : '#'}">
+                            <div class="media d-flex">
+                                <span class="avatar flex-shrink-0">
+                                    <img alt="Img" src="/public/storage/${sender_image}">
+                                </span>
+                                <div class="flex-grow-1">
+                                    <p class="noti-details">
+                                        <span class="noti-title">${notification.data && notification.data.sender_name ? notification.data.sender_name : 'System'}</span>
+                                        ${notification.data && notification.data.message ? notification.data.message : 'New notification'}
+                                    </p>
+                                    <p class="noti-time">${formatTimeAgo(notification.created_at)}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </li>`;
+                listContainer.innerHTML += notificationHtml;
+            });
+        }
+
+        // Helper function to format time ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInMinutes = Math.floor((now - date) / 60000);
+
+            if (diffInMinutes < 1) return 'Just now';
+            if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+            if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+            return `${Math.floor(diffInMinutes / 1440)}d ago`;
+        }
 
         window.syncNotificationDisplay = function(notifications) {
             // Update header notifications

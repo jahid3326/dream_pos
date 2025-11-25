@@ -55,7 +55,7 @@ class DocumentController extends Controller
         $supplier = $this->authorizeSupplier($purchase);
 
         $request->validate([
-            'ready_date' => 'nullable|date_format:d/m/Y',
+            'ready_date' => 'nullable',
             'documents' => 'nullable|array',
             'documents.*.*' => 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx,xls,xlsx,gif,svg,csv,zip,rar',
             'packing_type' => 'nullable|string|max:255',
@@ -71,7 +71,7 @@ class DocumentController extends Controller
             DB::transaction(function () use ($request, $purchase, $supplier) {
                 // Update Ready Date
                 if ($request->filled('ready_date')) {
-                    $purchase->suppliers()->updateExistingPivot($supplier->id, ['ready_date' => Carbon::createFromFormat('d/m/Y', $request->ready_date)->format('Y-m-d')]);
+                    $purchase->suppliers()->updateExistingPivot($supplier->id, ['ready_date' => $request->ready_date]);
                 } else {
                     $purchase->suppliers()->updateExistingPivot($supplier->id, ['ready_date' => null]);
                 }

@@ -413,7 +413,7 @@ class PurchaseController extends Controller
             // 1. Update the pivot table status for this specific supplier
             $purchase->suppliers()->updateExistingPivot($supplier->id, [
                 'status_review' => 'validated', // Or 'validated'
-                'status_production' => 'in process',
+                'status_production' => 'waiting',
             ]);
 
             // 2. Send notification to the supplier

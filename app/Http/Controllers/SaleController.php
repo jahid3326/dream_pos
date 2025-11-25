@@ -743,4 +743,20 @@ class SaleController extends Controller
         $sale->delete();
         return redirect()->route('sales.index')->with('success', 'Sale deleted successfully.');
     }
+
+    /**
+     * Mark the sale as complete.
+     */
+    public function markComplete(Request $request, Sale $sale)
+    {
+        $this->authorize('update', $sale);
+
+        try {
+            $sale->update(['order_status' => 'complete']);
+            return redirect()->back()->with('success', 'Sale marked as complete.');
+        } catch (\Exception $e) {
+            \Log::error('Failed to mark sale complete: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not mark sale as complete.');
+        }
+    }
 }

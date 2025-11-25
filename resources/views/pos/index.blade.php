@@ -507,7 +507,7 @@
                     const cartId = `c-${productData.productId}-${productData.variationId || '0'}`;
 
                     // Get the category name from the active tab for the description
-                    const categoryName = $('#level-2-tabs').find('.active h6 a').text() ||
+                    const categoryName = $('#level-2-tabs').find('li.active h6 a').text() ||
                         'Category';
 
                     // Add to the cart object, or update quantity if it already exists

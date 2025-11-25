@@ -2,13 +2,13 @@
 
     <!-- Logo -->
     <div class="header-left active">
-        <a href="index.html" class="logo logo-normal">
+        <a href="{{ route('dashboard') }}" class="logo logo-normal">
             <img src="{{ asset('public/assets/img/logo.svg') }}" alt="Img">
         </a>
-        <a href="index.html" class="logo logo-white">
+        <a href="{{ route('dashboard') }}" class="logo logo-white">
             <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
         </a>
-        <a href="index.html" class="logo-small">
+        <a href="{{ route('dashboard') }}" class="logo-small">
             <img src="{{ asset('public/assets/img/logo-small.png') }}" alt="Img">
         </a>
     </div>

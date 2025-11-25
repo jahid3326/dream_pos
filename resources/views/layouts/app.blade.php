@@ -19,10 +19,10 @@
     <script src="{{ asset('public/assets/js/theme-script.js') }}"></script>
 
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('public/assets/img/favicon.png') }}">
-
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('public/assets/img/apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('public/assets/favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('public/assets/favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('public/assets/favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('public/assets/favicon/site.webmanifest') }}">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap.min.css') }}">
@@ -72,6 +72,10 @@
     <style>
         .form-control {
             border-color: #bcc2c7;
+        }
+
+        .header .top-nav-search form .form-control {
+            border: 1px solid rgb(153 114 114 / 15%) !important;
         }
 
         .form-select {
@@ -271,13 +275,13 @@
 
                 <!-- Logo -->
                 <div class="header-left active">
-                    <a href="index.html" class="logo logo-normal">
+                    <a href="{{ route('dashboard') }}" class="logo logo-normal">
                         <img src="{{ asset('public/assets/img/logo.svg') }}" alt="Img">
                     </a>
-                    <a href="index.html" class="logo logo-white">
+                    <a href="{{ route('dashboard') }}" class="logo logo-white">
                         <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
                     </a>
-                    <a href="index.html" class="logo-small">
+                    <a href="{{ route('dashboard') }}" class="logo-small">
                         <img src="{{ asset('public/assets/img/logo-small.png') }}" alt="Img">
                     </a>
                 </div>
@@ -300,50 +304,21 @@
                             <a href="javascript:void(0);" class="responsive-search">
                                 <i class="fa fa-search"></i>
                             </a>
-                            <form action="#" class="dropdown">
+                            <form action="{{ route('global.search') }}" method="GET" class="dropdown"
+                                autocomplete="off">
                                 <div class="searchinputs input-group dropdown-toggle" id="dropdownMenuClickable"
                                     data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                    <input type="text" placeholder="Search">
+                                    <input type="text" name="q" placeholder="Search" class="form-control"
+                                        autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off"
+                                        style="padding-left: 25px;">
                                     <div class="search-addon">
                                         <span><i class="ti ti-search"></i></span>
                                     </div>
                                     <span class="input-group-text">
                                         <kbd class="d-flex align-items-center"><img
-                                                src="{{ asset('public/assets/img/icons/command.svg') }}" alt="img"
-                                                class="me-1">K</kbd>
+                                                src="{{ asset('public/assets/img/icons/command.svg') }}"
+                                                alt="img" class="me-1">K</kbd>
                                     </span>
-                                </div>
-                                <div class="dropdown-menu search-dropdown" aria-labelledby="dropdownMenuClickable">
-                                    <div class="search-info">
-                                        <h6><span><i data-feather="search" class="feather-16"></i></span>Recent
-                                            Searches
-                                        </h6>
-                                        <ul class="search-tags">
-                                            <li><a href="javascript:void(0);">Products</a></li>
-                                            <li><a href="javascript:void(0);">Sales</a></li>
-                                            <li><a href="javascript:void(0);">Applications</a></li>
-                                        </ul>
-                                    </div>
-                                    <div class="search-info">
-                                        <h6><span><i data-feather="help-circle" class="feather-16"></i></span>Help
-                                        </h6>
-                                        <p>How to Change Product Volume from 0 to 200 on Inventory management</p>
-                                        <p>Change Product Name</p>
-                                    </div>
-                                    <div class="search-info">
-                                        <h6><span><i data-feather="user" class="feather-16"></i></span>Customers</h6>
-                                        <ul class="customers">
-                                            <li><a href="javascript:void(0);">Aron Varu<img
-                                                        src="{{ asset('public/assets/img/profiles/avator1.jpg') }}"
-                                                        alt="Img" class="img-fluid"></a></li>
-                                            <li><a href="javascript:void(0);">Jonita<img
-                                                        src="{{ asset('public/assets/img/profiles/avatar-01.jpg') }}"
-                                                        alt="Img" class="img-fluid"></a></li>
-                                            <li><a href="javascript:void(0);">Aaron<img
-                                                        src="{{ asset('public/assets/img/profiles/avatar-10.jpg') }}"
-                                                        alt="Img" class="img-fluid"></a></li>
-                                        </ul>
-                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -352,149 +327,6 @@
                     @if (
                         (Auth::user() && Auth::user()->role && Auth::user()->role->name === 'Super Admin') ||
                             Auth::user()->role->name === 'Sales')
-                        <!-- Select Store -->
-                        <li class="nav-item dropdown has-arrow main-drop select-store-dropdown">
-                            <a href="javascript:void(0);" class="dropdown-toggle nav-link select-store"
-                                data-bs-toggle="dropdown">
-                                <span class="user-info">
-                                    <span class="user-letter">
-                                        <img src="{{ asset('public/assets/img/store/store-01.png') }}"
-                                            alt="Store Logo" class="img-fluid">
-                                    </span>
-                                    <span class="user-detail">
-                                        <span class="user-name">Freshmart</span>
-                                    </span>
-                                </span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="{{ asset('public/assets/img/store/store-01.png') }}" alt="Store Logo"
-                                        class="img-fluid">Freshmart
-                                </a>
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="{{ asset('public/assets/img/store/store-02.png') }}" alt="Store Logo"
-                                        class="img-fluid">Grocery Apex
-                                </a>
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="{{ asset('public/assets/img/store/store-03.png') }}" alt="Store Logo"
-                                        class="img-fluid">Grocery Bevy
-                                </a>
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="{{ asset('public/assets/img/store/store-04.png') }}" alt="Store Logo"
-                                        class="img-fluid">Grocery Eden
-                                </a>
-                            </div>
-                        </li>
-                        <!-- /Select Store -->
-
-                        <li class="nav-item dropdown link-nav">
-                            <a href="javascript:void(0);"
-                                class="btn btn-primary btn-md d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-circle-plus me-1"></i>Add New
-                            </a>
-                            <div class="dropdown-menu dropdown-xl dropdown-menu-center">
-                                <div class="row g-2">
-                                    <div class="col-md-2">
-                                        <a href="category-list.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-brand-codepen"></i>
-                                            </span>
-                                            <p>Category</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="add-product.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-square-plus"></i>
-                                            </span>
-                                            <p>Product</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="category-list.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-shopping-bag"></i>
-                                            </span>
-                                            <p>Purchase</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="online-orders.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-shopping-cart"></i>
-                                            </span>
-                                            <p>Sale</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="expense-list.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-file-text"></i>
-                                            </span>
-                                            <p>Expense</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="quotation-list.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-device-floppy"></i>
-                                            </span>
-                                            <p>Quotation</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="sales-returns.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-copy"></i>
-                                            </span>
-                                            <p>Return</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="users.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-user"></i>
-                                            </span>
-                                            <p>User</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="customers.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-users"></i>
-                                            </span>
-                                            <p>Customer</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="sales-report.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-shield"></i>
-                                            </span>
-                                            <p>Biller</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="suppliers.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-user-check"></i>
-                                            </span>
-                                            <p>Supplier</p>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="stock-transfer.html" class="link-item">
-                                            <span class="link-icon">
-                                                <i class="ti ti-truck"></i>
-                                            </span>
-                                            <p>Transfer</p>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-
                         <li class="nav-item pos-nav">
                             <a href="{{ route('pos.index') }}"
                                 class="btn btn-dark btn-md d-inline-flex align-items-center">
@@ -503,7 +335,7 @@
                         </li>
                     @endif
                     <!-- Flag -->
-                    <li class="nav-item dropdown has-arrow flag-nav nav-item-box">
+                    {{-- <li class="nav-item dropdown has-arrow flag-nav nav-item-box">
                         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);"
                             role="button">
                             <img src="{{ asset('public/assets/img/flags/us-flag.svg') }}" alt="Language"
@@ -519,10 +351,10 @@
                                     height="16">Arabic
                             </a>
                         </div>
-                    </li>
+                    </li> --}}
                     <!-- /Flag -->
 
-                    <li class="nav-item nav-item-box">
+                    {{-- <li class="nav-item nav-item-box">
                         <a href="javascript:void(0);" id="btnFullscreen">
                             <i class="ti ti-maximize"></i>
                         </a>
@@ -532,7 +364,7 @@
                             <i class="ti ti-mail"></i>
                             <span class="badge rounded-pill">1</span>
                         </a>
-                    </li>
+                    </li> --}}
                     <!-- Notifications -->
                     <li class="nav-item dropdown nav-item-box">
                         <a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
@@ -588,10 +420,6 @@
                         </div>
                     </li>
                     <!-- /Notifications -->
-
-                    <li class="nav-item nav-item-box">
-                        <a href="general-settings.html"><i class="ti ti-settings"></i></a>
-                    </li>
                     <li class="nav-item dropdown has-arrow main-drop profile-nav">
                         <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
                             <span class="user-info p-0">
@@ -647,13 +475,13 @@
         <div class="sidebar" id="sidebar">
             <!-- Logo -->
             <div class="sidebar-logo">
-                <a href="index.html" class="logo logo-normal">
+                <a href="{{ route('dashboard') }}" class="logo logo-normal">
                     <img src="{{ asset('public/assets/img/logo.svg') }}" alt="Img">
                 </a>
-                <a href="index.html" class="logo logo-white">
+                <a href="{{ route('dashboard') }}" class="logo logo-white">
                     <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
                 </a>
-                <a href="index.html" class="logo-small">
+                <a href="{{ route('dashboard') }}" class="logo-small">
                     <img src="{{ asset('public/assets/img/logo-small.png') }}" alt="Img">
                 </a>
                 <a id="toggle_btn" href="javascript:void(0);">
@@ -692,7 +520,7 @@
                 </div>
                 <div class="d-flex align-items-center justify-content-between menu-item mb-3">
                     <div>
-                        <a href="index.html" class="btn btn-sm btn-icon bg-light">
+                        <a href="{{ route('dashboard') }}" class="btn btn-sm btn-icon bg-light">
                             <i class="ti ti-layout-grid-remove"></i>
                         </a>
                     </div>
@@ -926,6 +754,32 @@
                             alert('Could not mark notifications as read.');
                         }
                     });
+                }
+            });
+
+            // keyboard shortcut: focus the header search input with 'k' or '/'
+            $(document).on('keydown', function(e) {
+                const tag = e.target.tagName.toLowerCase();
+                if (tag === 'input' || tag === 'textarea') return;
+                if (e.key === 'k' || e.key === '/') {
+                    e.preventDefault();
+                    $('.searchinputs input').first().focus();
+                }
+            });
+
+            // Open Recent Searches dropdown only when the responsive search icon or addon is clicked.
+            // Do NOT open on input focus to avoid showing recent searches unintentionally.
+            $('.top-nav-search').on('click', '.responsive-search, .search-addon, .search-addon *', function(e) {
+                try {
+                    // find the .searchinputs container in this top-nav-search
+                    const toggleEl = $(this).closest('.top-nav-search').find('.searchinputs')[0];
+                    if (toggleEl) {
+                        var dd = bootstrap.Dropdown.getOrCreateInstance(toggleEl);
+                        dd.show();
+                    }
+                } catch (err) {
+                    // fail silently
+                    console.error('Could not open search dropdown:', err);
                 }
             });
         });

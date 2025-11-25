@@ -70,9 +70,12 @@
                                         <td>{{ $sale->sales_date->format('d M, Y') }}</td>
                                         <td>{{ $sale->customer->user->name }}</td>
                                         <td>
-                                            @if (ucfirst($sale->order_status) == 'Delivered')
+                                            @php $status = strtolower($sale->order_status ?? ''); @endphp
+                                            @if ($status === 'delivered')
                                                 <span class="badge bg-success">Delivered</span>
-                                            @elseif(ucfirst($sale->order_status) == 'In process')
+                                            @elseif (in_array($status, ['complete', 'completed', 'complet']))
+                                                <span class="badge bg-success">Complete</span>
+                                            @elseif (in_array($status, ['in process', 'inprocess', 'processing', 'on process', 'onprocess']))
                                                 <span class="badge" style="background-color: #0d6efd">In process</span>
                                             @else
                                                 <span class="badge" style="background-color: #fd7e14">On process</span>
@@ -179,6 +182,24 @@
                                                         <li>
                                                             <hr class="dropdown-divider">
                                                         </li>
+                                                        {{-- Complete Action --}}
+                                                        @if (hasActionPermission('Sale', 'update') && strtolower($sale->order_status) !== 'complete')
+                                                            <li>
+                                                                <form action="{{ route('sales.markComplete', $sale->id) }}"
+                                                                    method="POST" class="d-inline">
+                                                                    @csrf
+                                                                    <button type="submit"
+                                                                        class="dropdown-item d-flex align-items-center text-success"
+                                                                        style="border:0; background:transparent; padding:0;">
+                                                                        <i class="fas fa-check fa-fw me-2"></i> Mark as
+                                                                        Complete
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                            <li>
+                                                                <hr class="dropdown-divider">
+                                                            </li>
+                                                        @endif
 
                                                         {{-- Invoice Actions --}}
                                                         <li>

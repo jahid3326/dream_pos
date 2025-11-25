@@ -36,18 +36,52 @@ class DashboardController extends Controller
     private function adminDashboard()
     {
         // For the admin, you can fetch summary data like total sales, new customers, etc.
-        // This is just an example.
         $totalSales = \App\Models\Sale::count();
         $totalCustomers = \App\Models\Customer::count();
+
+        // Determine which tab to show (defaults to 'sales')
+        $tab = request('tab', 'sales');
+
+        $sales = null;
+        $purchases = null;
+        $quotes = null;
+        $waiting = null;
+
+        if ($tab === 'sales') {
+            $sales = \App\Models\Sale::with(['customer', 'payments'])->latest()->paginate(10);
+        } elseif ($tab === 'purchase') {
+            $purchases = \App\Models\Purchase::with(['suppliers.user', 'payments'])->latest()->paginate(10);
+        } elseif ($tab === 'quotation') {
+            $quotes = \App\Models\Quote::with(['customer', 'payments'])->latest()->paginate(10);
+        } elseif ($tab === 'waiting') {
+            // Purchases where any supplier has status_review not equal to 'complet'
+            $waiting = \App\Models\Purchase::whereHas('suppliers', function ($q) {
+                $q->where('purchase_supplier.status_review', '!=', 'complet');
+            })->with(['suppliers.user', 'payments'])->latest()->paginate(10);
+        }
 
         // Get recent notifications for admin
         $notifications = Auth::user()->unreadNotifications()->latest()->take(5)->get();
 
         // The admin uses the main 'dashboard.blade.php' view
+        // Summary totals
+        $purchasesTotal = \App\Models\Purchase::sum('total_amount');
+        $salesTotal = \App\Models\Sale::sum('grand_total');
+        // Client payments = sum of sale payments
+        $clientPaymentsTotal = \App\Models\SalePayment::sum('amount');
+
         return view('dashboard', [
             'totalSales' => $totalSales,
             'totalCustomers' => $totalCustomers,
             'notifications' => $notifications,
+            'tab' => $tab,
+            'sales' => $sales,
+            'purchases' => $purchases,
+            'quotes' => $quotes,
+            'waiting' => $waiting,
+            'purchasesTotal' => $purchasesTotal,
+            'salesTotal' => $salesTotal,
+            'clientPaymentsTotal' => $clientPaymentsTotal,
         ]);
     }
 
@@ -103,8 +137,8 @@ class DashboardController extends Controller
         // The relationship automatically loads pivot data because we configured it in the Purchase model.
         $activities = $supplier->purchases()
             ->with(['sale', 'payments', 'documents.files', 'items'])
-            ->latest('purchase_date')
-            ->paginate(15);
+            ->latest('id')
+            ->paginate(10);
 
         // 3. Process each activity to calculate display-specific data.
         $activities->each(function ($activity) use ($supplier) {
@@ -160,7 +194,16 @@ class DashboardController extends Controller
         // print_r($activities->toArray());
         // echo '<pre>';
         // exit;
-        // 4. Return the view with the processed data.
-        return view('supplier.dashboard', compact('activities'));
+        // 4. Compute summary counts for production statuses (for this supplier)
+        $newOrdersCount = $supplier->purchases()->wherePivot('status_production', 'waiting')->count();
+        $inProcessCount = $supplier->purchases()->wherePivot('status_production', 'in process')->count();
+
+        // Some records may use slight variations (e.g. 'complet' or 'completed') - check both
+        $completeCount = \Illuminate\Support\Facades\DB::table('purchase_supplier')
+            ->where('supplier_id', $supplier->id)
+            ->whereIn('status_production', ['complet', 'completed'])
+            ->count();
+
+        return view('supplier.dashboard', compact('activities', 'newOrdersCount', 'inProcessCount', 'completeCount'));
     }
 }

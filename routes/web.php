@@ -23,7 +23,6 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ShipmentController;
-use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Supplier\OrderController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaxController;
@@ -120,38 +119,6 @@ Route::middleware(['auth'])->group(function () {
         // These routes are accessible to any role that has been granted permission by the Super Admin.
 
         Route::middleware(['nav.permission'])->group(function () {
-
-            // Student-related routes
-            Route::get('students', [StudentController::class, 'index'])
-                ->name('students.index')->middleware('action.permission:Student,read');
-
-            Route::get('students/create', [StudentController::class, 'create'])
-                ->name('students.create')->middleware('action.permission:Student,create');
-
-            Route::post('students', [StudentController::class, 'store'])
-                ->name('students.store')->middleware('action.permission:Student,create');
-
-            Route::get('students/{student}/edit', [StudentController::class, 'edit'])
-                ->name('students.edit')->middleware('action.permission:Student,update');
-
-            Route::put('students/{student}', [StudentController::class, 'update'])
-                ->name('students.update')->middleware('action.permission:Student,update');
-
-            Route::delete('students/{student}', [StudentController::class, 'destroy'])
-                ->name('students.destroy')->middleware('action.permission:Student,delete');
-
-
-            // Teacher-related routes
-            Route::get('teachers', [StudentController::class, 'index'])
-                ->name('teachers.index')->middleware('action.permission:Teacher,read');
-
-            Route::get('onlineorder', [StudentController::class, 'index'])
-                ->name('onlineorder')->middleware('action.permission:Teacher,read');
-
-            Route::get('posorder', [StudentController::class, 'index'])
-                ->name('posorder')->middleware('action.permission:Teacher,read');
-
-
             // Customer-related routes
             Route::get('customers/import', [CustomerController::class, 'showImportForm'])->name('customers.import.show');
             Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
@@ -265,6 +232,9 @@ Route::middleware(['auth'])->group(function () {
 
 
             // Sales-related routes
+            // Route to mark a sale as complete
+            Route::post('/sales/{sale}/complete', [SaleController::class, 'markComplete'])->name('sales.markComplete');
+
             Route::resource('sales', SaleController::class);
 
             // Route for creating a quote from the POS
@@ -353,8 +323,13 @@ Route::middleware(['auth'])->group(function () {
 
         // Notification routes (outside nav.permission middleware to avoid 403 errors)
         Route::post('/notifications/mark-as-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAsRead');
+        Route::post('/notifications/{id}/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.markAsReadSingle');
         Route::get('/notifications/count', [App\Http\Controllers\NotificationController::class, 'getCount'])->name('notifications.getCount');
         Route::get('/notifications/latest', [App\Http\Controllers\NotificationController::class, 'getLatest'])->name('notifications.getLatest');
+
+        // Global search routes
+        Route::get('/global-search', [App\Http\Controllers\SearchController::class, 'index'])->name('global.search');
+        Route::get('/global-search/suggest', [App\Http\Controllers\SearchController::class, 'suggest'])->name('global.search.suggest');
 
         // Test route to debug middleware issues
         Route::get('/test-auth', function () {

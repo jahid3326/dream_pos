@@ -200,7 +200,7 @@
                                     </a>
                                     <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
                                         class="rounded me-2" width="30" height="30" style="object-fit: contain;">
-                                    <h6 class="mb-0">{{ $supplier->user->name }}</h6>
+                                    <h6 class="mb-0">{{ $supplier->company_name }}</h6>
                                 </div>
                                 <div class="collapse p-3" id="packing-{{ $supplier->id }}">
                                     @if ($cargo = $supplier->purchase_details->cargo)
@@ -278,7 +278,7 @@
                                                 <td>{{ $payment->note }}</td>
                                                 <td>
                                                     @if ($payment->proof)
-                                                        <a href="{{ asset('storage/' . $payment->proof) }}"
+                                                        <a href="{{ asset('public/storage/' . $payment->proof) }}"
                                                             target="_blank"><i
                                                             class="far fa-file-pdf text-danger fa-lg"></i></a>@else<span
                                                             class="text-muted">N/A</span>
@@ -366,7 +366,7 @@
                         if (!input.next('.invalid-feedback').length) {
                             input.after(
                                 '<div class="invalid-feedback">Amount cannot exceed total due amount</div>'
-                                );
+                            );
                         }
                     } else if (amountPaid < 0) {
                         input.addClass('is-invalid');

@@ -66,7 +66,13 @@
                                                 {{ $shipment->payment_status }}
                                             </span>
                                         </td>
-                                        <td class="text-end">
+                                        <td class="text-end d-flex align-items-center justify-content-end">
+                                            <div>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('shipments.orderDetailDocument', $shipment) }}">
+                                                    <i class="fas fa-file-alt fa-fw me-2"></i> Complete Details
+                                                </a>
+                                            </div>
                                             <div class="dropdown">
                                                 <button class="btn btn-light btn-sm" type="button"
                                                     data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
@@ -77,19 +83,13 @@
                                                             <i class="fas fa-eye fa-fw me-2"></i> View
                                                         </a>
                                                     </li>
-                                                    <li>
-                                                        <a class="dropdown-item"
-                                                            href="{{ route('shipments.edit', $shipment) }}">
-                                                            <i class="fas fa-edit fa-fw me-2"></i> Edit
-                                                        </a>
-                                                    </li>
-                                                    <li>
+                                                    {{-- <li>
                                                         <a class="dropdown-item"
                                                             href="{{ route('shipments.orderDetailDocument', $shipment) }}">
                                                             <i class="fas fa-file-alt fa-fw me-2"></i> View order detail
                                                             document
                                                         </a>
-                                                    </li>
+                                                    </li> --}}
                                                     <li>
                                                         <hr class="dropdown-divider">
                                                     </li>
@@ -141,7 +141,7 @@
                                                                 <th class="text-end">Quantity Products</th>
                                                                 <th>Status Production</th>
                                                                 <th>Ready for pickup</th>
-                                                                <th class="text-end">Action</th>
+                                                                {{-- <th class="text-end">Action</th> --}}
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -171,11 +171,11 @@
                                                                     </td>
                                                                     <td>{{ $supplier->pivot->ready_date ? \Carbon\Carbon::parse($supplier->pivot->ready_date)->format('d-m-Y') : 'N/A' }}
                                                                     </td>
-                                                                    <td class="text-end">
+                                                                    {{-- <td class="text-end">
                                                                         <a href="{{ route('purchases.showSupplierDetails', ['purchase' => $shipment->purchase, 'supplier' => $supplier]) }}"
                                                                             class="btn btn-sm btn-outline-secondary"><i
                                                                                 class="fas fa-eye"></i></a>
-                                                                    </td>
+                                                                    </td> --}}
                                                                 </tr>
                                                                 {{-- This is the nested product row --}}
                                                                 <tr class="collapse-row">

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Shipment Dashboard')
+@section('title', 'Dashboard')
 
 @push('styles')
     <style>
@@ -51,6 +51,33 @@
                 transform: translate3d(0, -1px, 0);
             }
         }
+
+        /* Statistics card tweaks */
+        .dash-widget {
+            padding: 1.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 72px;
+            border-radius: 7px;
+        }
+
+        .dash-widgetimg span img {
+            width: 44px;
+            height: 44px;
+            display: inline-block;
+        }
+
+        .dash-widgetcontent h5 {
+            font-size: 1.375rem;
+            margin: 0;
+        }
+
+        .dash-widgetcontent h6 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
     </style>
 @endpush
 
@@ -59,7 +86,7 @@
         <div class="content">
             <div class="page-header">
                 <div class="page-title">
-                    <h4>Shipment Dashboard</h4>
+                    <h4>Dashboard</h4>
                     <h6>Welcome back, {{ Auth::user()->name }}</h6>
                 </div>
             </div>
@@ -368,18 +395,18 @@
                                 </div>
                                 <div class="notification-content flex-grow-1">
                                     ${isNewShipment ? `
-                                                            <h6 class="mb-1">New Shipment Created</h6>
-                                                            <p class="mb-1 text-muted">${notification.data ? notification.data.message || notification.message || 'New shipment notification' : 'New shipment notification'}</p>
-                                                            ${notification.data && notification.data.shipment_number ? `<small class="text-primary">Shipment: ${notification.data.shipment_number}</small>` : ''}
-                                                        ` : `
-                                                            <p class="mb-1">${notification.data ? notification.data.message || notification.message || 'New notification' : 'New notification'}</p>
-                                                        `}
+                                                                            <h6 class="mb-1">New Shipment Created</h6>
+                                                                            <p class="mb-1 text-muted">${notification.data ? notification.data.message || notification.message || 'New shipment notification' : 'New shipment notification'}</p>
+                                                                            ${notification.data && notification.data.shipment_number ? `<small class="text-primary">Shipment: ${notification.data.shipment_number}</small>` : ''}
+                                                                        ` : `
+                                                                            <p class="mb-1">${notification.data ? notification.data.message || notification.message || 'New notification' : 'New notification'}</p>
+                                                                        `}
                                     <small class="text-muted d-block">${notification.created_at || 'Just now'}</small>
                                 </div>
                                 <div class="notification-actions">
                                     ${notification.data && notification.data.action_url ? `
-                                                            <a href="${notification.data.action_url}" class="btn btn-sm btn-outline-primary">View</a>
-                                                        ` : ''}
+                                                                            <a href="${notification.data.action_url}" class="btn btn-sm btn-outline-primary">View</a>
+                                                                        ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -483,18 +510,18 @@
                             </div>
                             <div class="notification-content flex-grow-1">
                                 ${isNewShipment ? `
-                                                        <h6 class="mb-1">New Shipment Created</h6>
-                                                        <p class="mb-1 text-muted">${notification.message || 'New shipment notification'}</p>
-                                                        ${notification.shipment_number ? `<small class="text-primary">Shipment: ${notification.shipment_number}</small>` : ''}
-                                                    ` : `
-                                                        <p class="mb-1">${notification.message || 'New notification'}</p>
-                                                    `}
+                                                                        <h6 class="mb-1">New Shipment Created</h6>
+                                                                        <p class="mb-1 text-muted">${notification.message || 'New shipment notification'}</p>
+                                                                        ${notification.shipment_number ? `<small class="text-primary">Shipment: ${notification.shipment_number}</small>` : ''}
+                                                                    ` : `
+                                                                        <p class="mb-1">${notification.message || 'New notification'}</p>
+                                                                    `}
                                 <small class="text-muted d-block">Just now</small>
                             </div>
                             <div class="notification-actions">
                                 ${notification.action_url ? `
-                                                        <a href="${notification.action_url}" class="btn btn-sm btn-outline-primary">View</a>
-                                                    ` : ''}
+                                                                        <a href="${notification.action_url}" class="btn btn-sm btn-outline-primary">View</a>
+                                                                    ` : ''}
                             </div>
                         </div>
                     </div>

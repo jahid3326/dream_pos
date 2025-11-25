@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Shipment Dashboard')
+@section('title', 'Dashboard')
 
 @section('content')
     <div class="page-wrapper">
         <div class="content">
             <div class="page-header">
                 <div class="page-title">
-                    <h4>Shipment Dashboard</h4>
+                    <h4>Dashboard</h4>
                     <h6>Welcome back, {{ Auth::user()->name }}</h6>
                 </div>
             </div>
