@@ -409,8 +409,8 @@
                 // Update notifications list
                 const listElement = document.getElementById('notifications-list');
                 listElement.innerHTML = notifications.map(notification => {
-                    const isNewShipment = notification.type === 'App\\Notifications\\NewShipmentNotification';
-                    return `
+                        const isNewShipment = notification.type === 'App\\Notifications\\NewShipmentNotification';
+                        return `
                         <div class="notification-item border-bottom pb-3 mb-3 new-notification" data-id="${notification.id}">
                             <div class="d-flex">
                                 <div class="notification-icon me-3">
@@ -418,46 +418,66 @@
                                 </div>
                                 <div class="notification-content flex-grow-1">
                                     ${isNewShipment ? `
-                                                                                        <h6 class="mb-1">New Shipment Created</h6>
-                                                                                        <p class="mb-1 text-muted">${notification.data ? notification.data.message || notification.message || 'New shipment notification' : 'New shipment notification'}</p>
-                                                                                        ${notification.data && notification.data.shipment_number ? `<small class="text-primary">Shipment: ${notification.data.shipment_number}</small>` : ''}
-                                                                                    ` : `
-                                                                                        <p class="mb-1">${notification.data ? notification.data.message || notification.message || 'New notification' : 'New notification'}</p>
-                                                                                    `}
-                                    <small class="text-muted d-block">${notification.created_at || 'Just now'}</small>
-                                </div>
-                                <div class="notification-actions">
-                                    ${notification.data && notification.data.action_url ? `
+    <<<<<<< HEAD
+                                                                                            <h6 class="mb-1">New Shipment Created</h6>
+                                                                                            <p class="mb-1 text-muted">${notification.data ? notification.data.message || notification.message || 'New shipment notification' : 'New shipment notification'}</p>
+                                                                                            ${notification.data && notification.data.shipment_number ? `<small class="text-primary">Shipment: ${notification.data.shipment_number}</small>` : ''}
+                                                                                        ` : `
+                                                                                            <p class="mb-1">${notification.data ? notification.data.message || notification.message || 'New notification' : 'New notification'}</p>
+                                                                                        `}
+=======
+                                                                            <h6 class="mb-1">New Shipment Created</h6>
+                                                                            <p class="mb-1 text-muted">${notification.data ? notification.data.message || notification.message || 'New shipment notification' : 'New shipment notification'}</p>
+                                                                            ${notification.data && notification.data.shipment_number ? `<small class="text-primary">Shipment: ${notification.data.shipment_number}</small>` : ''}
+                                                                        `: `
+                                                                            <p class="mb-1">${notification.data ? notification.data.message || notification.message || 'New notification' : 'New notification'}</p>
+                                                                        `
+                    } >>>
+                    >>> > 5 bb5d6f0ac97586efbe039646ab59a3deb4bc774 <
+                    small class = "text-muted d-block" > $ {
+                        notification.created_at || 'Just now'
+                    } < /small> <
+                    /div> <
+                    div class = "notification-actions" >
+                    $ {
+                        notification.data && notification.data.action_url ? `
+<<<<<<< HEAD
                                                                                         <a href="${notification.data.action_url}" class="btn btn-sm btn-outline-primary">View</a>
-                                                                                    ` : ''}
+                                                                                    ` : ''
+                    } ===
+                    === = <
+                    a href = "${notification.data.action_url}"
+                    class = "btn btn-sm btn-outline-primary" > View < /a>
+                    ` : ''}
+>>>>>>> 5bb5d6f0ac97586efbe039646ab59a3deb4bc774
                                 </div>
                             </div>
                         </div>
                     `;
                 }).join('');
 
-                // Remove new-notification class after animation
-                setTimeout(() => {
-                    document.querySelectorAll('.notification-item.new-notification').forEach(item => {
-                        item.classList.remove('new-notification');
-                    });
-                }, 500);
+            // Remove new-notification class after animation
+            setTimeout(() => {
+                document.querySelectorAll('.notification-item.new-notification').forEach(item => {
+                    item.classList.remove('new-notification');
+                });
+            }, 500);
+        } else {
+            // Show no notifications message
+            if (notificationsList) {
+                notificationsList.innerHTML = '';
+            }
+            if (noNotificationsDiv) {
+                noNotificationsDiv.style.display = 'block';
             } else {
-                // Show no notifications message
-                if (notificationsList) {
-                    notificationsList.innerHTML = '';
-                }
-                if (noNotificationsDiv) {
-                    noNotificationsDiv.style.display = 'block';
-                } else {
-                    container.innerHTML = `
+                container.innerHTML = `
                         <div class="text-center text-muted py-4" id="no-notifications">
                             <i class="fas fa-bell-slash fa-3x mb-3"></i>
                             <p>No new notifications</p>
                         </div>
                     `;
-                }
             }
+        }
         }
 
         function updateShipmentDashboardNotificationBadge(count) {
@@ -533,35 +553,54 @@
                             </div>
                             <div class="notification-content flex-grow-1">
                                 ${isNewShipment ? `
-                                                                                    <h6 class="mb-1">New Shipment Created</h6>
-                                                                                    <p class="mb-1 text-muted">${notification.message || 'New shipment notification'}</p>
-                                                                                    ${notification.shipment_number ? `<small class="text-primary">Shipment: ${notification.shipment_number}</small>` : ''}
-                                                                                ` : `
-                                                                                    <p class="mb-1">${notification.message || 'New notification'}</p>
-                                                                                `}
-                                <small class="text-muted d-block">Just now</small>
-                            </div>
-                            <div class="notification-actions">
-                                ${notification.action_url ? `
+    <<<<<<< HEAD
+                                                                                        <h6 class="mb-1">New Shipment Created</h6>
+                                                                                        <p class="mb-1 text-muted">${notification.message || 'New shipment notification'}</p>
+                                                                                        ${notification.shipment_number ? `<small class="text-primary">Shipment: ${notification.shipment_number}</small>` : ''}
+                                                                                    ` : `
+                                                                                        <p class="mb-1">${notification.message || 'New notification'}</p>
+                                                                                    `}
+=======
+                                                                        <h6 class="mb-1">New Shipment Created</h6>
+                                                                        <p class="mb-1 text-muted">${notification.message || 'New shipment notification'}</p>
+                                                                        ${notification.shipment_number ? `<small class="text-primary">Shipment: ${notification.shipment_number}</small>` : ''}
+                                                                    `: `
+                                                                        <p class="mb-1">${notification.message || 'New notification'}</p>
+                                                                    `
+            } >>>
+            >>> > 5 bb5d6f0ac97586efbe039646ab59a3deb4bc774
+                <
+                small class = "text-muted d-block" > Just now < /small> <
+                /div> <
+                div class = "notification-actions" >
+                $ {
+                    notification.action_url ? `
+<<<<<<< HEAD
                                                                                     <a href="${notification.action_url}" class="btn btn-sm btn-outline-primary">View</a>
-                                                                                ` : ''}
+                                                                                ` : ''
+                } ===
+                === = <
+                a href = "${notification.action_url}"
+            class = "btn btn-sm btn-outline-primary" > View < /a>
+            ` : ''}
+>>>>>>> 5bb5d6f0ac97586efbe039646ab59a3deb4bc774
                             </div>
                         </div>
                     </div>
                 `;
 
-                // Prepend the new notification
-                const listElement = document.getElementById('notifications-list');
-                listElement.insertAdjacentHTML('afterbegin', newNotificationHtml);
+            // Prepend the new notification
+            const listElement = document.getElementById('notifications-list');
+            listElement.insertAdjacentHTML('afterbegin', newNotificationHtml);
 
-                // Remove new-notification class after animation
-                setTimeout(() => {
-                    const newNotif = listElement.querySelector('.notification-item.new-notification');
-                    if (newNotif) {
-                        newNotif.classList.remove('new-notification');
-                    }
-                }, 500);
-            }
+            // Remove new-notification class after animation
+            setTimeout(() => {
+                const newNotif = listElement.querySelector('.notification-item.new-notification');
+                if (newNotif) {
+                    newNotif.classList.remove('new-notification');
+                }
+            }, 500);
+        }
         }
 
         // Set up the Echo handler for shipment dashboard

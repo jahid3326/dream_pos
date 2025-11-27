@@ -755,12 +755,9 @@
                     // If we've already shown validation details, avoid double notifications
                     if (error.message === 'Validation failed') return;
 
-                    showLoadingState(false);
                     console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
-                        title: 'Save Failed',
-                        text: 'An error occurred while saving: ' + error.message
                     });
                 });
         }
