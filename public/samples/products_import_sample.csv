@@ -1,0 +1,5 @@
+type,parent_sku,name,sku,supplier,category,measurement,purchase_price,sale_price,margin,tax,cbm,weight
+single,,Modern Office Chair,CHR-BLK-001,HappyCoddingIT,Chairs,Standard,85,199,,,0.3,12
+variation,,Bumble Sofa,SOFA-BUMBLE-PARENT,HappyCoddingIT,Sofa,,,,,,,
+,SOFA-BUMBLE-PARENT,Bumble Sofa,SOFA-BUMBLE-2S,Supplier1 Ltd.,Sofa,2-Seater (L: 180cm),350,690,,,1.5,55
+,SOFA-BUMBLE-PAREN,Bumble Sofa,SOFA-BUMBLE-3S,Supplier2 Ltd,Sofa,3-Seater (L: 248cm),450,850,,,2.1,75
