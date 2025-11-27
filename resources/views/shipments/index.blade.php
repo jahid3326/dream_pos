@@ -68,10 +68,12 @@
                                         </td>
                                         <td class="text-end d-flex align-items-center justify-content-end">
                                             <div>
-                                                <a class="dropdown-item"
-                                                    href="{{ route('shipments.orderDetailDocument', $shipment) }}">
-                                                    <i class="fas fa-file-alt fa-fw me-2"></i> Complete Details
-                                                </a>
+                                                @if (auth()->user() && auth()->user()->role && auth()->user()->role->name === 'Shipment')
+                                                    <a class="dropdown-item"
+                                                        href="{{ route('shipments.orderDetailDocument', $shipment) }}">
+                                                        <i class="fas fa-file-alt fa-fw me-2"></i> Complete Details
+                                                    </a>
+                                                @endif
                                             </div>
                                             <div class="dropdown">
                                                 <button class="btn btn-light btn-sm" type="button"

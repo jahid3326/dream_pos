@@ -371,6 +371,11 @@ class ShipmentController extends Controller
      */
     public function orderDetailDocument(Shipment $shipment)
     {
+        // Authorization: Only users with the 'Shipment' role may access this page
+        if (!auth()->user() || !auth()->user()->role || auth()->user()->role->name !== 'Shipment') {
+            return redirect()->route('shipments.index')->with('error', 'Unauthorized. Only shipment role users can save/update complete details.');
+        }
+
         $shipment->load('documents');
 
         // Group documents by type

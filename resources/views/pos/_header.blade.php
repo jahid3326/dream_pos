@@ -27,9 +27,7 @@
 
         <!-- Search -->
         <li class="nav-item time-nav">
-            <span class="bg-teal text-white d-inline-flex align-items-center"><img
-                    src="{{ asset('public/assets/img/icons/clock-icon.svg') }}" alt="img"
-                    class="me-2">09:25:32</span>
+
         </li>
         <!-- /Search -->
 
@@ -38,70 +36,11 @@
                 <i class="ti ti-world me-1"></i>Dashboard
             </a>
         </li>
-
-        <!-- Select Store -->
-        <li class="nav-item dropdown has-arrow main-drop select-store-dropdown">
-            <a href="javascript:void(0);" class="dropdown-toggle nav-link select-store" data-bs-toggle="dropdown">
-                <span class="user-info">
-                    <span class="user-letter">
-                        <img src="{{ asset('public/assets/img/store/store-01.png') }}" alt="Store Logo"
-                            class="img-fluid">
-                    </span>
-                    <span class="user-detail">
-                        <span class="user-name">Freshmart</span>
-                    </span>
-                </span>
-            </a>
-            <div class="dropdown-menu dropdown-menu-right">
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="{{ asset('public/assets/img/store/store-01.png') }}" alt="Store Logo"
-                        class="img-fluid">Freshmart
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="{{ asset('public/assets/img/store/store-02.png') }}" alt="Store Logo"
-                        class="img-fluid">Grocery Apex
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="{{ asset('public/assets/img/store/store-03.png') }}" alt="Store Logo"
-                        class="img-fluid">Grocery Bevy
-                </a>
-                <a href="javascript:void(0);" class="dropdown-item">
-                    <img src="{{ asset('public/assets/img/store/store-04.png') }}" alt="Store Logo"
-                        class="img-fluid">Grocery Eden
-                </a>
-            </div>
-        </li>
-        <!-- /Select Store -->
-
-        <li class="nav-item nav-item-box">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#calculator"
-                class="bg-orange border-orange text-white"><i class="ti ti-calculator"></i></a>
-        </li>
         <li class="nav-item nav-item-box">
             <a href="javascript:void(0);" id="btnFullscreen" data-bs-toggle="tooltip" data-bs-placement="top"
                 data-bs-title="Maximize">
                 <i class="ti ti-maximize"></i>
             </a>
-        </li>
-        <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="Cash Register">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#cash-register"><i class="ti ti-cash"></i></a>
-        </li>
-        <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="Print Last Reciept">
-            <a href="#"><i class="ti ti-printer"></i></a>
-        </li>
-        <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Today’s Sale">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#today-sale"><i class="ti ti-progress"></i></a>
-        </li>
-        <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="Today’s Profit">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#today-profit"><i
-                    class="ti ti-chart-infographic"></i></a>
-        </li>
-        <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="POS Settings">
-            <a href="pos-settings.html"><i class="ti ti-settings"></i></a>
         </li>
         <li class="nav-item dropdown has-arrow main-drop profile-nav">
             <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
@@ -123,10 +62,8 @@
                         <p>{{ Auth::user()->role->name }}</p>
                     </div>
                 </div>
-                <a class="dropdown-item" href="profile.html"><i class="ti ti-user-circle me-2"></i>MyProfile</a>
-                <a class="dropdown-item" href="sales-report.html"><i class="ti ti-file-text me-2"></i>Reports</a>
-                <a class="dropdown-item" href="general-settings.html"><i
-                        class="ti ti-settings-2 me-2"></i>Settings</a>
+                <a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="ti ti-user-circle me-2"></i>My
+                    Profile</a>
                 <hr class="my-2">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
