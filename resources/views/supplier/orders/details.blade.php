@@ -145,18 +145,18 @@
                             <tbody>
                                 @foreach ($items as $index => $item)
                                     @php
-                                        $imageUrl = asset('public/storage/images/default_image.png');
+                                        $imageUrl = asset('storage/images/default_image.png');
                                         $unit_cbm = 0;
                                         if ($item->variation) {
                                             $unit_cbm = $item->variation->cbm ?? 0;
                                             $image = $item->variation->image ?? $item->product->product_image;
                                             if ($image) {
-                                                $imageUrl = asset('public/storage/' . $image);
+                                                $imageUrl = asset('storage/' . $image);
                                             }
                                         } elseif ($item->product) {
                                             $unit_cbm = $item->product->cbm ?? 0;
                                             if ($item->product->product_image) {
-                                                $imageUrl = asset('public/storage/' . $item->product->product_image);
+                                                $imageUrl = asset('storage/' . $item->product->product_image);
                                             }
                                         }
                                         $total_cbm = $item->quantity * $unit_cbm;

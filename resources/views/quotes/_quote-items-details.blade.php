@@ -30,8 +30,8 @@
                                     // Determine the image and category from either the variation or the parent product
                                     $image = $item->variation->image ?? $item->product->product_image;
                                     $imageUrl = $image
-                                        ? asset('public/storage/' . $image)
-                                        : asset('public/storage/images/default_image.png');
+                                        ? asset('storage/' . $image)
+                                        : asset('storage/images/default_image.png');
 
                                     $measurement = 'N/A';
                                     if ($item->variation) {
@@ -99,7 +99,7 @@
                                     @foreach ($packItem->constituentItems as $part)
                                         @php
                                             // Logic to get details for each part
-                                            $imageUrl = asset('public/storage/images/default_image.png');
+                                            $imageUrl = asset('storage/images/default_image.png');
                                             $categoryName = 'N/A';
                                             $measurement = 'N/A';
                                             $selection = $part->packProductSelectedVariation;
@@ -116,8 +116,8 @@
                                                 $image = $part->packProduct->product->product_image;
                                             }
                                             $imageUrl = $image
-                                                ? asset('public/storage/' . $image)
-                                                : asset('public/storage/images/default_image.png');
+                                                ? asset('storage/' . $image)
+                                                : asset('storage/images/default_image.png');
                                         @endphp
                                         <div class="d-flex align-items-center mb-2">
                                             <img src="{{ $imageUrl }}" alt="{{ $part->product_name }}"

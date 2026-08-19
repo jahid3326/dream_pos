@@ -124,14 +124,14 @@
                                 <tbody>
                                     @foreach ($items as $index => $item)
                                         @php
-                                            $imageUrl = asset('public/storage/images/default_image.png'); // Default image
+                                            $imageUrl = asset('storage/images/default_image.png'); // Default image
                                             if ($item->variation) {
                                                 $image = $item->variation->image ?? $item->product->product_image;
                                                 if ($image) {
-                                                    $imageUrl = asset('public/storage/' . $image);
+                                                    $imageUrl = asset('storage/' . $image);
                                                 }
                                             } elseif ($item->product && $item->product->product_image) {
-                                                $imageUrl = asset('public/storage/' . $item->product->product_image);
+                                                $imageUrl = asset('storage/' . $item->product->product_image);
                                             }
                                         @endphp
                                         <tr class="item-row">

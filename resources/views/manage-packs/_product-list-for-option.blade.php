@@ -20,8 +20,8 @@
                             <td>
                                 @php
                                     $imageUrl = $product->product_image
-                                        ? asset('public/storage/' . $product->product_image)
-                                        : asset('public/storage/images/default_image.png');
+                                        ? asset('storage/' . $product->product_image)
+                                        : asset('storage/images/default_image.png');
                                 @endphp
                                 <label class="d-flex align-items-center">
                                     {{-- Product Image --}}

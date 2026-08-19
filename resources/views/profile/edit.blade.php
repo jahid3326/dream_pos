@@ -71,8 +71,8 @@
                             <div class="profile-pic p-2">
                                 @php
                                     $profilePictureUrl = $user->profile_picture
-                                        ? asset('public/storage/' . $user->profile_picture)
-                                        : asset('public/storage/images/default_avatar.png');
+                                        ? asset('storage/' . $user->profile_picture)
+                                        : asset('storage/images/default_avatar.png');
                                 @endphp
                                 <img src="{{ $profilePictureUrl }}" class="object-fit-cover w-100 h-100 rounded-1"
                                     alt="user" id="profile-image-preview">

@@ -109,7 +109,7 @@
                 $supplier = $purchase->suppliers->firstWhere('id', $supplierId);
             @endphp
             <div style="margin-bottom: 20px; page-break-inside: avoid;">
-                <h5><img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                <h5><img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                         class="rounded-circle me-2" width="30" height="30"> {{ $supplier->company_name }}</h5>
                 {{-- Reuse the partial you already built --}}
                 @include('purchases._purchase-items-details-pdf', ['items' => $items])

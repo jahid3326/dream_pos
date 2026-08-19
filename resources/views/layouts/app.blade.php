@@ -16,58 +16,58 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} | @yield('title', 'Welcome')</title>
 
-    <script src="{{ asset('public/assets/js/theme-script.js') }}"></script>
+    <script src="{{ asset('assets/js/theme-script.js') }}"></script>
 
     <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('public/assets/favicon/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('public/assets/favicon/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('public/assets/favicon/favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('public/assets/favicon/site.webmanifest') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('assets/favicon/site.webmanifest') }}">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
 
     <!-- Datetimepicker CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap-datetimepicker.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-datetimepicker.min.css') }}">
 
     <!-- animation CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/animate.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/animate.css') }}">
 
     <!-- Feathericon CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/feather.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/feather.css') }}">
 
     <!-- Select2 CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
 
     <!-- Quill CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/quill/quill.snow.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/quill/quill.snow.css') }}">
 
     <!-- Bootstrap Tagsinput CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.css') }}">
 
     <!-- Datatable CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/dataTables.bootstrap5.min.css') }}">
 
     <!-- Fontawesome CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/all.min.css') }}">
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Daterangepikcer CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/daterangepicker/daterangepicker.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/daterangepicker/daterangepicker.css') }}">
 
     <!-- Tabler Icon CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/tabler-icons/tabler-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/tabler-icons/tabler-icons.min.css') }}">
 
     <!-- Map CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/jvectormap/jquery-jvectormap-2.0.5.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/jvectormap/jquery-jvectormap-2.0.5.css') }}">
 
     <!-- Color Picker Css -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/@simonwep/pickr/themes/nano.min.css') }}">
 
     <!-- Main CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 
     <style>
         .form-control {
@@ -263,6 +263,10 @@
 </head>
 
 <body>
+    @php
+        $unreadNotificationsCount = $unreadNotificationsCount ?? 0;
+        $unreadNotifications = $unreadNotifications ?? collect();
+    @endphp
     {{-- <div id="global-loader" >
 			<div class="whirly-loader"> </div>
 		</div>  --}}
@@ -276,13 +280,13 @@
                 <!-- Logo -->
                 <div class="header-left active">
                     <a href="{{ route('dashboard') }}" class="logo logo-normal">
-                        <img src="{{ asset('public/assets/img/logo.svg') }}" alt="Img">
+                        <img src="{{ asset('assets/img/logo.svg') }}" alt="Img">
                     </a>
                     <a href="{{ route('dashboard') }}" class="logo logo-white">
-                        <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
+                        <img src="{{ asset('assets/img/logo-white.svg') }}" alt="Img">
                     </a>
                     <a href="{{ route('dashboard') }}" class="logo-small">
-                        <img src="{{ asset('public/assets/img/logo-small.png') }}" alt="Img">
+                        <img src="{{ asset('assets/img/logo-small.png') }}" alt="Img">
                     </a>
                 </div>
                 <!-- /Logo -->
@@ -316,7 +320,7 @@
                                     </div>
                                     <span class="input-group-text">
                                         <kbd class="d-flex align-items-center"><img
-                                                src="{{ asset('public/assets/img/icons/command.svg') }}"
+                                                src="{{ asset('assets/img/icons/command.svg') }}"
                                                 alt="img" class="me-1">K</kbd>
                                     </span>
                                 </div>
@@ -324,9 +328,8 @@
                         </div>
                     </li>
                     <!-- /Search -->
-                    @if (
-                        (Auth::user() && Auth::user()->role && Auth::user()->role->name === 'Super Admin') ||
-                            Auth::user()->role->name === 'Sales')
+                    @if (auth()->check() &&
+                            (optional(auth()->user()->role)->name === 'Super Admin' || optional(auth()->user()->role)->name === 'Sales'))
                         <li class="nav-item pos-nav">
                             <a href="{{ route('pos.index') }}"
                                 class="btn btn-dark btn-md d-inline-flex align-items-center">
@@ -338,16 +341,16 @@
                     {{-- <li class="nav-item dropdown has-arrow flag-nav nav-item-box">
                         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);"
                             role="button">
-                            <img src="{{ asset('public/assets/img/flags/us-flag.svg') }}" alt="Language"
+                            <img src="{{ asset('assets/img/flags/us-flag.svg') }}" alt="Language"
                                 class="img-fluid">
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <a href="javascript:void(0);" class="dropdown-item">
-                                <img src="{{ asset('public/assets/img/flags/english.svg') }}" alt="Img"
+                                <img src="{{ asset('assets/img/flags/english.svg') }}" alt="Img"
                                     height="16">English
                             </a>
                             <a href="javascript:void(0);" class="dropdown-item">
-                                <img src="{{ asset('public/assets/img/flags/arabic.svg') }}" alt="Img"
+                                <img src="{{ asset('assets/img/flags/arabic.svg') }}" alt="Img"
                                     height="16">Arabic
                             </a>
                         </div>
@@ -390,7 +393,7 @@
                                                 <div class="media d-flex">
                                                     <span class="avatar flex-shrink-0">
                                                         <img alt="Img"
-                                                            src="{{ isset($notification->data['sender_avatar']) && $notification->data['sender_avatar'] ? asset($notification->data['sender_avatar']) : asset('public/storage/images/default_avatar.png') }}">
+                                                            src="{{ isset($notification->data['sender_avatar']) && $notification->data['sender_avatar'] ? asset($notification->data['sender_avatar']) : asset('storage/images/default_avatar.png') }}">
                                                     </span>
                                                     <div class="flex-grow-1">
                                                         <p class="noti-details">
@@ -420,36 +423,38 @@
                         </div>
                     </li>
                     <!-- /Notifications -->
-                    <li class="nav-item dropdown has-arrow main-drop profile-nav">
-                        <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
-                            <span class="user-info p-0">
-                                <span class="user-letter">
-                                    <img src="{{ Auth::user()->profile_picture ? asset('public/storage/' . Auth::user()->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                        alt="Profile Picture" class="img-fluid">
+                    @auth
+                        <li class="nav-item dropdown has-arrow main-drop profile-nav">
+                            <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
+                                <span class="user-info p-0">
+                                    <span class="user-letter">
+                                        <img src="{{ Auth::user()->profile_picture ? asset('storage/' . Auth::user()->profile_picture) : asset('storage/images/default_avatar.png') }}"
+                                            alt="Profile Picture" class="img-fluid">
+                                    </span>
                                 </span>
-                            </span>
-                        </a>
-                        <div class="dropdown-menu menu-drop-user">
-                            <div class="profileset d-flex align-items-center">
-                                <span class="user-img me-2">
-                                    <img src="{{ Auth::user()->profile_picture ? asset('public/storage/' . Auth::user()->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
-                                        alt="Profile Picture">
-                                </span>
-                                <div>
-                                    <h6 class="fw-medium">{{ Auth::user()->name }}</h6>
-                                    <p>{{ Auth::user()->role->name }}</p>
+                            </a>
+                            <div class="dropdown-menu menu-drop-user">
+                                <div class="profileset d-flex align-items-center">
+                                    <span class="user-img me-2">
+                                        <img src="{{ Auth::user()->profile_picture ? asset('storage/' . Auth::user()->profile_picture) : asset('storage/images/default_avatar.png') }}"
+                                            alt="Profile Picture">
+                                    </span>
+                                    <div>
+                                        <h6 class="fw-medium">{{ Auth::user()->name }}</h6>
+                                        <p>{{ optional(Auth::user()->role)->name }}</p>
+                                    </div>
                                 </div>
+                                <a class="dropdown-item" href="{{ route('profile.edit') }}"><i
+                                        class="ti ti-user-circle me-2"></i>My Profile</a>
+                                <hr class="my-2">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button class="dropdown-item logout pb-0" type="submit"><i
+                                            class="ti ti-logout me-2"></i>Logout</button>
+                                </form>
                             </div>
-                            <a class="dropdown-item" href="{{ route('profile.edit') }}"><i
-                                    class="ti ti-user-circle me-2"></i>My Profile</a>
-                            <hr class="my-2">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button class="dropdown-item logout pb-0" type="submit"><i
-                                        class="ti ti-logout me-2"></i>Logout</button>
-                            </form>
-                        </div>
-                    </li>
+                        </li>
+                    @endauth
                 </ul>
                 <!-- /Header Menu -->
 
@@ -476,13 +481,13 @@
             <!-- Logo -->
             <div class="sidebar-logo">
                 <a href="{{ route('dashboard') }}" class="logo logo-normal">
-                    <img src="{{ asset('public/assets/img/logo.svg') }}" alt="Img">
+                    <img src="{{ asset('assets/img/logo.svg') }}" alt="Img">
                 </a>
                 <a href="{{ route('dashboard') }}" class="logo logo-white">
-                    <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
+                    <img src="{{ asset('assets/img/logo-white.svg') }}" alt="Img">
                 </a>
                 <a href="{{ route('dashboard') }}" class="logo-small">
-                    <img src="{{ asset('public/assets/img/logo-small.png') }}" alt="Img">
+                    <img src="{{ asset('assets/img/logo-small.png') }}" alt="Img">
                 </a>
                 <a id="toggle_btn" href="javascript:void(0);">
                     <i data-feather="chevrons-left" class="feather-16"></i>
@@ -492,7 +497,7 @@
             <div class="modern-profile p-3 pb-0">
                 <div class="text-center rounded bg-light p-3 mb-4 user-profile">
                     <div class="avatar avatar-lg online mb-3">
-                        <img src="{{ asset('public/assets/img/customer/customer15.jpg') }}" alt="Img"
+                        <img src="{{ asset('assets/img/customer/customer15.jpg') }}" alt="Img"
                             class="img-fluid rounded-circle">
                     </div>
                     <h6 class="fs-14 fw-bold mb-1">Adrian Herman</h6>
@@ -510,7 +515,7 @@
             <div class="sidebar-header p-3 pb-0 pt-2">
                 <div class="text-center rounded bg-light p-2 mb-4 sidebar-profile d-flex align-items-center">
                     <div class="avatar avatar-md onlin">
-                        <img src="{{ asset('public/assets/img/customer/customer15.jpg') }}" alt="Img"
+                        <img src="{{ asset('assets/img/customer/customer15.jpg') }}" alt="Img"
                             class="img-fluid rounded-circle">
                     </div>
                     <div class="text-start sidebar-profile-info ms-2">
@@ -651,59 +656,59 @@
     <!-- /Main Wrapper -->
 
     <!-- jQuery -->
-    <script src="{{ asset('public/assets/js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-3.7.1.min.js') }}"></script>
 
     <!-- Feather Icon JS -->
-    <script src="{{ asset('public/assets/js/feather.min.js') }}"></script>
+    <script src="{{ asset('assets/js/feather.min.js') }}"></script>
 
     <!-- Slimscroll JS -->
-    <script src="{{ asset('public/assets/js/jquery.slimscroll.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.slimscroll.min.js') }}"></script>
 
     <!-- Datatable JS -->
-    <script src="{{ asset('public/assets/js/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('public/assets/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/js/dataTables.bootstrap5.min.js') }}"></script>
 
     <!-- Bootstrap Core JS -->
-    <script src="{{ asset('public/assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Chart JS -->
-    <script src="{{ asset('public/assets/plugins/apexchart/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/apexchart/chart-data.js') }}"></script>
+    <script src="{{ asset('assets/plugins/apexchart/apexcharts.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/apexchart/chart-data.js') }}"></script>
 
     <!-- Chart JS -->
-    <script src="{{ asset('public/assets/plugins/chartjs/chart.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/chartjs/chart-data.js') }}"></script>
+    <script src="{{ asset('assets/plugins/chartjs/chart.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/chartjs/chart-data.js') }}"></script>
 
     <!-- Chart JS -->
-    <script src="{{ asset('public/assets/plugins/peity/jquery.peity.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/peity/chart-data.js') }}"></script>
+    <script src="{{ asset('assets/plugins/peity/jquery.peity.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/peity/chart-data.js') }}"></script>
 
     <!-- Daterangepikcer JS -->
-    <script src="{{ asset('public/assets/js/moment.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/daterangepicker/daterangepicker.js') }}"></script>
-    <script src="{{ asset('public/assets/js/bootstrap-datetimepicker.min.js') }}"></script>
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/daterangepicker/daterangepicker.js') }}"></script>
+    <script src="{{ asset('assets/js/bootstrap-datetimepicker.min.js') }}"></script>
 
     <!-- Bootstrap Tagsinput JS -->
-    <script src="{{ asset('public/assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.js') }}"></script>
+    <script src="{{ asset('assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.js') }}"></script>
 
     <!-- Color Picker JS -->
-    <script src="{{ asset('public/assets/plugins/@simonwep/pickr/pickr.es5.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/@simonwep/pickr/pickr.es5.min.js') }}"></script>
 
     <!-- Select2 JS -->
-    <script src="{{ asset('public/assets/plugins/select2/js/select2.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/select2/js/select2.min.js') }}"></script>
 
     <!-- Quill JS -->
-    <script src="{{ asset('public/assets/plugins/quill/quill.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/quill/quill.min.js') }}"></script>
 
     <!-- Bootstrap Core JS -->
-    <script src="{{ asset('public/assets/plugins/sweetalert/sweetalert2.all.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/sweetalert/sweetalerts.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/sweetalert/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/sweetalert/sweetalerts.min.js') }}"></script>
 
     <!-- Custom JS -->
-    <script src="{{ asset('public/assets/js/theme-colorpicker.js') }}"></script>
-    <script src="{{ asset('public/assets/js/script.js') }}"></script>
+    <script src="{{ asset('assets/js/theme-colorpicker.js') }}"></script>
+    <script src="{{ asset('assets/js/script.js') }}"></script>
 
     {{-- 1. Load the main compiled app.js that DEFINES window.Echo --}}
     @vite('resources/js/app.js')

@@ -468,7 +468,7 @@
                                 <div class="mb-4 border rounded p-3">
                                     <div class="d-flex align-items-center mb-2">
                                         <input type="hidden" name="suppliers[${s_idx}][supplier_id]" value="${supplier.supplier_id}">
-                                        <img src="public/storage/${supplier.supplier_image_url}" class="rounded me-2" width="40" height="40" style="object-fit: contain;">
+                                        <img src="/storage/${supplier.supplier_image_url}" class="rounded me-2" width="40" height="40" style="object-fit: contain;">
                                         <h6 class="mb-0">${supplier.supplier_name}</h6>
                                     </div>
                                     <table class="table table-sm">
@@ -489,7 +489,7 @@
                                     {{-- DETAILED PRODUCT NAME CELL --}}
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="public/${product.image_url}" class="rounded me-2" width="40" height="40" style="object-fit: contain;">
+                                            <img src="${product.image_url}" class="rounded me-2" width="40" height="40" style="object-fit: contain;">
                                             <div>
                                                 <strong>${product.product_name}</strong><br>
                                                 <small class="text-muted">${product.category_name} (${product.measurement || 'N/A'})</small>

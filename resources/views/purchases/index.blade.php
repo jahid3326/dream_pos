@@ -156,7 +156,7 @@
                                                 @foreach ($purchase->suppliers as $supplier)
                                                     <a href="#" class="avatar-group-item" data-bs-toggle="tooltip"
                                                         title="{{ $supplier->company_name }}"><img
-                                                            src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                            src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                             alt="{{ $supplier->company_name }}"
                                                             class="rounded avatar-image" style="object-fit: contain"
                                                             width="30" height="30"
@@ -171,7 +171,7 @@
                                         <td class="text-end supplier-financials">
                                             @foreach ($purchase->suppliers as $supplier)
                                                 <div class="d-flex justify-content-end align-items-center mb-1"><img
-                                                        src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                        src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                         class="rounded me-1 avatar-image" style="object-fit: contain"
                                                         width="18"
                                                         height="18"><span>${{ number_format($supplier->paid_amount, 2) }}</span>
@@ -181,7 +181,7 @@
                                         <td class="text-end supplier-financials">
                                             @foreach ($purchase->suppliers as $supplier)
                                                 <div class="d-flex justify-content-end align-items-center mb-1"><img
-                                                        src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                        src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                         class="rounded me-1 avatar-image" style="object-fit: contain"
                                                         width="18"
                                                         height="18"><span>${{ number_format($supplier->due_amount, 2) }}</span>
@@ -275,7 +275,7 @@
                                                                                 data-bs-toggle="collapse"
                                                                                 href="#supplierProducts-{{ $purchase->id }}-{{ $supplier->id }}"><i
                                                                                     class="fas fa-angle-right"></i></a><img
-                                                                                src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                                                src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                                                 class="rounded me-2"
                                                                                 style="object-fit: contain" width="30"
                                                                                 height="30"><span>{{ $supplier->company_name }}</span>
@@ -357,7 +357,7 @@ $supplierItems = $purchase->items->where(
                                                                                             @foreach ($supplierItems as $item)
                                                                                                 @php
                                                                                                     $imageUrl = asset(
-                                                                                                        'public/storage/images/default_image.png',
+                                                                                                        'storage/images/default_image.png',
                                                                                                     );
                                                                                                     $categoryName =
                                                                                                         $item->product
@@ -390,7 +390,7 @@ $supplierItems = $purchase->items->where(
             ->product_image;
     $imageUrl = $image
         ? asset(
-            'public/storage/' .
+            'storage/' .
                 $image,
         )
         : $imageUrl;
@@ -405,16 +405,16 @@ $supplierItems = $purchase->items->where(
                                                                                                                 ->product
                                                                                                                 ->cbm ??
                                                                                                             0;
-                                                                                                        $imageUrl = $item
-                                                                                                            ->product
-                                                                                                            ->product_image
-                                                                                                            ? asset(
-                                                                                                                'public/storage/' .
-                                                                                                                    $item
-                                                                                                                        ->product
-                                                                                                                        ->product_image,
-                                                                                                            )
-                                                                                                            : $imageUrl;
+$imageUrl = $item
+                                            ->product
+                                            ->product_image
+                                            ? asset(
+                                                'storage/' .
+                                                    $item
+                                                        ->product
+                                                        ->product_image,
+                                            )
+                                            : $imageUrl;
                                                                                                     }
                                                                                                     $totalCbm =
                                                                                                         $item->quantity *

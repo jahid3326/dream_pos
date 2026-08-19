@@ -15,10 +15,10 @@
                     id="variation_image_input_{{ $index }}" class="variation-image-input" accept="image/*">
 
                 @php
-                    $defaultImage = asset('public/storage/images/default_image.png');
+                    $defaultImage = asset('storage/images/default_image.png');
                     $imageSrc =
                         isset($variation) && $variation->image
-                            ? asset('public/storage/' . $variation->image)
+                            ? asset('storage/' . $variation->image)
                             : $defaultImage;
                 @endphp
 

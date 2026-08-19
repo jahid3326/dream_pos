@@ -18,7 +18,7 @@
     <div class="sidebar">
         <div class="user-info">
             @auth
-                <img src="{{ Auth::user()->profile_picture ? asset('public/storage/' . Auth::user()->profile_picture) : asset('public/storage/images/default_avatar.png') }}" alt="Profile Picture">
+                <img src="{{ Auth::user()->profile_picture ? asset('storage/' . Auth::user()->profile_picture) : asset('storage/images/default_avatar.png') }}" alt="Profile Picture">
                 <p>Welcome, {{ Auth::user()->name }}</p>
                 <p>({{ Auth::user()->role->name }})</p>
                 <form method="POST" action="{{ route('logout') }}">

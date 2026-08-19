@@ -84,7 +84,7 @@
                                             {{ $customer->id }}
                                         </td>
                                         <td>
-                                            <img src="{{ $customer->user->profile_picture ? asset('public/storage/' . $customer->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                            <img src="{{ $customer->user->profile_picture ? asset('storage/' . $customer->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                 alt="" class="rounded-circle me-2" width="40" height="40">
                                             {{ $customer->user->name }}
                                         </td>

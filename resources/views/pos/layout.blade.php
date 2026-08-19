@@ -15,51 +15,51 @@
     <meta name="robots" content="index, follow">
     <title>{{ config('app.name') }} | POS</title>
 
-    <script src="{{ asset('public/assets/js/theme-script.js') }}"></script>
+    <script src="{{ asset('assets/js/theme-script.js') }}"></script>
 
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('public/assets/img/favicon.png') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/favicon.png') }}">
 
     <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('public/assets/img/apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/apple-touch-icon.png') }}">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
 
     <!-- Datetimepicker CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap-datetimepicker.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-datetimepicker.min.css') }}">
 
     <!-- animation CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/animate.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/animate.css') }}">
 
     <!-- Select2 CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
 
     <!-- Datatable CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/dataTables.bootstrap5.min.css') }}">
 
     <!-- Fontawesome CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/all.min.css') }}">
 
     <!-- Daterangepikcer CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/daterangepicker/daterangepicker.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/daterangepicker/daterangepicker.css') }}">
 
     <!-- Tabler Icon CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/tabler-icons/tabler-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/tabler-icons/tabler-icons.min.css') }}">
 
     <!-- Datetimepicker CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap-datetimepicker.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-datetimepicker.min.css') }}">
 
     <!-- Owl Carousel CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/owlcarousel/owl.carousel.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/owlcarousel/owl.theme.default.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/owlcarousel/owl.carousel.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/owlcarousel/owl.theme.default.min.css') }}">
 
     <!-- Color Picker Css -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/@simonwep/pickr/themes/nano.min.css') }}">
 
     <!-- Main CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 
     <style>
         /* Add some padding to the auto-width items in our POS carousels */
@@ -328,51 +328,51 @@
     <!-- /Discount -->
 
     <!-- jQuery -->
-    <script src="{{ asset('public/assets/js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-3.7.1.min.js') }}"></script>
 
     <!-- Feather Icon JS -->
-    <script src="{{ asset('public/assets/js/feather.min.js') }}"></script>
+    <script src="{{ asset('assets/js/feather.min.js') }}"></script>
 
     <!-- Slimscroll JS -->
-    <script src="{{ asset('public/assets/js/jquery.slimscroll.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.slimscroll.min.js') }}"></script>
 
     <!-- Bootstrap Core JS -->
-    <script src="{{ asset('public/assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Chart JS -->
-    <script src="{{ asset('public/assets/plugins/apexchart/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/apexchart/chart-data.js') }}"></script>
+    <script src="{{ asset('assets/plugins/apexchart/apexcharts.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/apexchart/chart-data.js') }}"></script>
 
     <!-- Datatable JS -->
-    <script src="{{ asset('public/assets/js/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('public/assets/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/js/dataTables.bootstrap5.min.js') }}"></script>
 
     <!-- Daterangepikcer JS -->
-    <script src="{{ asset('public/assets/js/moment.min.js') }}"></script>
-    <script src="{{ asset('public/assets/js/bootstrap-datetimepicker.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/daterangepicker/daterangepicker.js') }}"></script>
+    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
+    <script src="{{ asset('assets/js/bootstrap-datetimepicker.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/daterangepicker/daterangepicker.js') }}"></script>
 
     <!-- Owl JS -->
-    <script src="{{ asset('public/assets/plugins/owlcarousel/owl.carousel.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/owlcarousel/owl.carousel.min.js') }}"></script>
 
     <!-- Select2 JS -->
-    <script src="{{ asset('public/assets/plugins/select2/js/select2.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/select2/js/select2.min.js') }}"></script>
 
     <!-- Sticky-sidebar -->
-    <script src="{{ asset('public/assets/plugins/theia-sticky-sidebar/ResizeSensor.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js') }}"></script>
+    <script src="{{ asset('assets/plugins/theia-sticky-sidebar/ResizeSensor.js') }}"></script>
+    <script src="{{ asset('assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js') }}"></script>
 
     <!-- Color Picker JS -->
-    <script src="{{ asset('public/assets/plugins/@simonwep/pickr/pickr.es5.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/@simonwep/pickr/pickr.es5.min.js') }}"></script>
 
     <!-- Bootstrap Core JS -->
-    <script src="{{ asset('public/assets/plugins/sweetalert/sweetalert2.all.min.js') }}"></script>
-    <script src="{{ asset('public/assets/plugins/sweetalert/sweetalerts.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/sweetalert/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/sweetalert/sweetalerts.min.js') }}"></script>
 
     <!-- Custom JS -->
-    <script src="{{ asset('public/assets/js/theme-colorpicker.js') }}"></script>
-    <script src="{{ asset('public/assets/js/calculator.js') }}"></script>
-    <script src="{{ asset('public/assets/js/script.js') }}"></script>
+    <script src="{{ asset('assets/js/theme-colorpicker.js') }}"></script>
+    <script src="{{ asset('assets/js/calculator.js') }}"></script>
+    <script src="{{ asset('assets/js/script.js') }}"></script>
     @stack('scripts')
 </body>
 

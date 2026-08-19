@@ -37,7 +37,7 @@
                                         <td>{{ $shipment->shipment_number }}</td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ $shipment->customer->user->profile_picture ? asset('public/storage/' . $shipment->customer->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                <img src="{{ $shipment->customer->user->profile_picture ? asset('storage/' . $shipment->customer->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                     alt="" class="rounded me-2" width="30" height="30"
                                                     style="object-fit: contain;">
                                                 <span>{{ $shipment->customer->user->name }}</span>
@@ -48,7 +48,7 @@
                                                 @foreach ($shipment->purchase->suppliers as $supplier)
                                                     <a href="#" class="avatar-group-item" data-bs-toggle="tooltip"
                                                         title="{{ $supplier->company_name }}"><img
-                                                            src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                            src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                             alt="{{ $supplier->company_name }}" class="rounded avatar-image"
                                                             style="object-fit: contain" width="30" height="30"
                                                             style="margin-left: -10px; border: 2px solid white;"></a>
@@ -157,7 +157,7 @@
                                                                                 href="#supplierProducts-ship-{{ $shipment->id }}-{{ $supplier->id }}">
                                                                                 <i class="fas fa-angle-right"></i>
                                                                             </a>
-                                                                            <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                                            <img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                                                 class="rounded me-2"
                                                                                 style="object-fit: contain" width="30"
                                                                                 height="30">

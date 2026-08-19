@@ -88,7 +88,7 @@
                                                 <div class="flex-shrink-0">
                                                     {{-- Wrap the image in a container to control its size --}}
                                                     <div style="width: 40px; height: 40px;">
-                                                        <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                        <img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                             alt="{{ $supplier->company_name }}" class="rounded img-fluid"
                                                             style="width: 100%; height: 100%; object-fit: cover;">
                                                     </div>

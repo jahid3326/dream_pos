@@ -16,23 +16,23 @@
     <title>{{ config('app.name') }} - Sign In</title>
 
     <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('public/assets/favicon/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('public/assets/favicon/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('public/assets/favicon/favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('public/assets/favicon/site.webmanifest') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('assets/favicon/site.webmanifest') }}">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
 
     <!-- Fontawesome CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/all.min.css') }}">
 
     <!-- Tabler Icon CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/plugins/tabler-icons/tabler-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/plugins/tabler-icons/tabler-icons.min.css') }}">
 
     <!-- Main CSS -->
-    <link rel="stylesheet" href="{{ asset('public/assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <style>
         .form-control {
             border-color: #9fa5a9;
@@ -69,14 +69,15 @@
             <div class="row login-wrapper m-0">
                 <div class="col-lg-6 p-0">
                     <div class="login-content">
+                        @include('layouts._messages')
                         <form method="POST" action="{{ route('login') }}">
                             @csrf
                             <div class="login-userset">
                                 <div class="login-logo logo-normal">
-                                    <img src="{{ asset('public/assets/img/logo.svg') }}" alt="img">
+                                    <img src="{{ asset('assets/img/logo.svg') }}" alt="img">
                                 </div>
                                 <a href="{{ route('dashboard') }}" class="login-logo logo-white">
-                                    <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
+                                    <img src="{{ asset('assets/img/logo-white.svg') }}" alt="Img">
                                 </a>
                                 <div class="login-userheading">
                                     <h3>Sign In</h3>
@@ -130,7 +131,8 @@
                                             </div>
                                         </div>
                                         <div class="col-6 text-end">
-                                            <a class="forgot-link" href="forgot-password-2.html">Forgot Password?</a>
+                                            <a class="forgot-link" href="{{ route('password.request') }}">Forgot
+                                                Password?</a>
                                         </div>
                                     </div>
                                 </div>
@@ -143,7 +145,7 @@
                 </div>
                 <div class="col-lg-6 p-0">
                     <div class="login-img">
-                        <img src="{{ asset('public/assets/img/authentication/authentication-01.svg') }}"
+                        <img src="{{ asset('assets/img/authentication/authentication-01.svg') }}"
                             alt="img">
                     </div>
                 </div>
@@ -153,16 +155,16 @@
     <!-- /Main Wrapper -->
 
     <!-- jQuery -->
-    <script src="{{ asset('public/assets/js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-3.7.1.min.js') }}"></script>
 
     <!-- Feather Icon JS -->
-    <script src="{{ asset('public/assets/js/feather.min.js') }}"></script>
+    <script src="{{ asset('assets/js/feather.min.js') }}"></script>
 
     <!-- Bootstrap Core JS -->
-    <script src="{{ asset('public/assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Custom JS -->
-    <script src="{{ asset('public/assets/js/script.js') }}"></script>
+    <script src="{{ asset('assets/js/script.js') }}"></script>
 
 </body>
 

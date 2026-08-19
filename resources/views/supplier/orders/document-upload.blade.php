@@ -217,7 +217,7 @@
                                                         @endphp
 
                                                         <li class="file-item" id="file-item-{{ $file->id }}">
-                                                            <a href="{{ asset('public/storage/' . $file->file_path) }}"
+                                                            <a href="{{ asset('storage/' . $file->file_path) }}"
                                                                 target="_blank" class="text-primary text-truncate"
                                                                 title="{{ $file->original_name }}">
                                                                 <i

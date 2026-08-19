@@ -3,13 +3,13 @@
     <!-- Logo -->
     <div class="header-left active">
         <a href="{{ route('dashboard') }}" class="logo logo-normal">
-            <img src="{{ asset('public/assets/img/logo.svg') }}" alt="Img">
+            <img src="{{ asset('assets/img/logo.svg') }}" alt="Img">
         </a>
         <a href="{{ route('dashboard') }}" class="logo logo-white">
-            <img src="{{ asset('public/assets/img/logo-white.svg') }}" alt="Img">
+            <img src="{{ asset('assets/img/logo-white.svg') }}" alt="Img">
         </a>
         <a href="{{ route('dashboard') }}" class="logo-small">
-            <img src="{{ asset('public/assets/img/logo-small.png') }}" alt="Img">
+            <img src="{{ asset('assets/img/logo-small.png') }}" alt="Img">
         </a>
     </div>
     <!-- /Logo -->
@@ -46,7 +46,7 @@
             <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
                 <span class="user-info p-0">
                     <span class="user-letter">
-                        <img src="{{ Auth::user()->profile_picture ? asset('public/storage/' . Auth::user()->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                        <img src="{{ Auth::user()->profile_picture ? asset('storage/' . Auth::user()->profile_picture) : asset('storage/images/default_avatar.png') }}"
                             alt="Profile Picture" class="img-fluid">
                     </span>
                 </span>
@@ -54,7 +54,7 @@
             <div class="dropdown-menu menu-drop-user">
                 <div class="profileset d-flex align-items-center">
                     <span class="user-img me-2">
-                        <img src="{{ Auth::user()->profile_picture ? asset('public/storage/' . Auth::user()->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                        <img src="{{ Auth::user()->profile_picture ? asset('storage/' . Auth::user()->profile_picture) : asset('storage/images/default_avatar.png') }}"
                             alt="Profile Picture">
                     </span>
                     <div>

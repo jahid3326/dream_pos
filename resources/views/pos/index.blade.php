@@ -90,7 +90,7 @@
             <div class="product-added block-section">
                 <div class="product-wrap">
                     <div class="empty-cart text-center">
-                        <div class="mb-1"><img src="{{ asset('public/assets/img/icons/empty-cart.svg') }}" alt="img">
+                        <div class="mb-1"><img src="{{ asset('assets/img/icons/empty-cart.svg') }}" alt="img">
                         </div>
                         <p class="fw-bold">No Products Selected</p>
                     </div>
@@ -830,8 +830,8 @@
                             if (item.variation) {
                                 const variation = item.variation;
                                 const imageUrl = variation.image ?
-                                    `{{ asset('public/storage') }}/${variation.image}` :
-                                    `{{ asset('public/storage/images/default_image.png') }}`;
+                                    `{{ asset('storage') }}/${variation.image}` :
+                                    `{{ asset('storage/images/default_image.png') }}`;
 
                                 slidesHtml += `
                                 <div class="item">
@@ -852,8 +852,8 @@
                             } else {
                                 const product = item.product;
                                 const productImageUrl = product.product_image ?
-                                    `{{ asset('public/storage') }}/${product.product_image}` :
-                                    `{{ asset('public/storage/images/default_image.png') }}`;
+                                    `{{ asset('storage') }}/${product.product_image}` :
+                                    `{{ asset('storage/images/default_image.png') }}`;
 
                                 slidesHtml += `
                                 <div class="item">
@@ -882,8 +882,8 @@
                     // Case 2: It's a SINGLE product
                     else if (product.type === 'single') {
                         const imageUrl = product.product_image ?
-                            `{{ asset('public/storage') }}/${product.product_image}` :
-                            `{{ asset('public/storage/images/default_image.png') }}`;
+                            `{{ asset('storage') }}/${product.product_image}` :
+                            `{{ asset('storage/images/default_image.png') }}`;
                         finalHtml = `
                         <div class="col-sm-6 col-md-4 col-lg-4 item">
                             <div class="card h-100 product-info product-info-pack" 

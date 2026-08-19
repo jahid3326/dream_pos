@@ -154,7 +154,7 @@ class ManagePackController extends Controller
         // This logic for getting all possible items remains correct
         $allItems = Product::with(['variations', 'category'])->get()->flatMap(function ($product) {
             if ($product->type === 'single') {
-                $product->image = $product->product_image ? asset('public/storage/' . $product->product_image) : asset('public/storage/images/default_image.png');
+                $product->image = $product->product_image ? asset('storage/' . $product->product_image) : asset('storage/images/default_image.png');
                 $product->display_name = $product->name;
                 $product->measurement = $product->measurement;
                 $product->unique_id = 'p-' . $product->id;
@@ -162,7 +162,7 @@ class ManagePackController extends Controller
                 return collect([$product]);
             }
             return $product->variations->map(function ($variation) use ($product) {
-                $variation->image = $variation->image ? asset('public/storage/' . $variation->image) : asset('public/storage/images/default_image.png');
+                $variation->image = $variation->image ? asset('storage/' . $variation->image) : asset('storage/images/default_image.png');
                 $variation->display_name = $product->name;
                 $variation->measurement = $variation->measurement;
                 $variation->unique_id = 'v-' . $variation->id;

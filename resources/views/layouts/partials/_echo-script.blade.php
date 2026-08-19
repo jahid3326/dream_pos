@@ -125,7 +125,7 @@
                         <a href="${notification.action_url || '#'}">
                             <div class="media d-flex">
                                 <span class="avatar flex-shrink-0">
-                                    <img alt="Img" src="/public/storage/${sender_image}">
+                                    <img alt="Img" src="/storage/${sender_image}">
                                 </span>
                                 <div class="flex-grow-1">
                                     <p class="noti-details">
@@ -252,7 +252,7 @@
                         <a href="${notification.data && notification.data.action_url ? notification.data.action_url : '#'}">
                             <div class="media d-flex">
                                 <span class="avatar flex-shrink-0">
-                                    <img alt="Img" src="/public/storage/${sender_image}">
+                                    <img alt="Img" src="/storage/${sender_image}">
                                 </span>
                                 <div class="flex-grow-1">
                                     <p class="noti-details">
@@ -294,7 +294,7 @@
                                 <a href="${notification.data && notification.data.action_url ? notification.data.action_url : '#'}">
                                     <div class="media d-flex">
                                         <span class="avatar flex-shrink-0">
-                                            <img alt="Img" src="/public/storage/${sender_image}">
+                                            <img alt="Img" src="/storage/${sender_image}">
                                         </span>
                                         <div class="flex-grow-1">
                                             <p class="noti-details">

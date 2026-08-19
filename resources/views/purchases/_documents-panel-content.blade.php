@@ -12,7 +12,7 @@
     <div class="mb-5 border-bottom pb-4">
         {{-- Supplier Header --}}
         <h5 class="d-flex align-items-center mb-3">
-            <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+            <img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                 class="rounded me-2" style="object-fit: contain" width="30" height="30">
             {{ $supplier->company_name }}
         </h5>
@@ -54,7 +54,7 @@
                         @if ($doc->files->isNotEmpty())
                             <a href="#" class="text-decoration-none document-modal-trigger" data-bs-toggle="modal"
                                 data-bs-target="#documentFilesModal" data-document-name="{{ $doc->document_name }}"
-                                data-files-json="{{ $doc->files->map(fn($file) => ['url' => asset('public/storage/' . $file->file_path), 'name' => $file->original_name])->toJson() }}">
+                                data-files-json="{{ $doc->files->map(fn($file) => ['url' => asset('storage/' . $file->file_path), 'name' => $file->original_name])->toJson() }}">
 
                                 <i class="far fa-file-pdf text-success position-relative" style="font-size: 3rem;">
                                     @if ($doc->files->count() > 0)

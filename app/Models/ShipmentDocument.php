@@ -29,6 +29,6 @@ class ShipmentDocument extends Model
      */
     public function getFileUrlAttribute()
     {
-        return asset('public/storage/' . $this->file_path);
+        return asset('storage/' . $this->file_path);
     }
 }

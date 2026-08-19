@@ -120,7 +120,7 @@ class PosController extends Controller
                         'name' => $product->name,
                         'measurement' => $product->measurement,
                         'price' => $product->sale_price,
-                        'image' => $product->product_image ? asset('public/storage/' . $product->product_image) : asset('public/storage/images/default_image.png'),
+                        'image' => $product->product_image ? asset('storage/' . $product->product_image) : asset('storage/images/default_image.png'),
                         'measurement' => $product->measurement,
                         'category_id' => $product->category_id,
                     ]);
@@ -132,7 +132,7 @@ class PosController extends Controller
                             'name' => $product->name,
                             'measurement' => $variation->measurement,
                             'price' => $variation->sale_price,
-                            'image' => $variation->image ? asset('public/storage/' . $variation->image) : asset('public/storage/images/default_image.png'),
+                            'image' => $variation->image ? asset('storage/' . $variation->image) : asset('storage/images/default_image.png'),
                             'measurement' => $variation->measurement,
                             'category_id' => $product->category_id,
                         ]);

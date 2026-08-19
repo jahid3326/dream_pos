@@ -47,7 +47,7 @@
                     <label class="form-label">Profile Image</label>
                     <input type="file" name="profile_picture" class="form-control">
                     @if(isset($customer) && $customer->user->profile_picture)
-                    <img src="{{ asset('public/storage/' . $customer->user->profile_picture) }}" alt="Profile" class="img-thumbnail mt-2" width="120">
+                    <img src="{{ asset('storage/' . $customer->user->profile_picture) }}" alt="Profile" class="img-thumbnail mt-2" width="120">
                     @endif
                 </div>
             </div>

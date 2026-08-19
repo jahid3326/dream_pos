@@ -226,8 +226,8 @@
 
                             response.products.forEach(function(product) {
                                 const imageUrl = product.product_image ?
-                                    `{{ asset('public/storage') }}/${product.product_image}` :
-                                    `{{ asset('public/storage/images/default_image.png') }}`;
+                                    `{{ asset('storage') }}/${product.product_image}` :
+                                    `{{ asset('storage/images/default_image.png') }}`;
                                 const newRowHtml = `
                             <tr data-id="${product.id}">
                                 <td>

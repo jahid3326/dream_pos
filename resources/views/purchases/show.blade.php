@@ -119,7 +119,7 @@
                                     <div
                                         class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-2">
                                         <h5 class="d-flex align-items-center mb-0">
-                                            <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                            <img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                 class="rounded me-2" style="object-fit: contain" width="30"
                                                 height="30">
                                             {{ $supplier->company_name }}
@@ -186,7 +186,7 @@
                                                 <td>{{ $payment->note }}</td>
                                                 <td>
                                                     @if ($payment->proof)
-                                                        <a href="{{ asset('public/storage/' . $payment->proof) }}"
+                                                        <a href="{{ asset('storage/' . $payment->proof) }}"
                                                             target="_blank" class="text-primary" title="View Proof">
                                                             <i class="far fa-file-pdf fa-lg"></i>
                                                         </a>

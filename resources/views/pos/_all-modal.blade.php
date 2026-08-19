@@ -31,7 +31,7 @@
                 <div class="modal-body">
                     <div class="icon-head text-center">
                         <a href="javascript:void(0);">
-                            <img src="{{ asset('public/assets/img/logo.svg') }}" width="100" height="30"
+                            <img src="{{ asset('assets/img/logo.svg') }}" width="100" height="30"
                                 alt="Receipt Logo">
                         </a>
                     </div>
@@ -123,7 +123,7 @@
                                 business!</p>
                         </div>
                         <a href="javascript:void(0);">
-                            <img src="{{ asset('public/assets/img/barcode/barcode-03.jpg') }}" alt="Barcode">
+                            <img src="{{ asset('assets/img/barcode/barcode-03.jpg') }}" alt="Barcode">
                         </a>
                         <p class="text-dark fw-bold">Sale 31</p>
                         <p>Thank You For Shopping With Us. Please Come Again</p>
@@ -159,7 +159,7 @@
                                     <div class="d-flex align-items-center product-info" data-bs-toggle="modal"
                                         data-bs-target="#products">
                                         <a href="javascript:void(0);" class="img-bg">
-                                            <img src="{{ asset('public/assets/img/products/pos-product-16.png') }}"
+                                            <img src="{{ asset('assets/img/products/pos-product-16.png') }}"
                                                 alt="Products">
                                         </a>
                                         <div class="info">
@@ -173,7 +173,7 @@
                                     <div class="d-flex align-items-center product-info" data-bs-toggle="modal"
                                         data-bs-target="#products">
                                         <a href="javascript:void(0);" class="img-bg">
-                                            <img src="{{ asset('public/assets/img/products/pos-product-17.png') }}"
+                                            <img src="{{ asset('assets/img/products/pos-product-17.png') }}"
                                                 alt="Products">
                                         </a>
                                         <div class="info">
@@ -470,13 +470,13 @@
                                             <li>
                                                 <a data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Pdf"><img
-                                                        src="{{ asset('public/assets/img/icons/pdf.svg') }}"
+                                                        src="{{ asset('assets/img/icons/pdf.svg') }}"
                                                         alt="img"></a>
                                             </li>
                                             <li>
                                                 <a data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Excel"><img
-                                                        src="{{ asset('public/assets/img/icons/excel.svg') }}"
+                                                        src="{{ asset('assets/img/icons/excel.svg') }}"
                                                         alt="img"></a>
                                             </li>
                                             <li>
@@ -515,7 +515,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-27.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-27.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Carl Evans</a>
@@ -549,7 +549,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-02.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-02.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Minerva Rameriz</a>
@@ -583,7 +583,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-05.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-05.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Robert Lamon</a>
@@ -617,7 +617,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-22.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-22.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Patricia Lewis</a>
@@ -651,7 +651,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-03.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-03.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Mark Joslyn</a>
@@ -685,7 +685,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-12.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-12.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Marsha Betts</a>
@@ -719,7 +719,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-06.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-06.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Daniel Jude</a>
@@ -762,13 +762,13 @@
                                             <li>
                                                 <a data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Pdf"><img
-                                                        src="{{ asset('public/assets/img/icons/pdf.svg') }}"
+                                                        src="{{ asset('assets/img/icons/pdf.svg') }}"
                                                         alt="img"></a>
                                             </li>
                                             <li>
                                                 <a data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Excel"><img
-                                                        src="{{ asset('public/assets/img/icons/excel.svg') }}"
+                                                        src="{{ asset('assets/img/icons/excel.svg') }}"
                                                         alt="img"></a>
                                             </li>
                                             <li>
@@ -807,7 +807,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-27.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-27.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Carl Evans</a>
@@ -841,7 +841,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-02.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-02.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Minerva Rameriz</a>
@@ -875,7 +875,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-05.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-05.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Robert Lamon</a>
@@ -909,7 +909,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-22.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-22.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Patricia Lewis</a>
@@ -943,7 +943,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-03.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-03.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Mark Joslyn</a>
@@ -977,7 +977,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-12.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-12.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Marsha Betts</a>
@@ -1011,7 +1011,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-06.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-06.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Daniel Jude</a>
@@ -1054,13 +1054,13 @@
                                             <li>
                                                 <a data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Pdf"><img
-                                                        src="{{ asset('public/assets/img/icons/pdf.svg') }}"
+                                                        src="{{ asset('assets/img/icons/pdf.svg') }}"
                                                         alt="img"></a>
                                             </li>
                                             <li>
                                                 <a data-bs-toggle="tooltip" data-bs-placement="top"
                                                     title="Excel"><img
-                                                        src="{{ asset('public/assets/img/icons/excel.svg') }}"
+                                                        src="{{ asset('assets/img/icons/excel.svg') }}"
                                                         alt="img"></a>
                                             </li>
                                             <li>
@@ -1099,7 +1099,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-27.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-27.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Carl Evans</a>
@@ -1133,7 +1133,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-02.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-02.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Minerva Rameriz</a>
@@ -1167,7 +1167,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-05.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-05.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Robert Lamon</a>
@@ -1201,7 +1201,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-22.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-22.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Patricia Lewis</a>
@@ -1235,7 +1235,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-03.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-03.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Mark Joslyn</a>
@@ -1269,7 +1269,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-12.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-12.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Marsha Betts</a>
@@ -1303,7 +1303,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <a href="javascript:void(0);"
                                                                     class="avatar avatar-md me-2">
-                                                                    <img src="{{ asset('public/assets/img/users/user-06.jpg') }}"
+                                                                    <img src="{{ asset('assets/img/users/user-06.jpg') }}"
                                                                         alt="product">
                                                                 </a>
                                                                 <a href="javascript:void(0);">Daniel Jude</a>

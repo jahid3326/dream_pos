@@ -69,8 +69,8 @@ class PurchaseOrderCreated extends Notification implements ShouldQueue
         // Determine sender information
         $senderName = $this->sender ? $this->sender->name : 'System';
         $senderAvatar = $this->sender && $this->sender->profile_picture
-            ? 'public/storage/' . $this->sender->profile_picture
-            : 'public/storage/images/default_avatar.png';
+            ? 'storage/' . $this->sender->profile_picture
+            : 'storage/images/default_avatar.png';
 
         // Create personalized message
         $message = $this->sender

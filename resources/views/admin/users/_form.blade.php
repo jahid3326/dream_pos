@@ -60,7 +60,7 @@
                 @enderror
                 @if (isset($user) && $user->profile_picture)
                     <div class="mt-2">
-                        <img src="{{ asset('public/storage/' . $user->profile_picture) }}" alt="Current Picture"
+                        <img src="{{ asset('storage/' . $user->profile_picture) }}" alt="Current Picture"
                             width="100">
                     </div>
                 @endif

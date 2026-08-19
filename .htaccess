@@ -1,6 +1,13 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
+
+    # Rewrite public assets so they keep working when the document root
+    # points at the project root (e.g. shared hosting) instead of public/
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+    RewriteRule ^storage/(.*)$ public/storage/$1 [L]
+    RewriteRule ^build/(.*)$ public/build/$1 [L]
+
     RewriteRule ^index\.php$ - [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

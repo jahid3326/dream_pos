@@ -65,9 +65,9 @@
 
                         {{-- 1. Image Preview (or Default Image) --}}
                         @php
-                            $defaultImage = asset('public/storage/images/default_image.png'); // Path to your default placeholder
+                            $defaultImage = asset('storage/images/default_image.png'); // Path to your default placeholder
                             $existingImage = $product->product_image
-                                ? asset('public/storage/' . $product->product_image)
+                                ? asset('storage/' . $product->product_image)
                                 : $defaultImage;
                         @endphp
                         <img src="{{ $existingImage }}" alt="Preview" class="image-preview" id="imagePreview">

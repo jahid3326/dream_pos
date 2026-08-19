@@ -239,7 +239,7 @@
                                             <a href="#" class="text-decoration-none document-modal-trigger"
                                                 data-bs-toggle="modal" data-bs-target="#documentFilesModal"
                                                 data-document-name="{{ $doc->document_name }}"
-                                                data-files-json="{{ json_encode($doc->files->map(fn($file) => ['url' => asset('public/storage/' . $file->file_path), 'name' => $file->original_name])) }}">
+                                                data-files-json="{{ json_encode($doc->files->map(fn($file) => ['url' => asset('storage/' . $file->file_path), 'name' => $file->original_name])) }}">
 
                                                 <i class="fas fa-file-alt text-success position-relative"
                                                     style="font-size: 3rem;">
@@ -367,7 +367,7 @@ $totalPaidToSupplier = $supplierPayments->sum('amount');
                                                                     $iconColor = 'text-success';
                                                                 }
                                                             @endphp
-                                                            <a href="{{ asset('public/storage/' . $payment->proof) }}"
+                                                            <a href="{{ asset('storage/' . $payment->proof) }}"
                                                                 target="_blank" title="{{ basename($payment->proof) }}">
                                                                 <i
                                                                     class="fas {{ $iconClass }} {{ $iconColor }} fa-lg"></i>

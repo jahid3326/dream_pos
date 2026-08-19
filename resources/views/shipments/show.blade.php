@@ -78,7 +78,7 @@
                             <h6 class="text-muted mb-3">Good ready on</h6>
                             @foreach ($shipment->purchase->suppliers as $supplier)
                                 <div class="d-flex align-items-center mb-2">
-                                    <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                    <img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                         class="rounded-circle me-2" width="24" height="24"
                                         style="object-fit: cover;">
                                     <span
@@ -97,7 +97,7 @@
                                     $statusClass = $readyDate && $readyDate->lte($currentDate) ? 'ready' : 'in-process';
                                 @endphp
                                 <div class="d-flex align-items-center mb-2">
-                                    <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                    <img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                         class="rounded-circle me-2" width="24" height="24"
                                         style="object-fit: cover;">
                                     <span class="status-badge status-{{ $statusClass }}">{{ $status }}</span>
@@ -203,7 +203,7 @@
                                         data-bs-toggle="collapse" href="#packing-{{ $supplier->id }}">
                                         <i class="fas fa-angle-right"></i>
                                     </a>
-                                    <img src="{{ $supplier->user->profile_picture ? asset('public/storage/' . $supplier->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                    <img src="{{ $supplier->user->profile_picture ? asset('storage/' . $supplier->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                         class="rounded me-2" width="30" height="30" style="object-fit: contain;">
                                     <h6 class="mb-0">{{ $supplier->company_name }}</h6>
                                 </div>
@@ -283,7 +283,7 @@
                                                 <td>{{ $payment->note }}</td>
                                                 <td>
                                                     @if ($payment->proof)
-                                                        <a href="{{ asset('public/storage/' . $payment->proof) }}"
+                                                        <a href="{{ asset('storage/' . $payment->proof) }}"
                                                             target="_blank"><i
                                                             class="far fa-file-pdf text-danger fa-lg"></i></a>@else<span
                                                             class="text-muted">N/A</span>

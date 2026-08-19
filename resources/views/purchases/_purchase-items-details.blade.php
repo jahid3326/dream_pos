@@ -13,7 +13,7 @@
         <tbody>
             @foreach ($items as $item)
                 @php
-                    $imageUrl = asset('public/storage/images/default_image.png');
+                    $imageUrl = asset('storage/images/default_image.png');
                     $categoryName = $item->product->category->name ?? 'N/A';
                     $measurement = 'N/A';
                     $unit_cbm = 0;
@@ -22,12 +22,12 @@
                         $measurement = $item->variation->measurement;
                         $unit_cbm = $item->variation->cbm ?? 0;
                         $image = $item->variation->image ?? $item->product->product_image;
-                        $imageUrl = $image ? asset('public/storage/' . $image) : $imageUrl;
+                        $imageUrl = $image ? asset('storage/' . $image) : $imageUrl;
                     } else {
                         $measurement = $item->product->measurement;
                         $unit_cbm = $item->product->cbm ?? 0;
                         $imageUrl = $item->product->product_image
-                            ? asset('public/storage/' . $item->product->product_image)
+                            ? asset('storage/' . $item->product->product_image)
                             : $imageUrl;
                     }
                     // echo $item->quantity . 'x' . $unit_cbm;

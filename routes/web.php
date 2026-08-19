@@ -53,6 +53,11 @@ Route::get('/linkstorage', function () {
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('login', [AuthController::class, 'login']);
+    // Password reset routes
+    Route::get('password/forgot', [AuthController::class, 'showForgotForm'])->name('password.request');
+    Route::post('password/email', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    Route::post('password/reset', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
 // Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');

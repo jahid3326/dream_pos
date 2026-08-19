@@ -98,13 +98,13 @@
                             @if ($product->type === 'single')
                                 @php
                                     $imageUrl = $product->product_image
-                                        ? asset('public/storage/' . $product->product_image)
-                                        : asset('public/storage/images/default_image.png');
+                                        ? asset('storage/' . $product->product_image)
+                                        : asset('storage/images/default_image.png');
                                 @endphp
                                 <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="img-fluid rounded w-100">
                             @else
                                 {{-- Fallback placeholder if NO variations have an image --}}
-                                <img src="{{ asset('public/storage/images/default_image.png') }}" alt="Default Image"
+                                <img src="{{ asset('storage/images/default_image.png') }}" alt="Default Image"
                                     class="img-fluid rounded w-90">
                             @endif
                         </div>
@@ -142,8 +142,8 @@
                                                     <td>
                                                         @php
                                                             $variantImageUrl = $variation->image
-                                                                ? asset('public/storage/' . $variation->image)
-                                                                : asset('public/storage/images/default_image.png');
+                                                                ? asset('storage/' . $variation->image)
+                                                                : asset('storage/images/default_image.png');
                                                         @endphp
                                                         <img src="{{ $variantImageUrl }}"
                                                             alt="{{ $variation->measurement }}" class="img-thumbnail">

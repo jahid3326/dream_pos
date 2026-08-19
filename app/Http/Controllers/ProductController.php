@@ -81,7 +81,7 @@ class ProductController extends Controller
         // 4. Transform the fetched products into a flattened list for the view
         $product_list = collect(); // Create a new empty Laravel Collection
 
-        $default_image = asset('public/storage/images/default_image.png');
+        $default_image = asset('storage/images/default_image.png');
 
         foreach ($products as $product) {
             if ($product->type === 'single') {
@@ -96,7 +96,7 @@ class ProductController extends Controller
                     'supplier' => $product->supplier,
                     'sale_price' => $product->sale_price,
                     'purchase_price' => $product->purchase_price,
-                    'image_url' => $product->product_image ? asset('public/storage/' . $product->product_image) : $default_image,
+                    'image_url' => $product->product_image ? asset('storage/' . $product->product_image) : $default_image,
                 ];
                 $product_list->push($row);
             } elseif ($product->type === 'variation') {
@@ -113,7 +113,7 @@ class ProductController extends Controller
                             'supplier' => $product->supplier,
                             'sale_price' => $variation->sale_price,
                             'purchase_price' => $variation->purchase_price,
-                            'image_url' => $variation->image ? asset('public/storage/' . $variation->image) : $default_image,
+                            'image_url' => $variation->image ? asset('storage/' . $variation->image) : $default_image,
                         ];
                         $product_list->push($row);
                     }

@@ -61,8 +61,8 @@ class SupplierProposedModification extends Notification implements ShouldQueue
         // Determine sender information
         $senderName = $this->supplier->company_name ?? $this->supplier->user->name ?? 'Supplier';
         $senderAvatar = $this->supplier->user && $this->supplier->user->profile_picture
-            ? 'public/storage/' . $this->supplier->user->profile_picture
-            : 'public/storage/images/default_avatar.png';
+            ? 'storage/' . $this->supplier->user->profile_picture
+            : 'storage/images/default_avatar.png';
 
         // Create personalized message
         $message = $senderName . ' proposed a modification for PO #' . $this->purchase->purchase_number;

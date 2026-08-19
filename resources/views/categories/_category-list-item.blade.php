@@ -21,7 +21,7 @@
     {{-- Category Logo Column --}}
     <td>
         @if ($category->logo)
-            <img src="{{ asset('public/storage/' . $category->logo) }}" alt="{{ $category->name }}" width="50"
+            <img src="{{ asset('storage/' . $category->logo) }}" alt="{{ $category->name }}" width="50"
                 class="img-thumbnail">
         @endif
     </td>

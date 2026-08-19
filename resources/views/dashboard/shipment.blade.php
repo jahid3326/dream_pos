@@ -242,7 +242,7 @@
                                                         <a href="{{ route('shipments.show', $shipment) }}"
                                                             class="text-decoration-none">
                                                             <div class="d-flex align-items-center">
-                                                                <img src="{{ $shipment->customer->user->profile_picture ? asset('public/storage/' . $shipment->customer->user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                                                <img src="{{ $shipment->customer->user->profile_picture ? asset('storage/' . $shipment->customer->user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                                     class="rounded me-2" width="32" height="32"
                                                                     style="object-fit: cover;">
                                                                 <div>

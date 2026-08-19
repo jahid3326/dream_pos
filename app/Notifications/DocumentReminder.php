@@ -63,8 +63,8 @@ class DocumentReminder extends Notification implements ShouldQueue
         // Determine sender information
         $senderName = $this->adminUser ? $this->adminUser->name : 'Admin';
         $senderAvatar = $this->adminUser && $this->adminUser->profile_picture
-            ? 'public/storage/' . $this->adminUser->profile_picture
-            : 'public/storage/images/default_avatar.png';
+            ? 'storage/' . $this->adminUser->profile_picture
+            : 'storage/images/default_avatar.png';
 
         // Create personalized message
         $message = $senderName . ' sent you a reminder for missing documents on PO #' . $this->purchase->purchase_number;

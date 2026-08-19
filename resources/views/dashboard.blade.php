@@ -227,7 +227,7 @@
                                                     }
                                                 @endphp
                                                 @if ($custAvatar)
-                                                    <img src="{{ asset('public/storage/' . $custAvatar) }}"
+                                                    <img src="{{ asset('storage/' . $custAvatar) }}"
                                                         class="customer-avatar" alt="{{ $custName }}">
                                                 @else
                                                     <span class="customer-avatar">{{ $custInitials }}</span>
@@ -315,7 +315,7 @@
                                                     @endphp
                                                     <div class="d-flex align-items-center mb-1">
                                                         @if ($supAvatar)
-                                                            <img src="{{ asset('public/storage/' . $supAvatar) }}"
+                                                            <img src="{{ asset('storage/' . $supAvatar) }}"
                                                                 class="customer-avatar me-2" alt="{{ $company }}">
                                                         @else
                                                             <span class="customer-avatar me-2">{{ $compInitials }}</span>
@@ -403,7 +403,7 @@
                                             @endphp
                                             <td>
                                                 @if ($qCustAvatar)
-                                                    <img src="{{ asset('public/storage/' . $qCustAvatar) }}"
+                                                    <img src="{{ asset('storage/' . $qCustAvatar) }}"
                                                         class="customer-avatar" alt="{{ $qCustName }}">
                                                 @else
                                                     <span class="customer-avatar">{{ $qInitials }}</span>
@@ -489,7 +489,7 @@
                                                     @endphp
                                                     <div class="d-flex align-items-center mb-1">
                                                         @if ($supAvatar)
-                                                            <img src="{{ asset('public/storage/' . $supAvatar) }}"
+                                                            <img src="{{ asset('storage/' . $supAvatar) }}"
                                                                 class="customer-avatar me-2" alt="{{ $company }}">
                                                         @else
                                                             <span class="customer-avatar me-2">{{ $compInitials }}</span>

@@ -44,7 +44,7 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
-                                            <img src="{{ $user->profile_picture ? asset('public/storage/' . $user->profile_picture) : asset('public/storage/images/default_avatar.png') }}"
+                                            <img src="{{ $user->profile_picture ? asset('storage/' . $user->profile_picture) : asset('storage/images/default_avatar.png') }}"
                                                 alt="{{ $user->name }}" width="50" height="50"
                                                 style="border-radius: 50%;">
                                         </td>
